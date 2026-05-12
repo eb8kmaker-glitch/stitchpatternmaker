@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-linen-base font-sans text-warm-600;
+    background-image: linear-gradient(180deg, #f8f6f3 0%, #f1ece6 100%);
+    min-height: 100vh;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  /* ── Card ── */
+  .card-linen {
+    @apply bg-linen-50/80 border border-linen-300/20 rounded-card shadow-linen;
+    background-image: none;
+    background-color: rgba(247, 245, 242, 0.85);
+  }
+
+  /* ── Button variants ── */
+  .btn-primary {
+    @apply flex items-center justify-center gap-2 px-5 py-3
+           bg-warm-600 text-linen-50 text-sm font-normal tracking-wide
+           rounded-btn border-none cursor-pointer
+           transition-all duration-200
+           hover:bg-warm-500 hover:shadow-[0_6px_20px_rgba(79,74,69,0.18)]
+           active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2 px-5 py-2.5
+           bg-sage-400/15 text-sage-500 text-xs font-light tracking-wide
+           rounded-btn border border-sage-400/25 cursor-pointer
+           transition-all duration-200
+           hover:bg-sage-400/25 hover:shadow-linen
+           active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply flex items-center justify-center gap-1.5 px-3 py-1.5
+           bg-linen-50/80 text-warm-500 text-xs font-light
+           rounded-[9px] border border-linen-300/30 cursor-pointer
+           transition-all duration-150
+           hover:bg-linen-100/70;
+  }
+
+  .btn-ghost.active {
+    @apply bg-sage-400/15 border-sage-400/30 text-sage-500;
+  }
+
+  /* ── Form controls ── */
+  .input-linen {
+    @apply w-full px-3 py-2 text-xs font-light text-warm-600
+           bg-linen-50/70 border border-linen-300/35 rounded-chip
+           outline-none tracking-wide
+           transition-all duration-150
+           focus:border-sage-400/50 focus:ring-2 focus:ring-sage-400/12
+           placeholder:text-warm-400;
+    font-family: 'Noto Sans KR', sans-serif;
+    appearance: none;
+  }
+
+  /* ── Section label ── */
+  .sec-label {
+    @apply text-[9px] uppercase tracking-[0.13em] text-sage-400 font-normal mb-2.5;
+  }
+
+  /* ── Separator ── */
+  .divider-linen {
+    @apply h-px bg-linen-300/20;
+  }
+}
+
+@layer utilities {
+  .font-playfair  { font-family: 'Playfair Display', Georgia, serif; }
+  .font-cormorant { font-family: 'Cormorant Garamond', Georgia, serif; }
+  .font-noto      { font-family: 'Noto Sans KR', sans-serif; }
+
+  .text-balance { text-wrap: balance; }
+
+  /* canvas pixel rendering */
+  canvas { image-rendering: pixelated; }
+
+  /* thin scrollbar */
+  .scrollbar-linen {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168,178,161,0.4) transparent;
+  }
+  .scrollbar-linen::-webkit-scrollbar { width: 4px; }
+  .scrollbar-linen::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-linen::-webkit-scrollbar-thumb {
+    background: rgba(168,178,161,0.4);
+    border-radius: 2px;
+  }
+}
