@@ -18,9 +18,8 @@ export default function Navbar() {
       {/* Links */}
       <ul className="flex items-center gap-7 list-none">
         {[
-          { label: '갤러리',    href: '#' },
-          { label: '가이드',    href: '#' },
-          { label: 'DMC 색상표', href: '#' },
+          { label: '가이드',    href: '/guide' },
+          { label: 'DMC 색상표', href: '/dmc-colors' },
         ].map(link => (
           <li key={link.label}>
             <Link
@@ -34,11 +33,14 @@ export default function Navbar() {
           </li>
         ))}
         <li>
-          <button className="nav-cta px-5 py-2 bg-warm-600 text-linen-50 text-xs
-                             rounded-pill border-none cursor-pointer
-                             hover:bg-warm-500 transition-colors duration-200">
+          <Link
+            href="/"
+            className="px-5 py-2 bg-warm-600 text-linen-50 text-xs
+                       rounded-pill cursor-pointer no-underline
+                       hover:bg-warm-500 transition-colors duration-200"
+          >
             무료 시작
-          </button>
+          </Link>
         </li>
       </ul>
     </nav>
