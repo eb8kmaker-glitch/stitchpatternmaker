@@ -27,27 +27,53 @@ export default function ThreadList({ threads, pattern }: ThreadListProps) {
   return (
     <div className="px-[18px] py-3.5">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-2.5">
-        <p className="sec-label mb-0">실 목록</p>
-        <span className="text-[9px] bg-sage-400/14 text-sage-500 px-2 py-0.5 rounded-full
+      <div className="flex items-center gap-2 mb-3">
+        <p className="sec-label mb-0">실 목록 · 범례</p>
+        <span className="text-[9px] bg-sage-400/15 text-sage-500 px-2 py-0.5 rounded-full
                          font-light tracking-wide">
           {threads.length}색
         </span>
       </div>
 
+      {/* Column labels */}
+      <div className="flex items-center gap-2 px-1 mb-1.5">
+        <span className="w-6 text-[9px] uppercase tracking-wider text-warm-400/70 text-center flex-shrink-0">기호</span>
+        <span className="w-4 flex-shrink-0" />
+        <span className="flex-1 text-[9px] uppercase tracking-wider text-warm-400/70">DMC 번호</span>
+        <span className="text-[9px] uppercase tracking-wider text-warm-400/70">사용량</span>
+      </div>
+
       {/* Thread rows */}
-      <div className="max-h-44 overflow-y-auto scrollbar-linen space-y-0">
-        {threads.map(({ dmc, cells, skeins }) => (
+      <div className="max-h-52 overflow-y-auto scrollbar-linen space-y-0">
+        {threads.map(({ dmc, cells, skeins, symbol }) => (
           <div
             key={dmc.id}
-            className="flex items-center gap-2 py-1.5 border-b border-dashed border-linen-300/20 last:border-0"
+            className="flex items-center gap-2 py-1.5
+                       border-b border-dashed border-linen-300/20 last:border-0"
           >
+            {/* Symbol chip */}
             <div
-              className="w-5 h-5 rounded-[6px] border border-linen-300/25 flex-shrink-0 shadow-sm"
+              className="w-6 h-6 rounded-[6px] bg-linen-100/90 border border-linen-300/35
+                         flex items-center justify-center flex-shrink-0 shadow-sm"
+            >
+              <span className="text-[12px] font-mono font-bold text-warm-700 leading-none">
+                {symbol}
+              </span>
+            </div>
+
+            {/* Color chip */}
+            <div
+              className="w-4 h-4 rounded-[4px] border border-linen-300/25 flex-shrink-0 shadow-sm"
               style={{ background: dmc.hex }}
             />
-            <span className="flex-1 text-[11px] text-warm-600 font-normal">DMC {dmc.id}</span>
-            <span className="text-[10px] text-warm-400 font-mono">
+
+            {/* DMC number */}
+            <span className="flex-1 text-[11px] text-warm-600 font-normal">
+              DMC {dmc.id}
+            </span>
+
+            {/* Counts */}
+            <span className="text-[10px] text-warm-400 font-mono tabular-nums whitespace-nowrap">
               {cells.toLocaleString()} · {skeins}타래
             </span>
           </div>

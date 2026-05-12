@@ -1,5 +1,6 @@
 import { rgbToLab, deltaE } from '@/lib/color/lab'
 import { findClosestDmc, DMC_COLORS } from '@/lib/dmc/database'
+import { buildSymbolMap } from '@/lib/pattern/symbols'
 import type { DmcColor, PatternResult, SepLevel } from '@/types'
 
 // ── Progress callback type ────────────────────────────────────────────────────
@@ -196,7 +197,8 @@ export async function generatePattern(
 export function calcThreadUsage(
   grid: number[][],
   dmcMap: DmcColor[],
-): Array<{ dmc: DmcColor; cells: number; skeins: number }> {
+) {
+  const symbolMap = buildSymbolMap(grid)
   const counts: Record<number, number> = {}
   for (const row of grid) {
     for (const ci of row) {
@@ -206,9 +208,11 @@ export function calcThreadUsage(
   return Object.entries(counts)
     .sort(([, a], [, b]) => b - a)
     .map(([ci, cells]) => ({
-      dmc:    dmcMap[Number(ci)],
+      dmc:          dmcMap[Number(ci)],
       cells,
-      skeins: Math.ceil(cells / 250),
+      skeins:       Math.ceil(cells / 250),
+      symbol:       symbolMap.get(Number(ci)) ?? '?',
+      clusterIndex: Number(ci),
     }))
 }
 

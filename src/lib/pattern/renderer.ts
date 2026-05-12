@@ -1,11 +1,6 @@
 import { contrastColor } from '@/lib/color/lab'
+import { buildSymbolMap } from '@/lib/pattern/symbols'
 import type { PatternResult, DisplayMode } from '@/types'
-
-const SYMBOLS = [
-  '■','●','▲','★','♦','✚','✿','❋','◆','✦',
-  '♠','♣','♥','◎','○','□','△','▽','☆','◇',
-  '✖','✗','♪','♫','⊕','⊗','⊞','⊟','⊠','⊡',
-]
 
 export interface RenderOptions {
   cellSize:    number
@@ -27,8 +22,8 @@ export function renderPattern(
   const ctx = canvas.getContext('2d')!
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  // Unique cluster indices for symbol assignment
-  const uniqueIndices = Array.from(new Set(grid.flat()))
+  // Build symbol map (consistent with ThreadList & PDF)
+  const symbolMap = buildSymbolMap(grid)
 
   // Draw cells
   for (let y = 0; y < height; y++) {
@@ -48,15 +43,14 @@ export function renderPattern(
 
       // Symbol overlay
       if ((mode === 'symbol' || mode === 'mixed') && cs >= 8) {
-        const symIdx = uniqueIndices.indexOf(ci) % SYMBOLS.length
-        const symbol = SYMBOLS[symIdx]
+        const symbol = symbolMap.get(ci) ?? '?'
         const textColor =
           mode === 'mixed'
-            ? contrastColor(dmc.hex).replace('#000000', 'rgba(0,0,0,0.6)').replace('#ffffff', 'rgba(255,255,255,0.8)')
+            ? contrastColor(dmc.hex).replace('#000000', 'rgba(0,0,0,0.65)').replace('#ffffff', 'rgba(255,255,255,0.85)')
             : '#4f4a45'
 
         ctx.fillStyle    = textColor
-        ctx.font         = `${Math.max(6, cs - 2)}px monospace`
+        ctx.font         = `bold ${Math.max(7, cs - 3)}px monospace`
         ctx.textAlign    = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText(symbol, px + cs / 2, py + cs / 2)

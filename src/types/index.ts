@@ -34,7 +34,9 @@ export interface PatternSettings {
 
 // ── Thread usage ─────────────────────────────────────────────────────────────
 export interface ThreadUsage {
-  dmc:    DmcColor
-  cells:  number
-  skeins: number
+  dmc:          DmcColor
+  cells:        number
+  skeins:       number
+  symbol:       string   // the symbol shown in the pattern grid
+  clusterIndex: number   // cluster index in the pattern grid
 }
