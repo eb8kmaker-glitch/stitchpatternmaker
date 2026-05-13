@@ -1,6 +1,6 @@
 'use client'
 
-import type { PatternSettings, SepLevel, DisplayMode, SizePrefixPreset } from '@/types'
+import type { PatternSettings, SepLevel, DisplayMode, SizePrefixPreset, QualityMode } from '@/types'
 
 interface SettingsPanelProps {
   settings:    PatternSettings
@@ -23,6 +23,12 @@ const COLOR_COUNTS = [
   { label: '40색 — 균형',  value: 40 },
   { label: '60색 — 세밀',  value: 60 },
   { label: '80색 — 정교',  value: 80 },
+]
+
+const QUALITY_MODES: { label: string; value: QualityMode; hint: string }[] = [
+  { label: 'Sharp',   value: 'sharp',   hint: '플랫 컬러 — 선명한 경계선' },
+  { label: 'Smooth',  value: 'smooth',  hint: '디더링 — 부드러운 그라데이션' },
+  { label: 'Vibrant', value: 'vibrant', hint: '채도 강화 — 풍부하고 선명한 색감' },
 ]
 
 const SEP_LEVELS: { label: string; value: SepLevel; hint: string }[] = [
@@ -111,6 +117,32 @@ export default function SettingsPanel({
             ))}
           </select>
         </div>
+      </Section>
+
+      {/* Quality mode */}
+      <Section label="렌더링 품질">
+        <p className="text-[10px] text-warm-400 font-light leading-relaxed mb-2.5">
+          색감 표현 방식과<br />디더링 알고리즘을 선택합니다
+        </p>
+        <div className="flex gap-1 mb-2">
+          {QUALITY_MODES.map(q => (
+            <button
+              key={q.value}
+              onClick={() => onChange({ ...settings, qualityMode: q.value })}
+              className={`flex-1 py-1.5 text-[10px] rounded-chip border cursor-pointer
+                         transition-all duration-150 font-noto tracking-wide
+                         ${settings.qualityMode === q.value
+                           ? 'bg-warm-600 text-linen-50 border-warm-600'
+                           : 'bg-linen-50/60 text-warm-400 border-linen-300/35 hover:bg-linen-100/70'
+                         }`}
+            >
+              {q.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-[10px] text-sage-400 font-light">
+          {QUALITY_MODES.find(q => q.value === settings.qualityMode)?.hint}
+        </p>
       </Section>
 
       {/* Separation */}

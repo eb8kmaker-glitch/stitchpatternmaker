@@ -24,12 +24,15 @@ export type SepLevel = 'off' | 'weak' | 'medium' | 'strong'
 
 export type DisplayMode = 'color' | 'symbol' | 'mixed'
 
+export type QualityMode = 'sharp' | 'smooth' | 'vibrant'
+
 export interface PatternSettings {
-  width:      number
-  height:     number
-  colorCount: number
-  sepLevel:   SepLevel
-  mode:       DisplayMode
+  width:       number
+  height:      number
+  colorCount:  number
+  sepLevel:    SepLevel
+  mode:        DisplayMode
+  qualityMode: QualityMode
 }
 
 // ── Thread usage ─────────────────────────────────────────────────────────────
