@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Script           from 'next/script'
 import Navbar          from '@/components/layout/Navbar'
 import UploadZone      from '@/components/pattern/UploadZone'
 import SettingsPanel   from '@/components/pattern/SettingsPanel'
@@ -50,7 +51,9 @@ export default function HomePage() {
     <div className="min-h-screen">
       <Navbar />
 
-      <main className="px-9 pb-16">
+      <main className="px-9 pb-16 flex gap-5 items-start">
+        {/* ── Content ───────────────────────────────────────────────────── */}
+        <div className="flex-1 min-w-0">
         {/* ── Hero ─────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 min-h-[400px] border-b border-linen-300/20">
           {/* Left */}
@@ -161,6 +164,22 @@ export default function HomePage() {
 
         {/* ── Palette showcase ──────────────────────────────────────────── */}
         <PaletteShowcase />
+        </div>
+
+        {/* ── 카카오 애드핏 세로형 배너 ─────────────────────────────────── */}
+        <div className="flex-shrink-0 sticky top-4 pt-2">
+          <ins
+            className="kakao_ad_area"
+            style={{ display: 'none' }}
+            data-ad-unit="DAN-4Eyf5lz9W8UiuTJa"
+            data-ad-width="160"
+            data-ad-height="600"
+          />
+          <Script
+            src="//t1.kakaocdn.net/kas/static/ba.min.js"
+            strategy="afterInteractive"
+          />
+        </div>
       </main>
     </div>
   )
