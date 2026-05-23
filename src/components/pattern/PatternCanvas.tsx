@@ -12,7 +12,12 @@ interface PatternCanvasProps {
 const CELL_SIZES = [2, 3, 4, 6, 8, 10, 12, 16]
 
 export default function PatternCanvas({ pattern, displayMode }: PatternCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasRef    = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const spaceDown    = useRef(false)
+  const isPanning    = useRef(false)
+  const lastPos      = useRef({ x: 0, y: 0 })
+
   const [cellSize, setCellSize] = useState(4)
   const [showGrid, setShowGrid] = useState(true)
   const [hovered, setHovered]   = useState<string | null>(null)
@@ -23,6 +28,58 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
     if (!canvas || !pattern) return
     renderPattern(canvas, pattern, { cellSize, showGrid, displayMode })
   }, [pattern, displayMode, cellSize, showGrid])
+
+  // Spacebar tracking — sets grab cursor on the scroll container
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.code !== 'Space' || e.repeat) return
+      // avoid firing while typing in inputs
+      if (document.activeElement instanceof HTMLInputElement) return
+      e.preventDefault()
+      spaceDown.current = true
+      if (containerRef.current) containerRef.current.style.cursor = 'grab'
+    }
+    function onKeyUp(e: KeyboardEvent) {
+      if (e.code !== 'Space') return
+      spaceDown.current = false
+      isPanning.current = false
+      if (containerRef.current) containerRef.current.style.cursor = ''
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup',   onKeyUp)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup',   onKeyUp)
+    }
+  }, [])
+
+  const handleContainerMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!spaceDown.current) return
+    e.preventDefault()
+    isPanning.current = true
+    lastPos.current   = { x: e.clientX, y: e.clientY }
+    if (containerRef.current) containerRef.current.style.cursor = 'grabbing'
+  }, [])
+
+  const handleContainerMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isPanning.current) return
+    const dx = e.clientX - lastPos.current.x
+    const dy = e.clientY - lastPos.current.y
+    lastPos.current = { x: e.clientX, y: e.clientY }
+    const el = containerRef.current
+    if (el) {
+      el.scrollLeft -= dx
+      el.scrollTop  -= dy
+    }
+  }, [])
+
+  const handleContainerMouseUp = useCallback(() => {
+    if (!isPanning.current) return
+    isPanning.current = false
+    if (containerRef.current) {
+      containerRef.current.style.cursor = spaceDown.current ? 'grab' : ''
+    }
+  }, [])
 
   const zoom = useCallback((dir: 1 | -1 | 0) => {
     setCellSize(cur => {
@@ -35,6 +92,7 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
   }, [])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isPanning.current) return
     const canvas = canvasRef.current
     if (!canvas || !pattern) return
     const rect = canvas.getBoundingClientRect()
@@ -70,14 +128,25 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
         >
           <GridIcon /> <span className="text-[11px]">격자</span>
         </ToolBtn>
-        <span className="ml-auto text-[10px] text-warm-400 font-light tracking-wider">
+        <span className="ml-auto flex items-center gap-3 text-[10px] text-warm-400 font-light tracking-wider">
+          {pattern && (
+            <span className="hidden sm:inline opacity-60">
+              Space + 드래그로 이동
+            </span>
+          )}
           {cellSize} px / 칸
         </span>
       </div>
 
       {/* Canvas area */}
-      <div className="flex-1 overflow-auto p-6 relative min-h-96"
-           style={{
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-auto p-6 relative min-h-96 select-none"
+        onMouseDown={handleContainerMouseDown}
+        onMouseMove={handleContainerMouseMove}
+        onMouseUp={handleContainerMouseUp}
+        onMouseLeave={handleContainerMouseUp}
+        style={{
              backgroundImage: `
                repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(168,178,161,0.05) 23px, rgba(168,178,161,0.05) 24px),
                repeating-linear-gradient(90deg, transparent, transparent 23px, rgba(168,178,161,0.05) 23px, rgba(168,178,161,0.05) 24px),
