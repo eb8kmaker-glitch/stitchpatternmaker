@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Pan cursor — applied via JS classList on body */
+body.pan-ready,
+body.pan-ready * { cursor: grab !important; }
+body.pan-grabbing,
+body.pan-grabbing * { cursor: grabbing !important; }
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;

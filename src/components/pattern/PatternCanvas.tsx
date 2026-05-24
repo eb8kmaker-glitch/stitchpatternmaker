@@ -29,27 +29,52 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
     renderPattern(canvas, pattern, { cellSize, showGrid, displayMode })
   }, [pattern, displayMode, cellSize, showGrid])
 
-  // Spacebar tracking — sets grab cursor on the scroll container
+  // Spacebar + drag pan — window-level events so fast drags never lose track
   useEffect(() => {
+    function onMouseMove(e: MouseEvent) {
+      if (!isPanning.current) return
+      const dx = e.clientX - lastPos.current.x
+      const dy = e.clientY - lastPos.current.y
+      lastPos.current = { x: e.clientX, y: e.clientY }
+      const el = containerRef.current
+      if (el) {
+        el.scrollLeft -= dx
+        el.scrollTop  -= dy
+      }
+    }
+
+    function onMouseUp() {
+      if (!isPanning.current) return
+      isPanning.current = false
+      document.body.classList.remove('pan-grabbing')
+      if (spaceDown.current) document.body.classList.add('pan-ready')
+    }
+
     function onKeyDown(e: KeyboardEvent) {
       if (e.code !== 'Space' || e.repeat) return
-      // avoid firing while typing in inputs
       if (document.activeElement instanceof HTMLInputElement) return
       e.preventDefault()
       spaceDown.current = true
-      if (containerRef.current) containerRef.current.style.cursor = 'grab'
+      document.body.classList.add('pan-ready')
     }
+
     function onKeyUp(e: KeyboardEvent) {
       if (e.code !== 'Space') return
       spaceDown.current = false
       isPanning.current = false
-      if (containerRef.current) containerRef.current.style.cursor = ''
+      document.body.classList.remove('pan-ready', 'pan-grabbing')
     }
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup',   onKeyUp)
+
+    window.addEventListener('keydown',   onKeyDown)
+    window.addEventListener('keyup',     onKeyUp)
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup',   onMouseUp)
     return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('keyup',   onKeyUp)
+      window.removeEventListener('keydown',   onKeyDown)
+      window.removeEventListener('keyup',     onKeyUp)
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup',   onMouseUp)
+      document.body.classList.remove('pan-ready', 'pan-grabbing')
     }
   }, [])
 
@@ -58,27 +83,8 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
     e.preventDefault()
     isPanning.current = true
     lastPos.current   = { x: e.clientX, y: e.clientY }
-    if (containerRef.current) containerRef.current.style.cursor = 'grabbing'
-  }, [])
-
-  const handleContainerMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isPanning.current) return
-    const dx = e.clientX - lastPos.current.x
-    const dy = e.clientY - lastPos.current.y
-    lastPos.current = { x: e.clientX, y: e.clientY }
-    const el = containerRef.current
-    if (el) {
-      el.scrollLeft -= dx
-      el.scrollTop  -= dy
-    }
-  }, [])
-
-  const handleContainerMouseUp = useCallback(() => {
-    if (!isPanning.current) return
-    isPanning.current = false
-    if (containerRef.current) {
-      containerRef.current.style.cursor = spaceDown.current ? 'grab' : ''
-    }
+    document.body.classList.remove('pan-ready')
+    document.body.classList.add('pan-grabbing')
   }, [])
 
   const zoom = useCallback((dir: 1 | -1 | 0) => {
@@ -143,9 +149,6 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
         ref={containerRef}
         className="flex-1 overflow-auto p-6 relative min-h-96 select-none"
         onMouseDown={handleContainerMouseDown}
-        onMouseMove={handleContainerMouseMove}
-        onMouseUp={handleContainerMouseUp}
-        onMouseLeave={handleContainerMouseUp}
         style={{
              backgroundImage: `
                repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(168,178,161,0.05) 23px, rgba(168,178,161,0.05) 24px),
