@@ -50,9 +50,15 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
       if (spaceDown.current) document.body.classList.add('pan-ready')
     }
 
+    function isEditable(el: Element | null) {
+      if (!el) return false
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return true
+      return (el as HTMLElement).isContentEditable
+    }
+
     function onKeyDown(e: KeyboardEvent) {
       if (e.code !== 'Space' || e.repeat) return
-      if (document.activeElement instanceof HTMLInputElement) return
+      if (isEditable(document.activeElement)) return
       e.preventDefault()
       spaceDown.current = true
       document.body.classList.add('pan-ready')
@@ -65,13 +71,14 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
       document.body.classList.remove('pan-ready', 'pan-grabbing')
     }
 
-    window.addEventListener('keydown',   onKeyDown)
-    window.addEventListener('keyup',     onKeyUp)
+    // capture:true — 버블 단계 이전에 실행해 브라우저 스크롤보다 먼저 preventDefault()
+    window.addEventListener('keydown',   onKeyDown,   { capture: true })
+    window.addEventListener('keyup',     onKeyUp,     { capture: true })
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup',   onMouseUp)
     return () => {
-      window.removeEventListener('keydown',   onKeyDown)
-      window.removeEventListener('keyup',     onKeyUp)
+      window.removeEventListener('keydown',   onKeyDown,   { capture: true })
+      window.removeEventListener('keyup',     onKeyUp,     { capture: true })
       window.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mouseup',   onMouseUp)
       document.body.classList.remove('pan-ready', 'pan-grabbing')
