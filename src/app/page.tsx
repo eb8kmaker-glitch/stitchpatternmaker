@@ -51,30 +51,30 @@ export default function HomePage() {
     <div className="min-h-screen">
       <Navbar />
 
-      <main className="px-9 pb-16 flex gap-5 items-start">
+      <main className="px-4 sm:px-9 pb-16 flex flex-col lg:flex-row gap-5 items-start">
         {/* ── Content ───────────────────────────────────────────────────── */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 w-full">
         {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 min-h-[400px] border-b border-linen-300/20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-linen-300/20">
           {/* Left */}
-          <div className="flex flex-col justify-center py-14 pr-12 border-r border-linen-300/20">
+          <div className="flex flex-col justify-center py-10 sm:py-14 sm:pr-12 sm:border-r border-linen-300/20">
             <div className="flex items-center gap-2.5 mb-5">
               <span className="text-[10px] uppercase tracking-[0.18em] text-sage-400 font-light">
                 Photo to Cross Stitch Pattern Generator
               </span>
-              <div className="h-px w-12 bg-sage-400/50" />
+              <div className="h-px w-12 bg-sage-400/50 hidden sm:block" />
             </div>
-            <h1 className="font-playfair text-[40px] leading-[1.2] text-warm-700 mb-2
+            <h1 className="font-playfair text-[32px] sm:text-[40px] leading-[1.2] text-warm-700 mb-2
                            tracking-[-0.01em]">
               사진을<br />
               <em className="text-warm-500 not-italic font-playfair italic">십자수 도안으로</em>
             </h1>
-            <p className="font-cormorant text-[17px] italic font-light text-warm-500
-                          leading-[1.7] mb-9 max-w-xs">
+            <p className="font-cormorant text-[16px] sm:text-[17px] italic font-light text-warm-500
+                          leading-[1.7] mb-7 sm:mb-9 max-w-xs">
               소중한 순간을 실 한 올로 담아내는<br />
               조용하고 감성적인 도안 작업실
             </p>
-            <div className="flex gap-5 flex-wrap">
+            <div className="flex gap-4 sm:gap-5 flex-wrap">
               {['사진 업로드', '옵션 설정', '도안 생성', 'PDF 저장'].map((step, i) => (
                 <div key={step} className="flex items-center gap-2">
                   <span className="w-[22px] h-[22px] rounded-full border border-linen-300/40
@@ -88,25 +88,19 @@ export default function HomePage() {
           </div>
 
           {/* Right — upload */}
-          <div className="flex items-center justify-center py-14 pl-12">
+          <div className="flex items-center justify-center py-8 sm:py-14 sm:pl-12">
             <UploadZone onImageLoad={handleImageLoad} />
           </div>
         </div>
 
         {/* ── Main Studio ───────────────────────────────────────────────── */}
-        <div className="mt-7 grid grid-cols-[280px_1fr] min-h-[560px]
+        <div className="mt-7 flex flex-col lg:grid lg:grid-cols-[280px_1fr]
                         border border-linen-300/20 rounded-panel overflow-hidden
                         shadow-linen bg-linen-50/60">
           {/* Sidebar */}
-          <div className="flex flex-col max-h-[640px] overflow-y-auto scrollbar-linen
-                          border-r border-linen-300/20
+          <div className="flex flex-col overflow-y-auto scrollbar-linen
+                          border-b lg:border-b-0 lg:border-r border-linen-300/20
                           bg-gradient-to-b from-linen-100/35 to-linen-200/20">
-            <div className="px-5 py-4 border-b border-linen-300/18">
-              <h2 className="font-cormorant text-[15px] text-warm-600 tracking-wide">
-                도안 설정
-              </h2>
-            </div>
-
             <SettingsPanel
               settings={settings}
               onChange={handleSettingsChange}
@@ -126,7 +120,7 @@ export default function HomePage() {
           </div>
 
           {/* Canvas pane */}
-          <div className="relative flex flex-col">
+          <div className="relative flex flex-col min-h-[400px] lg:min-h-[560px]">
             <PatternCanvas
               pattern={state.pattern}
               displayMode={settings.mode}
@@ -141,8 +135,19 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* ── 카카오 애드핏 모바일 배너 (모바일 전용) ──────────────────── */}
+        <div className="mt-7 flex justify-center lg:hidden">
+          <ins
+            className="kakao_ad_area"
+            style={{ display: 'none' }}
+            data-ad-unit="DAN-4Eyf5lz9W8UiuTJa"
+            data-ad-width="320"
+            data-ad-height="100"
+          />
+        </div>
+
         {/* ── Features ──────────────────────────────────────────────────── */}
-        <div className="mt-7 grid grid-cols-4 gap-3.5">
+        <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           {FEATURES.map(f => (
             <div key={f.title}
                  className="bg-linen-50/80 border border-linen-300/20 rounded-card p-5
@@ -166,8 +171,8 @@ export default function HomePage() {
         <PaletteShowcase />
         </div>
 
-        {/* ── 카카오 애드핏 세로형 배너 ─────────────────────────────────── */}
-        <div className="flex-shrink-0 sticky top-4 pt-2">
+        {/* ── 카카오 애드핏 세로형 배너 (데스크탑 전용) ────────────────── */}
+        <div className="flex-shrink-0 sticky top-4 pt-2 hidden lg:block">
           <ins
             className="kakao_ad_area"
             style={{ display: 'none' }}
@@ -175,11 +180,13 @@ export default function HomePage() {
             data-ad-width="160"
             data-ad-height="600"
           />
-          <Script
-            src="//t1.kakaocdn.net/kas/static/ba.min.js"
-            strategy="afterInteractive"
-          />
         </div>
+
+        {/* 카카오 AdFit 스크립트 */}
+        <Script
+          src="//t1.kakaocdn.net/kas/static/ba.min.js"
+          strategy="afterInteractive"
+        />
       </main>
     </div>
   )
