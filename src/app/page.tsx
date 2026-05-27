@@ -27,7 +27,8 @@ export default function HomePage() {
   const imageRef = useRef<HTMLImageElement | null>(null)
   const [hasImage,       setHasImage]       = useState(false)
   const [settings,       setSettings]       = useState<PatternSettings>(DEFAULT_SETTINGS)
-  const [highlightDmcId, setHighlightDmcId] = useState<string | null>(null)
+  const [highlightDmcId,  setHighlightDmcId]  = useState<string | null>(null)
+  const [replaceSourceId, setReplaceSourceId] = useState<string | null>(null)
   const { state, generate } = usePatternGenerator()
 
   function handleImageLoad(img: HTMLImageElement) {
@@ -117,6 +118,7 @@ export default function HomePage() {
                   pattern={state.pattern}
                   onHighlight={setHighlightDmcId}
                   highlightDmcId={highlightDmcId}
+                  onReplaceRequest={setReplaceSourceId}
                 />
               </div>
             )}
@@ -128,6 +130,8 @@ export default function HomePage() {
               pattern={state.pattern}
               displayMode={settings.mode}
               highlightDmcId={highlightDmcId}
+              replaceRequest={replaceSourceId}
+              onReplaceClose={() => setReplaceSourceId(null)}
             />
 
             <ProgressOverlay

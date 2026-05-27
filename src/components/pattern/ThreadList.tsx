@@ -4,13 +4,14 @@ import { useState } from 'react'
 import type { ThreadUsage, PatternResult } from '@/types'
 
 interface ThreadListProps {
-  threads:     ThreadUsage[]
-  pattern:     PatternResult | null
-  onHighlight?: (dmcId: string | null) => void
-  highlightDmcId?: string | null
+  threads:          ThreadUsage[]
+  pattern:          PatternResult | null
+  onHighlight?:     (dmcId: string | null) => void
+  highlightDmcId?:  string | null
+  onReplaceRequest?: (dmcId: string) => void
 }
 
-export default function ThreadList({ threads, pattern, onHighlight, highlightDmcId }: ThreadListProps) {
+export default function ThreadList({ threads, pattern, onHighlight, highlightDmcId, onReplaceRequest }: ThreadListProps) {
   const [exporting, setExporting] = useState(false)
   const [pinnedId, setPinnedId] = useState<string | null>(null)
 
@@ -88,6 +89,18 @@ export default function ThreadList({ threads, pattern, onHighlight, highlightDmc
             <span className="text-[10px] text-warm-400 font-mono tabular-nums whitespace-nowrap">
               {cells.toLocaleString()} · {skeins}타래
             </span>
+
+            {/* Replace button */}
+            {onReplaceRequest && (
+              <button
+                onClick={e => { e.stopPropagation(); onReplaceRequest(dmc.id) }}
+                title="색상 변환"
+                className="ml-1 flex-shrink-0 w-5 h-5 rounded-[4px] flex items-center justify-center
+                           text-warm-300 hover:text-warm-600 hover:bg-linen-300/40 transition-colors"
+              >
+                <EditIcon />
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -108,6 +121,16 @@ export default function ThreadList({ threads, pattern, onHighlight, highlightDmc
         )}
       </button>
     </div>
+  )
+}
+
+function EditIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
   )
 }
 
