@@ -208,25 +208,33 @@ export default function PatternCanvas({ pattern, displayMode, highlightDmcId }: 
     isDrawing.current = false
   }, [editableGrid, pushHistory])
 
-  // ── Wheel zoom (Ctrl + wheel) ───────────────────────────────────────────────
+  // ── Wheel scroll & zoom — window-level capture so page scroll is suppressed ──
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    // Cast to non-null for use inside nested closures
-    const container: HTMLDivElement = el
-
     function onWheel(e: WheelEvent) {
-      if (!e.ctrlKey && !e.metaKey) return
+      const el = containerRef.current
+      if (!el) return
+      // Only act when the pointer is inside our canvas container
+      if (!el.contains(e.target as Node)) return
+
+      // Always prevent page scroll / browser pinch-zoom inside the container
       e.preventDefault()
 
+      if (!e.ctrlKey && !e.metaKey) {
+        // Normal scroll → manually forward to container
+        el.scrollLeft += e.deltaX
+        el.scrollTop  += e.deltaY
+        return
+      }
+
+      // Ctrl/Cmd + wheel → zoom
       wheelAccum.current += e.deltaY
       if (Math.abs(wheelAccum.current) < 60) return
       const dir = wheelAccum.current > 0 ? -1 : 1
       wheelAccum.current = 0
 
-      const rect   = container.getBoundingClientRect()
-      const focusX = e.clientX - rect.left + container.scrollLeft
-      const focusY = e.clientY - rect.top  + container.scrollTop
+      const rect   = el.getBoundingClientRect()
+      const focusX = e.clientX - rect.left + el.scrollLeft
+      const focusY = e.clientY - rect.top  + el.scrollTop
 
       setCellSize(cur => {
         const idx    = CELL_SIZES.indexOf(cur)
@@ -235,16 +243,17 @@ export default function PatternCanvas({ pattern, displayMode, highlightDmcId }: 
         if (next === cur) return cur
         const ratio  = next / cur
         requestAnimationFrame(() => {
-          const r2 = container.getBoundingClientRect()
-          container.scrollLeft = focusX * ratio - (e.clientX - r2.left)
-          container.scrollTop  = focusY * ratio - (e.clientY - r2.top)
+          const r2 = el.getBoundingClientRect()
+          el.scrollLeft = focusX * ratio - (e.clientX - r2.left)
+          el.scrollTop  = focusY * ratio - (e.clientY - r2.top)
         })
         return next
       })
     }
 
-    container.addEventListener('wheel', onWheel, { passive: false })
-    return () => container.removeEventListener('wheel', onWheel)
+    // capture:true → runs before browser scroll/zoom handlers
+    window.addEventListener('wheel', onWheel, { passive: false, capture: true })
+    return () => window.removeEventListener('wheel', onWheel, { capture: true })
   }, [])
 
   // ── Touch pinch zoom ────────────────────────────────────────────────────────
