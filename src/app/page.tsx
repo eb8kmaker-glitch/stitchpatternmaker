@@ -25,8 +25,9 @@ const DEFAULT_SETTINGS: PatternSettings = {
 
 export default function HomePage() {
   const imageRef = useRef<HTMLImageElement | null>(null)
-  const [hasImage,  setHasImage]  = useState(false)
-  const [settings,  setSettings]  = useState<PatternSettings>(DEFAULT_SETTINGS)
+  const [hasImage,       setHasImage]       = useState(false)
+  const [settings,       setSettings]       = useState<PatternSettings>(DEFAULT_SETTINGS)
+  const [highlightDmcId, setHighlightDmcId] = useState<string | null>(null)
   const { state, generate } = usePatternGenerator()
 
   function handleImageLoad(img: HTMLImageElement) {
@@ -114,6 +115,8 @@ export default function HomePage() {
                 <ThreadList
                   threads={state.threads}
                   pattern={state.pattern}
+                  onHighlight={setHighlightDmcId}
+                  highlightDmcId={highlightDmcId}
                 />
               </div>
             )}
@@ -124,6 +127,7 @@ export default function HomePage() {
             <PatternCanvas
               pattern={state.pattern}
               displayMode={settings.mode}
+              highlightDmcId={highlightDmcId}
             />
 
             <ProgressOverlay

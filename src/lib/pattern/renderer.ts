@@ -3,9 +3,10 @@ import { buildSymbolMap } from '@/lib/pattern/symbols'
 import type { PatternResult, DisplayMode } from '@/types'
 
 export interface RenderOptions {
-  cellSize:    number
-  showGrid:    boolean
-  displayMode: DisplayMode
+  cellSize:       number
+  showGrid:       boolean
+  displayMode:    DisplayMode
+  highlightDmcId?: string | null
 }
 
 export function renderPattern(
@@ -13,7 +14,7 @@ export function renderPattern(
   pattern: PatternResult,
   options: RenderOptions,
 ): void {
-  const { cellSize: cs, showGrid, displayMode: mode } = options
+  const { cellSize: cs, showGrid, displayMode: mode, highlightDmcId } = options
   const { grid, dmcMap, width, height } = pattern
 
   canvas.width  = width  * cs
@@ -54,6 +55,12 @@ export function renderPattern(
         ctx.textAlign    = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText(symbol, px + cs / 2, py + cs / 2)
+      }
+
+      // Highlight overlay — dim non-highlighted cells
+      if (highlightDmcId && dmc.id !== highlightDmcId) {
+        ctx.fillStyle = 'rgba(248,246,243,0.72)'
+        ctx.fillRect(px, py, cs, cs)
       }
 
       // Cell border

@@ -4,12 +4,15 @@ import { useState } from 'react'
 import type { ThreadUsage, PatternResult } from '@/types'
 
 interface ThreadListProps {
-  threads: ThreadUsage[]
-  pattern: PatternResult | null
+  threads:     ThreadUsage[]
+  pattern:     PatternResult | null
+  onHighlight?: (dmcId: string | null) => void
+  highlightDmcId?: string | null
 }
 
-export default function ThreadList({ threads, pattern }: ThreadListProps) {
+export default function ThreadList({ threads, pattern, onHighlight, highlightDmcId }: ThreadListProps) {
   const [exporting, setExporting] = useState(false)
+  const [pinnedId, setPinnedId] = useState<string | null>(null)
 
   async function handleExport() {
     if (!pattern || threads.length === 0) return
@@ -48,8 +51,17 @@ export default function ThreadList({ threads, pattern }: ThreadListProps) {
         {threads.map(({ dmc, cells, skeins, symbol }) => (
           <div
             key={dmc.id}
-            className="flex items-center gap-2 py-1.5
-                       border-b border-dashed border-linen-300/20 last:border-0"
+            className={`flex items-center gap-2 py-1.5 cursor-pointer
+                       border-b border-dashed border-linen-300/20 last:border-0
+                       transition-colors duration-100
+                       ${pinnedId === dmc.id ? 'bg-sage-400/10' : 'hover:bg-linen-200/40'}`}
+            onMouseEnter={() => onHighlight?.(dmc.id)}
+            onMouseLeave={() => onHighlight?.(pinnedId)}
+            onClick={() => {
+              const next = pinnedId === dmc.id ? null : dmc.id
+              setPinnedId(next)
+              onHighlight?.(next)
+            }}
           >
             {/* Symbol chip */}
             <div
