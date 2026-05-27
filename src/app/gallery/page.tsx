@@ -1,38 +1,39 @@
+import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 
 // ── 설정 옵션 목록 ────────────────────────────────────────────────────────────
 const ASPECT_MODES = [
-  { value: 'fit',     label: 'Fit',     desc: '원본 비율 유지 + 여백 채움' },
-  { value: 'crop',    label: 'Crop',    desc: '중앙 기준 크롭, 여백 없음' },
-  { value: 'stretch', label: 'Stretch', desc: '격자에 맞게 늘림' },
+  { value: 'fit',     label: 'Fit',     desc: '원본 비율 유지 + 여백 채움',  img: '/gallery/aspect/freeset(300x300)-DMC-20-fast-none-off-color-fit.png' },
+  { value: 'crop',    label: 'Crop',    desc: '중앙 기준 크롭, 여백 없음',   img: '/gallery/aspect/freeset(300x300)-DMC-20-fast-none-off-color-crop.png' },
+  { value: 'stretch', label: 'Stretch', desc: '격자에 맞게 늘림',            img: '/gallery/aspect/freeset(300x300)-DMC-20-fast-none-off-color-stretch.png' },
 ]
 const COLOR_COUNTS = [
-  { value: 20, label: '20색', desc: '단순 — 굵은 색 경계, 빠른 작업' },
-  { value: 40, label: '40색', desc: '균형 — 기본 권장값' },
-  { value: 60, label: '60색', desc: '세밀 — 풍부한 색조' },
-  { value: 80, label: '80색', desc: '정교 — 사진에 근접한 색재현' },
+  { value: 20, label: '20색', desc: '단순 — 굵은 색 경계, 빠른 작업', img: '/gallery/color-count/freeset(600x315)-fit-DMC-fast-none-off-color-20.png' },
+  { value: 40, label: '40색', desc: '균형 — 기본 권장값',              img: '/gallery/color-count/freeset(600x315)-fit-DMC-fast-none-off-color-40.png' },
+  { value: 60, label: '60색', desc: '세밀 — 풍부한 색조',              img: '/gallery/color-count/freeset(600x315)-fit-DMC-fast-none-off-color-60.png' },
+  { value: 80, label: '80색', desc: '정교 — 사진에 근접한 색재현',     img: '/gallery/color-count/freeset(600x315)-fit-DMC-fast-none-off-color-80.png' },
 ]
 const QUALITY_MODES = [
-  { value: 'fast',     label: 'Fast',     desc: '플랫 컬러, 빠른 생성' },
-  { value: 'balanced', label: 'Balanced', desc: '디더링 지원, 균형 품질' },
-  { value: 'hq',       label: 'HQ',       desc: '샤픈 + Confetti 정리, 최고 품질' },
+  { value: 'fast',     label: 'Fast',     desc: '플랫 컬러, 빠른 생성',              img: '/gallery/quality/freeset(600x315)-fit-DMC-20-none-off-color-fast.png' },
+  { value: 'balanced', label: 'Balanced', desc: '디더링 지원, 균형 품질',            img: '/gallery/quality/freeset(600x315)-fit-DMC-20-none-off-color-balanced.png' },
+  { value: 'hq',       label: 'HQ',       desc: '샤픈 + Confetti 정리, 최고 품질',  img: '/gallery/quality/freeset(600x315)-fit-DMC-20-none-off-color-hq.png' },
 ]
 const DITHERING_MODES = [
-  { value: 'none',     label: 'None',     desc: '플랫 컬러 — 선명한 경계' },
-  { value: 'floyd',    label: 'Floyd',    desc: 'Floyd–Steinberg 디더링' },
-  { value: 'atkinson', label: 'Atkinson', desc: '부드러운 Atkinson 디더링' },
-  { value: 'ordered',  label: 'Ordered',  desc: 'Bayer 4×4 매트릭스 패턴' },
+  { value: 'none',     label: 'None',     desc: '플랫 컬러 — 선명한 경계',       img: '/gallery/dithering/freeset(600x315)-fit-DMC-20-fast-off-color-none.png' },
+  { value: 'floyd',    label: 'Floyd',    desc: 'Floyd–Steinberg 디더링',        img: '/gallery/dithering/freeset(600x315)-fit-DMC-20-fast-off-color-floyd.png' },
+  { value: 'atkinson', label: 'Atkinson', desc: '부드러운 Atkinson 디더링',      img: '/gallery/dithering/freeset(600x315)-fit-DMC-20-fast-off-color-atkinson.png' },
+  { value: 'ordered',  label: 'Ordered',  desc: 'Bayer 4×4 매트릭스 패턴',      img: '/gallery/dithering/freeset(600x315)-fit-DMC-20-fast-off-color-ordered.png' },
 ]
 const SEP_LEVELS = [
-  { value: 'off',    label: 'OFF',   desc: '유사색 분리 없음' },
-  { value: 'weak',   label: '약하게', desc: 'ΔE < 8 보정' },
-  { value: 'medium', label: '보통',  desc: 'ΔE < 15 보정 (기본값)' },
-  { value: 'strong', label: '강하게', desc: 'ΔE < 25 보정' },
+  { value: 'off',    label: 'OFF',   desc: '유사색 분리 없음',     img: '/gallery/sep/freeset(600x315)-fit-DMC-20-fast-none-color-off.png' },
+  { value: 'weak',   label: '약하게', desc: 'ΔE < 8 보정',         img: '/gallery/sep/freeset(600x315)-fit-DMC-20-fast-none-color-mild.png' },
+  { value: 'medium', label: '보통',  desc: 'ΔE < 15 보정 (기본값)', img: '/gallery/sep/freeset(600x315)-fit-DMC-20-fast-none-color-normal.png' },
+  { value: 'strong', label: '강하게', desc: 'ΔE < 25 보정',        img: '/gallery/sep/freeset(600x315)-fit-DMC-20-fast-none-color-strong.png' },
 ]
 const DISPLAY_MODES = [
-  { value: 'color',  label: '컬러',  desc: '색상만 표시' },
-  { value: 'symbol', label: '기호',  desc: '흑백 + 기호 표시' },
-  { value: 'mixed',  label: '혼합',  desc: '색상 + 기호 동시 표시' },
+  { value: 'color',  label: '컬러',  desc: '색상만 표시',          img: '/gallery/display/freeset(600x315)-fit-DMC-20-fast-none-off-color.png' },
+  { value: 'symbol', label: '기호',  desc: '흑백 + 기호 표시',     img: '/gallery/display/freeset(600x315)-fit-DMC-20-fast-none-off-symbol.png' },
+  { value: 'mixed',  label: '혼합',  desc: '색상 + 기호 동시 표시', img: '/gallery/display/freeset(600x315)-fit-DMC-20-fast-none-off-combined.png' },
 ]
 
 // 전체 조합 수
@@ -47,6 +48,7 @@ const SECTIONS = [
     count:   ASPECT_MODES.length,
     items:   ASPECT_MODES,
     tag:     'AspectMode',
+    square:  true,
   },
   {
     id:      'color-count',
@@ -55,6 +57,7 @@ const SECTIONS = [
     count:   COLOR_COUNTS.length,
     items:   COLOR_COUNTS,
     tag:     'colorCount',
+    square:  false,
   },
   {
     id:      'quality',
@@ -63,6 +66,7 @@ const SECTIONS = [
     count:   QUALITY_MODES.length,
     items:   QUALITY_MODES,
     tag:     'QualityMode',
+    square:  false,
   },
   {
     id:      'dithering',
@@ -71,6 +75,7 @@ const SECTIONS = [
     count:   DITHERING_MODES.length,
     items:   DITHERING_MODES,
     tag:     'DitheringMode',
+    square:  false,
   },
   {
     id:      'sep',
@@ -79,6 +84,7 @@ const SECTIONS = [
     count:   SEP_LEVELS.length,
     items:   SEP_LEVELS,
     tag:     'SepLevel',
+    square:  false,
   },
   {
     id:      'display',
@@ -87,6 +93,7 @@ const SECTIONS = [
     count:   DISPLAY_MODES.length,
     items:   DISPLAY_MODES,
     tag:     'DisplayMode',
+    square:  false,
   },
 ]
 
@@ -194,8 +201,10 @@ export default function GalleryPage() {
                     key={item.value}
                     label={item.label}
                     desc={item.desc}
+                    img={item.img}
                     index={iIdx}
                     sectionColor={sIdx}
+                    square={section.square}
                   />
                 ))}
               </div>
@@ -224,7 +233,6 @@ export default function GalleryPage() {
 }
 
 // ── GalleryCard ───────────────────────────────────────────────────────────────
-// 색상 팔레트: 섹션마다 다른 악센트 색
 const SECTION_ACCENTS = [
   'from-rose-50   to-rose-100/60   border-rose-200/40',
   'from-amber-50  to-amber-100/60  border-amber-200/40',
@@ -235,12 +243,14 @@ const SECTION_ACCENTS = [
 ]
 
 function GalleryCard({
-  label, desc, index, sectionColor,
+  label, desc, img, index, sectionColor, square,
 }: {
   label:        string
   desc:         string
+  img:          string
   index:        number
   sectionColor: number
+  square:       boolean
 }) {
   const accent = SECTION_ACCENTS[sectionColor % SECTION_ACCENTS.length]
 
@@ -249,35 +259,21 @@ function GalleryCard({
                     rounded-panel shadow-linen overflow-hidden
                     hover:shadow-linen-md hover:border-linen-300/35 transition-all duration-250">
 
-      {/* 이미지 플레이스홀더 */}
-      <div className={`relative aspect-square bg-gradient-to-br ${accent}
-                       border-b border-linen-300/15 overflow-hidden`}>
+      {/* 이미지 영역 */}
+      <div className={`relative bg-gradient-to-br ${accent} border-b border-linen-300/15 overflow-hidden
+                       ${square ? 'aspect-square' : 'aspect-[600/315]'}`}>
 
-        {/* 격자 패턴 (십자수 느낌) */}
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `
-              repeating-linear-gradient(0deg, transparent, transparent 11px, rgba(168,178,161,0.4) 11px, rgba(168,178,161,0.4) 12px),
-              repeating-linear-gradient(90deg, transparent, transparent 11px, rgba(168,178,161,0.4) 11px, rgba(168,178,161,0.4) 12px)
-            `,
-          }}
+        <Image
+          src={img}
+          alt={label}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="object-cover"
         />
 
-        {/* 업로드 유도 안내 */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 p-5">
-          <div className="w-10 h-10 rounded-[10px] border border-linen-300/40
-                          bg-white/50 flex items-center justify-center">
-            <ImagePlaceholderIcon />
-          </div>
-          <p className="text-[10px] text-warm-400/80 font-light text-center leading-relaxed">
-            예시 이미지<br />준비 중
-          </p>
-        </div>
-
         {/* 인덱스 배지 */}
-        <div className="absolute top-3 left-3">
-          <span className="text-[9px] text-warm-400/60 font-mono">
+        <div className="absolute top-3 left-3 z-10">
+          <span className="text-[9px] text-white/70 font-mono drop-shadow">
             {String(index + 1).padStart(2, '0')}
           </span>
         </div>
@@ -296,17 +292,5 @@ function GalleryCard({
       </div>
 
     </div>
-  )
-}
-
-function ImagePlaceholderIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-         stroke="rgba(168,178,161,0.6)" strokeWidth="1.4"
-         strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-      <circle cx="8.5" cy="8.5" r="1.5"/>
-      <polyline points="21 15 16 10 5 21"/>
-    </svg>
   )
 }
