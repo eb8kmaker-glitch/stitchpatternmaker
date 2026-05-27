@@ -98,7 +98,7 @@ export default function HomePage() {
         {/* ── Main Studio ───────────────────────────────────────────────── */}
         <div className="mt-7 flex flex-col lg:grid lg:grid-cols-[280px_1fr]
                         border border-linen-300/20 rounded-panel overflow-hidden
-                        shadow-linen bg-linen-50/60">
+                        shadow-linen bg-linen-50/60 h-[calc(100vh-120px)]">
           {/* Sidebar */}
           <div className="flex flex-col overflow-y-auto scrollbar-linen
                           border-b lg:border-b-0 lg:border-r border-linen-300/20
@@ -125,7 +125,7 @@ export default function HomePage() {
           </div>
 
           {/* Canvas pane */}
-          <div className="relative flex flex-col min-h-[400px] lg:min-h-[560px]">
+          <div className="relative flex flex-col h-full">
             <PatternCanvas
               pattern={state.pattern}
               displayMode={settings.mode}

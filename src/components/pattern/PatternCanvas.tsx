@@ -251,9 +251,10 @@ export default function PatternCanvas({
       if (e.code === 'KeyY' && (e.ctrlKey || e.metaKey)) {
         redo(); e.preventDefault(); return
       }
-      if (e.code !== 'Space' || e.repeat) return
+      if (e.code !== 'Space') return
       if (isEditable(document.activeElement)) return
-      e.preventDefault()
+      e.preventDefault()           // repeat 포함 항상 스크롤 차단
+      if (e.repeat) return
       spaceDown.current = true
       document.body.classList.add('pan-ready')
     }
@@ -423,7 +424,7 @@ export default function PatternCanvas({
   const paletteColors = effectiveDmcMap
 
   return (
-    <div className="flex flex-col bg-linen-card">
+    <div className="flex flex-col bg-linen-card h-full">
       {/* ── Toolbar ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-linen-300/20
                       bg-linen-50/70 flex-wrap relative">
@@ -502,7 +503,7 @@ export default function PatternCanvas({
       {/* ── Canvas area ──────────────────────────────────────────────────────── */}
       <div
         ref={containerRef}
-        className="flex-1 relative overflow-hidden min-h-96 select-none"
+        className="flex-1 relative overflow-hidden min-h-[500px] select-none"
         style={{
           touchAction: 'none',
           backgroundImage: `

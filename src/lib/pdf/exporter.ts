@@ -146,56 +146,75 @@ export async function exportPatternPdf(
       doc.line(MARGIN, 13.5, PAGE_W - MARGIN, 13.5)
 
       const originY = 16
+      const chunkW  = endX - startX
+      const chunkH  = endY - startY
 
-      // Draw cells: color fill + symbol overlay
+      // ── Offscreen Canvas → PNG → addImage (파일 크기 대폭 감소) ──────────
+      const RENDER_SCALE = 3
+      const offCanvas    = document.createElement('canvas')
+      offCanvas.width    = chunkW * CELL_PX * RENDER_SCALE
+      offCanvas.height   = chunkH * CELL_PX * RENDER_SCALE
+      const ctx          = offCanvas.getContext('2d')!
+      ctx.scale(RENDER_SCALE, RENDER_SCALE)
+
       for (let y = startY; y < endY; y++) {
         for (let x = startX; x < endX; x++) {
-          const ci  = grid[y][x]
-          const dmc = dmcMap[ci]
-          const px  = MARGIN + (x - startX) * CELL_MM
-          const py  = originY + (y - startY) * CELL_MM
-
-          // Color fill
+          const ci       = grid[y][x]
+          const dmc      = dmcMap[ci]
           const [r, g, b] = dmc.rgb
-          doc.setFillColor(r, g, b)
-          doc.rect(px, py, CELL_MM, CELL_MM, 'F')
+          const px       = (x - startX) * CELL_PX
+          const py       = (y - startY) * CELL_PX
 
-          // Symbol overlay
+          // 색상 채우기
+          ctx.fillStyle = `rgb(${r},${g},${b})`
+          ctx.fillRect(px, py, CELL_PX, CELL_PX)
+
+          // 기호 오버레이
           const symbol = symbolMap.get(ci) ?? ''
           if (symbol) {
-            const luma  = (r * 299 + g * 587 + b * 114) / 1000
-            const tGray = luma > 140 ? 20 : 235   // higher contrast
-            doc.setTextColor(tGray, tGray, tGray)
-            doc.setFont('helvetica', 'bold')
-            doc.setFontSize(2.8)
-            doc.text(symbol, px + CELL_MM / 2, py + CELL_MM * 0.70, { align: 'center' })
+            const luma = (r * 299 + g * 587 + b * 114) / 1000
+            ctx.fillStyle    = luma > 140 ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.75)'
+            ctx.font         = `bold ${CELL_PX - 2}px monospace`
+            ctx.textAlign    = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.fillText(symbol, px + CELL_PX / 2, py + CELL_PX * 0.55)
           }
 
-          // Fine grid line every 10 cells
+          // 격자선 (10칸마다 굵게)
           if ((x - startX) % 10 === 0 || (y - startY) % 10 === 0) {
-            doc.setDrawColor(90, 82, 74)
-            doc.setLineWidth(0.18)
-            doc.rect(px, py, CELL_MM, CELL_MM, 'S')
+            ctx.strokeStyle = 'rgba(60,50,40,0.45)'
+            ctx.lineWidth   = 0.6
           } else {
-            // Light hairline between every cell for readability
-            doc.setDrawColor(180, 174, 166)
-            doc.setLineWidth(0.05)
-            doc.rect(px, py, CELL_MM, CELL_MM, 'S')
+            ctx.strokeStyle = 'rgba(150,140,130,0.25)'
+            ctx.lineWidth   = 0.2
           }
+          ctx.strokeRect(px + 0.1, py + 0.1, CELL_PX - 0.2, CELL_PX - 0.2)
         }
       }
 
-      // Ruler labels (x-axis: top, y-axis: left)
+      // 눈금자 x축 숫자 (Canvas에 직접)
+      ctx.fillStyle    = 'rgba(100,90,80,0.7)'
+      ctx.font         = `${CELL_PX - 1}px monospace`
+      ctx.textAlign    = 'left'
+      ctx.textBaseline = 'top'
+      for (let x = startX; x < endX; x += 10) {
+        ctx.fillText(String(x + 1), (x - startX) * CELL_PX + 1, 1)
+      }
+
+      // PNG → jsPDF addImage
+      const imgData  = offCanvas.toDataURL('image/png')
+      const printW   = PAGE_W - MARGIN * 2
+      const printHRaw = printW * (chunkH / chunkW)
+      const printH   = Math.min(printHRaw, PAGE_H - MARGIN - originY)
+      doc.addImage(imgData, 'PNG', MARGIN, originY, printW, printH)
+
+      // 눈금자 y축 숫자 (PDF 텍스트)
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(4.5)
       doc.setTextColor(110, 100, 90)
-
-      for (let x = startX; x < endX; x += 10) {
-        const px = MARGIN + (x - startX) * CELL_MM
-        doc.text(String(x + 1), px, originY - 1)
-      }
+      const cellMmFit = printW / chunkW
       for (let y = startY; y < endY; y += 10) {
-        const py = originY + (y - startY) * CELL_MM + CELL_MM / 2 + 1
+        const py = originY + (y - startY) * cellMmFit + cellMmFit / 2 + 1
         doc.text(String(y + 1), MARGIN - 2, py, { align: 'right' })
       }
     }
