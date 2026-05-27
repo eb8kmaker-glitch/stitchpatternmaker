@@ -213,14 +213,16 @@ export default function PatternCanvas({ pattern, displayMode, highlightDmcId }: 
     function onWheel(e: WheelEvent) {
       const el = containerRef.current
       if (!el) return
-      // Only act when the pointer is inside our canvas container
-      if (!el.contains(e.target as Node)) return
 
-      // Always prevent page scroll / browser pinch-zoom inside the container
+      // 마우스 포인터가 컨테이너 rect 안에 있을 때만 처리
+      const rect = el.getBoundingClientRect()
+      const insideX = e.clientX >= rect.left && e.clientX <= rect.right
+      const insideY = e.clientY >= rect.top  && e.clientY <= rect.bottom
+      if (!insideX || !insideY) return
+
       e.preventDefault()
 
       if (!e.ctrlKey && !e.metaKey) {
-        // Normal scroll → manually forward to container
         el.scrollLeft += e.deltaX
         el.scrollTop  += e.deltaY
         return
@@ -232,16 +234,16 @@ export default function PatternCanvas({ pattern, displayMode, highlightDmcId }: 
       const dir = wheelAccum.current > 0 ? -1 : 1
       wheelAccum.current = 0
 
-      const rect   = el.getBoundingClientRect()
       const focusX = e.clientX - rect.left + el.scrollLeft
       const focusY = e.clientY - rect.top  + el.scrollTop
 
       setCellSize(cur => {
-        const idx    = CELL_SIZES.indexOf(cur)
-        const newIdx = Math.max(0, Math.min(CELL_SIZES.length - 1, idx + dir))
-        const next   = CELL_SIZES[newIdx]
+        const idx  = CELL_SIZES.indexOf(cur)
+        const next = dir === 1
+          ? (idx < CELL_SIZES.length - 1 ? CELL_SIZES[idx + 1] : cur)
+          : (idx > 0 ? CELL_SIZES[idx - 1] : cur)
         if (next === cur) return cur
-        const ratio  = next / cur
+        const ratio = next / cur
         requestAnimationFrame(() => {
           const r2 = el.getBoundingClientRect()
           el.scrollLeft = focusX * ratio - (e.clientX - r2.left)
@@ -251,7 +253,6 @@ export default function PatternCanvas({ pattern, displayMode, highlightDmcId }: 
       })
     }
 
-    // capture:true → runs before browser scroll/zoom handlers
     window.addEventListener('wheel', onWheel, { passive: false, capture: true })
     return () => window.removeEventListener('wheel', onWheel, { capture: true })
   }, [])
