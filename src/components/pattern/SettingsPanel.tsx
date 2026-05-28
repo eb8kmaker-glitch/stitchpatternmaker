@@ -5,6 +5,7 @@ import type {
   PatternSettings, SepLevel, DisplayMode, SizePrefixPreset,
   QualityMode, AspectMode, DitheringMode,
 } from '@/types'
+import AdUnit from '@/components/ui/AdUnit'
 
 interface SettingsPanelProps {
   settings:     PatternSettings
@@ -284,6 +285,9 @@ export default function SettingsPanel({
           )}
         </button>
       </div>
+
+      {/* stitch-sidebar-bottom */}
+      <AdUnit slot="1955905061" wrapperStyle={{ padding: '0 16px 16px', marginTop: 8 }} />
     </aside>
   )
 }

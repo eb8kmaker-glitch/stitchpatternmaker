@@ -112,3 +112,8 @@ body.pan-grabbing * { cursor: grabbing !important; }
     border-radius: 2px;
   }
 }
+
+.adsbygoogle {
+  border: none !important;
+  outline: none !important;
+}

@@ -9,6 +9,7 @@ import PatternCanvas   from '@/components/pattern/PatternCanvas'
 import ThreadList      from '@/components/pattern/ThreadList'
 import ProgressOverlay from '@/components/ui/ProgressOverlay'
 import PaletteShowcase from '@/components/ui/PaletteShowcase'
+import AdUnit from '@/components/ui/AdUnit'
 import { usePatternGenerator } from '@/hooks/usePatternGenerator'
 import type { PatternSettings } from '@/types'
 
@@ -166,6 +167,9 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+
+        {/* ── stitch-linen-above ─────────────────────────────────────────── */}
+        <AdUnit slot="8049858908" wrapperStyle={{ margin: '32px 0 0' }} />
 
         {/* ── Palette showcase ──────────────────────────────────────────── */}
         <PaletteShowcase />
