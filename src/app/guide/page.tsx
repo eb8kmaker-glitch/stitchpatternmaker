@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
+import AdUnit from '@/components/ads/AdUnit'
 
 export const metadata: Metadata = {
   title: '십자수 완전 입문 가이드 — 초보자를 위한 시작부터 완성까지 | Stitch Pattern Maker',
@@ -318,6 +319,9 @@ export default function GuidePage() {
             </div>
           </section>
 
+          {/* ── AdSense 반응형 배너 (섹션 5 이후) ────────────────────────── */}
+          <AdUnit slot="XXXXXXXXXX" format="auto" />
+
           {/* Section 6 */}
           <section id="section-6">
             <SectionLabel num={6} />
@@ -527,6 +531,9 @@ export default function GuidePage() {
               ))}
             </div>
           </section>
+
+          {/* ── AdSense 반응형 배너 (FAQ 이후 CTA 전) ────────────────────── */}
+          <AdUnit slot="XXXXXXXXXX" format="auto" />
 
           {/* CTA */}
           <div className="mt-10 p-8 bg-gradient-to-br from-linen-100/60 to-linen-200/40
