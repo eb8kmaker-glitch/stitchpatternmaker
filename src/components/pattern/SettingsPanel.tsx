@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import AdUnit from '@/components/ads/AdUnit'
 import type {
   PatternSettings, SepLevel, DisplayMode, SizePrefixPreset,
   QualityMode, AspectMode, DitheringMode,
@@ -283,6 +284,11 @@ export default function SettingsPanel({
             </>
           )}
         </button>
+      </div>
+
+      {/* stitch-sidebar-bottom */}
+      <div className="px-4 pb-4">
+        <AdUnit slot="1955905061" format="auto" />
       </div>
     </aside>
   )

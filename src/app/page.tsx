@@ -168,9 +168,9 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* ── AdSense 반응형 배너 (피처 그리드 하단) ───────────────────── */}
-        <div className="mt-7">
-          <AdUnit slot="XXXXXXXXXX" format="auto" />
+        {/* stitch-linen-above — Linen Collection 섹션 바로 위 */}
+        <div className="my-8 w-full">
+          <AdUnit slot="8049858908" format="auto" label={false} />
         </div>
 
         {/* ── Palette showcase ──────────────────────────────────────────── */}
