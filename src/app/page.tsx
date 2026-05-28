@@ -9,6 +9,7 @@ import PatternCanvas   from '@/components/pattern/PatternCanvas'
 import ThreadList      from '@/components/pattern/ThreadList'
 import ProgressOverlay from '@/components/ui/ProgressOverlay'
 import PaletteShowcase from '@/components/ui/PaletteShowcase'
+import AdUnit          from '@/components/ads/AdUnit'
 import { usePatternGenerator } from '@/hooks/usePatternGenerator'
 import type { PatternSettings } from '@/types'
 
@@ -165,6 +166,11 @@ export default function HomePage() {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* ── AdSense 반응형 배너 (피처 그리드 하단) ───────────────────── */}
+        <div className="mt-7">
+          <AdUnit slot="XXXXXXXXXX" format="auto" />
         </div>
 
         {/* ── Palette showcase ──────────────────────────────────────────── */}

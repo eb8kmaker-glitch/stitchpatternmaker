@@ -90,6 +90,29 @@ body.pan-grabbing * { cursor: grabbing !important; }
   }
 }
 
+@layer components {
+  /* ── AdSense 광고 공통 스타일 ── */
+  .ad-wrap {
+    @apply overflow-hidden;
+    background: transparent;
+  }
+
+  .ad-label {
+    @apply text-[9px] uppercase tracking-[0.12em] text-warm-400/50 font-light text-center;
+    margin-bottom: 3px;
+  }
+
+  .adsbygoogle {
+    border-radius: 11px;
+    overflow: hidden;
+  }
+
+  /* 광고 영역 — 심사 전 빈 공간 collapse 방지 */
+  .adsbygoogle:not([data-ad-status]) {
+    min-height: 0;
+  }
+}
+
 @layer utilities {
   .font-playfair  { font-family: 'Playfair Display', Georgia, serif; }
   .font-cormorant { font-family: 'Cormorant Garamond', Georgia, serif; }
