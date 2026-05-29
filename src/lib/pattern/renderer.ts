@@ -8,6 +8,10 @@ export interface RenderOptions {
   displayMode: DisplayMode
 }
 
+// iOS Safari silently returns a blank canvas beyond ~16 M pixels;
+// Chrome/Firefox fail at ~268 M. 16 M is the safe cross-browser floor.
+const MAX_CANVAS_PIXELS = 16_000_000
+
 export function renderPattern(
   canvas: HTMLCanvasElement,
   pattern: PatternResult,
@@ -16,8 +20,18 @@ export function renderPattern(
   const { cellSize: cs, showGrid, displayMode: mode } = options
   const { grid, dmcMap, width, height } = pattern
 
-  canvas.width  = width  * cs
-  canvas.height = height * cs
+  const canvasW = width  * cs
+  const canvasH = height * cs
+
+  if (canvasW * canvasH > MAX_CANVAS_PIXELS) {
+    throw new RangeError(
+      `캔버스가 너무 큽니다 (${canvasW}×${canvasH}px = ${Math.round(canvasW * canvasH / 1e6)}M픽셀). ` +
+      `줌을 낮춰주세요.`,
+    )
+  }
+
+  canvas.width  = canvasW
+  canvas.height = canvasH
 
   const ctx = canvas.getContext('2d')!
   ctx.clearRect(0, 0, canvas.width, canvas.height)

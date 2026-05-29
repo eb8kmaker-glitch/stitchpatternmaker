@@ -198,11 +198,11 @@ function initKMeansPlusPlus(
 }
 
 // ── K-means in LAB space ──────────────────────────────────────────────────────
-function kMeansLab(
+async function kMeansLab(
   pixels: [number, number, number][],
   k: number,
   iterations: number,
-): { centers: [number, number, number][]; assignments: number[] } {
+): Promise<{ centers: [number, number, number][]; assignments: number[] }> {
   let centers = initKMeansPlusPlus(pixels, k)
   let assignments = new Array(pixels.length).fill(0)
 
@@ -226,27 +226,33 @@ function kMeansLab(
       sums[a][2] += pixels[i][2]
       sums[a][3]++
     }
-    centers = sums.map((s, idx) =>
+    centers = sums.map((s) =>
       s[3] > 0
         ? [s[0] / s[3], s[1] / s[3], s[2] / s[3]]
         : centers[Math.floor(Math.random() * k)],
     ) as [number, number, number][]
+
+    // Yield after every iteration to unblock the main thread.
+    // Without this, 500×500 + 80 colors + HQ(20 iter) = ~400M deltaE calls
+    // executed synchronously, which crashes the browser tab.
+    await tick()
   }
 
   return { centers, assignments }
 }
 
 // ── Floyd–Steinberg dithering in LAB space ────────────────────────────────────
-function applyFloydSteinberg(
+async function applyFloydSteinberg(
   labPixels: [number, number, number][],
   dmcPalette: DmcColor[],
   width: number,
   height: number,
-): number[] {
+): Promise<number[]> {
   const buf: [number, number, number][] = labPixels.map(p => [p[0], p[1], p[2]])
   const out: number[] = new Array(width * height).fill(0)
 
   for (let y = 0; y < height; y++) {
+    if (y > 0 && y % 40 === 0) await tick()
     for (let x = 0; x < width; x++) {
       const i = y * width + x
       const pixel = buf[i]
@@ -282,16 +288,17 @@ function applyFloydSteinberg(
 }
 
 // ── Atkinson dithering in LAB space ──────────────────────────────────────────
-function applyAtkinson(
+async function applyAtkinson(
   labPixels: [number, number, number][],
   dmcPalette: DmcColor[],
   width: number,
   height: number,
-): number[] {
+): Promise<number[]> {
   const buf: [number, number, number][] = labPixels.map(p => [p[0], p[1], p[2]])
   const out: number[] = new Array(width * height).fill(0)
 
   for (let y = 0; y < height; y++) {
+    if (y > 0 && y % 40 === 0) await tick()
     for (let x = 0; x < width; x++) {
       const i = y * width + x
       const pixel = buf[i]
@@ -329,16 +336,17 @@ function applyAtkinson(
 // ── Ordered (Bayer 4×4) dithering in LAB space ───────────────────────────────
 const BAYER_4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 
-function applyOrdered(
+async function applyOrdered(
   labPixels: [number, number, number][],
   dmcPalette: DmcColor[],
   width: number,
   height: number,
-): number[] {
+): Promise<number[]> {
   const out: number[] = new Array(width * height).fill(0)
   const strength = 6 // LAB units
 
   for (let y = 0; y < height; y++) {
+    if (y > 0 && y % 40 === 0) await tick()
     for (let x = 0; x < width; x++) {
       const i = y * width + x
       const t = (BAYER_4[(y % 4) * 4 + (x % 4)] / 16 - 0.5) * strength
@@ -411,6 +419,8 @@ function separateSimilarColors(
     for (let x = 0; x < width; x++) {
       const ci  = grid[y][x]
       const myD = result[ci]
+      // Lazily computed per cell; invalidated when result[ni] changes.
+      let usedIds: string[] | null = null
 
       for (const [dy, dx] of dirs) {
         const ny = y + dy, nx = x + dx
@@ -421,12 +431,13 @@ function separateSimilarColors(
 
         const nbD = result[ni]
         if (deltaE(myD.lab, nbD.lab) < threshold) {
-          const allUsedIds = result.map(d => d.id)
-          const exclude = allUsedIds.filter(id => id !== nbD.id).slice(0, allUsedIds.length - 3)
+          if (!usedIds) usedIds = result.map(d => d.id)
+          const exclude = usedIds.filter(id => id !== nbD.id).slice(0, usedIds.length - 3)
           const alt = findClosestDmc(nbD.lab, exclude)
 
           if (alt && deltaE(alt.lab, myD.lab) >= threshold) {
             result[ni] = alt
+            usedIds = null // invalidate so next neighbor gets a fresh list
           }
         }
       }
@@ -487,7 +498,7 @@ export async function generatePattern(
   await tick()
 
   const k = Math.min(colorCount, labPixels.length, DMC_COLORS.length)
-  const { centers, assignments: clusterAssignments } = kMeansLab(labPixels, k, kIter)
+  const { centers, assignments: clusterAssignments } = await kMeansLab(labPixels, k, kIter)
 
   // 6. Map cluster centers → unique DMC colors (ΔE nearest)
   progress(65, 'DMC 색상 매핑 중...', 'ΔE 기반 최적 매칭')
@@ -513,11 +524,11 @@ export async function generatePattern(
 
   let assignments: number[]
   if (ditheringMode === 'floyd') {
-    assignments = applyFloydSteinberg(labPixels, dmcPalette, width, height)
+    assignments = await applyFloydSteinberg(labPixels, dmcPalette, width, height)
   } else if (ditheringMode === 'atkinson') {
-    assignments = applyAtkinson(labPixels, dmcPalette, width, height)
+    assignments = await applyAtkinson(labPixels, dmcPalette, width, height)
   } else if (ditheringMode === 'ordered') {
-    assignments = applyOrdered(labPixels, dmcPalette, width, height)
+    assignments = await applyOrdered(labPixels, dmcPalette, width, height)
   } else {
     assignments = clusterAssignments
   }

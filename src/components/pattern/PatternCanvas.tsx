@@ -18,15 +18,21 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
   const isPanning    = useRef(false)
   const lastPos      = useRef({ x: 0, y: 0 })
 
-  const [cellSize, setCellSize] = useState(4)
-  const [showGrid, setShowGrid] = useState(true)
-  const [hovered, setHovered]   = useState<string | null>(null)
+  const [cellSize, setCellSize]     = useState(4)
+  const [showGrid, setShowGrid]     = useState(true)
+  const [hovered, setHovered]       = useState<string | null>(null)
+  const [renderError, setRenderError] = useState<string | null>(null)
 
   // Re-render when pattern, mode, cellSize, or grid changes
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || !pattern) return
-    renderPattern(canvas, pattern, { cellSize, showGrid, displayMode })
+    try {
+      setRenderError(null)
+      renderPattern(canvas, pattern, { cellSize, showGrid, displayMode })
+    } catch (err) {
+      setRenderError(err instanceof Error ? err.message : '렌더링 오류가 발생했습니다')
+    }
   }, [pattern, displayMode, cellSize, showGrid])
 
   // Spacebar + drag pan — window-level events so fast drags never lose track
@@ -174,6 +180,15 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
             </div>
             <p className="font-cormorant text-sm italic text-warm-400 text-center leading-relaxed font-light">
               사진을 업로드하고<br />도안 생성을 눌러주세요
+            </p>
+          </div>
+        )}
+        {renderError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3
+                          bg-linen-50/90 backdrop-blur-sm z-10">
+            <p className="text-sm font-medium text-warm-600">렌더링 오류</p>
+            <p className="text-xs text-warm-400 text-center max-w-xs leading-relaxed px-4">
+              {renderError}
             </p>
           </div>
         )}
