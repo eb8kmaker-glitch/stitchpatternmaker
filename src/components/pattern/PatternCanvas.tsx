@@ -18,15 +18,21 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
   const isPanning    = useRef(false)
   const lastPos      = useRef({ x: 0, y: 0 })
 
-  const [cellSize, setCellSize] = useState(4)
-  const [showGrid, setShowGrid] = useState(true)
-  const [hovered, setHovered]   = useState<string | null>(null)
+  const [cellSize, setCellSize]     = useState(4)
+  const [showGrid, setShowGrid]     = useState(true)
+  const [hovered, setHovered]       = useState<string | null>(null)
+  const [renderError, setRenderError] = useState<string | null>(null)
 
   // Re-render when pattern, mode, cellSize, or grid changes
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || !pattern) return
-    renderPattern(canvas, pattern, { cellSize, showGrid, displayMode })
+    try {
+      setRenderError(null)
+      renderPattern(canvas, pattern, { cellSize, showGrid, displayMode })
+    } catch (err) {
+      setRenderError(err instanceof Error ? err.message : '렌더링 중 오류가 발생했습니다.')
+    }
   }, [pattern, displayMode, cellSize, showGrid])
 
   // Spacebar + drag pan — window-level events so fast drags never lose track
@@ -177,10 +183,22 @@ export default function PatternCanvas({ pattern, displayMode }: PatternCanvasPro
             </p>
           </div>
         )}
+        {renderError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6">
+            <div className="w-10 h-10 rounded-full bg-red-100 border border-red-200 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <p className="text-[12px] text-red-600 text-center leading-relaxed max-w-xs">
+              {renderError}
+            </p>
+          </div>
+        )}
         <canvas
           ref={canvasRef}
           className="block rounded-[10px] shadow-canvas"
-          style={{ display: pattern ? 'block' : 'none' }}
+          style={{ display: pattern && !renderError ? 'block' : 'none' }}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHovered(null)}
         />

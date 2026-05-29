@@ -8,11 +8,13 @@ interface UploadZoneProps {
 
 export default function UploadZone({ onImageLoad }: UploadZoneProps) {
   const inputRef  = useRef<HTMLInputElement>(null)
-  const [drag, setDrag]     = useState(false)
-  const [loaded, setLoaded] = useState<{ name: string; size: string } | null>(null)
+  const [drag, setDrag]         = useState(false)
+  const [loaded, setLoaded]     = useState<{ name: string; size: string } | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const processFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return
+    setLoadError(null)
     const reader = new FileReader()
     reader.onload = ev => {
       const img = new Image()
@@ -23,8 +25,10 @@ export default function UploadZone({ onImageLoad }: UploadZoneProps) {
         })
         onImageLoad(img, file)
       }
+      img.onerror = () => setLoadError('이미지를 불러올 수 없습니다. 다른 파일을 사용해보세요.')
       img.src = ev.target?.result as string
     }
+    reader.onerror = () => setLoadError('파일을 읽는 중 오류가 발생했습니다.')
     reader.readAsDataURL(file)
   }, [onImageLoad])
 
@@ -78,7 +82,14 @@ export default function UploadZone({ onImageLoad }: UploadZoneProps) {
         }
       </div>
 
-      {loaded ? (
+      {loadError ? (
+        <>
+          <p className="text-xs text-red-500 font-light leading-relaxed">{loadError}</p>
+          <p className="text-[10px] text-sage-400 mt-2 font-light tracking-wide">
+            클릭하여 다시 시도
+          </p>
+        </>
+      ) : loaded ? (
         <>
           <p className="font-cormorant text-base italic text-warm-600 mb-1">{loaded.name}</p>
           <p className="text-xs text-warm-400 font-light">{loaded.size}</p>

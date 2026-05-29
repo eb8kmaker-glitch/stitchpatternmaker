@@ -8,6 +8,9 @@ export interface RenderOptions {
   displayMode: DisplayMode
 }
 
+// Maximum safe canvas dimension to avoid browser OOM / quota errors
+const MAX_CANVAS_DIM = 8192
+
 export function renderPattern(
   canvas: HTMLCanvasElement,
   pattern: PatternResult,
@@ -16,10 +19,21 @@ export function renderPattern(
   const { cellSize: cs, showGrid, displayMode: mode } = options
   const { grid, dmcMap, width, height } = pattern
 
-  canvas.width  = width  * cs
-  canvas.height = height * cs
+  const canvasW = width  * cs
+  const canvasH = height * cs
 
-  const ctx = canvas.getContext('2d')!
+  if (canvasW > MAX_CANVAS_DIM || canvasH > MAX_CANVAS_DIM) {
+    throw new Error(
+      `캔버스 크기(${canvasW}×${canvasH}px)가 허용 한계(${MAX_CANVAS_DIM}px)를 초과합니다. ` +
+      '도안 크기를 줄이거나 확대 배율을 낮춰보세요.',
+    )
+  }
+
+  canvas.width  = canvasW
+  canvas.height = canvasH
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D 컨텍스트를 생성할 수 없습니다. 브라우저 메모리가 부족합니다.')
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   // Build symbol map (consistent with ThreadList & PDF)

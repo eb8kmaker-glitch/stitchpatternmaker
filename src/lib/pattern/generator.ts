@@ -23,6 +23,18 @@ const QUALITY_PARAMS: Record<QualityMode, {
   hq:       { sat: 1.12, contrast: 1.06, gamma: 0.93, sharpen: true,  kIter: 20 },
 }
 
+// ── Null-safe canvas context helper ──────────────────────────────────────────
+function getCtx(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D 컨텍스트를 생성할 수 없습니다. 이미지 크기를 줄이거나 다른 브라우저를 사용해보세요.')
+  return ctx
+}
+
+// ── Yield to main thread (prevents browser script-timeout crash) ──────────────
+function yieldToMain(): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, 0))
+}
+
 // ── Multi-step high-quality downscale ─────────────────────────────────────────
 function stepDownResize(
   src: CanvasImageSource,
@@ -34,7 +46,7 @@ function stepDownResize(
   let cur = document.createElement('canvas')
   cur.width  = srcW
   cur.height = srcH
-  cur.getContext('2d')!.drawImage(src, 0, 0)
+  getCtx(cur).drawImage(src, 0, 0)
 
   let w = srcW, h = srcH
 
@@ -44,10 +56,13 @@ function stepDownResize(
     const next = document.createElement('canvas')
     next.width  = nw
     next.height = nh
-    const ctx = next.getContext('2d')!
+    const ctx = getCtx(next)
     ctx.imageSmoothingEnabled  = true
     ctx.imageSmoothingQuality  = 'high'
     ctx.drawImage(cur, 0, 0, nw, nh)
+    // Release previous intermediate canvas immediately
+    cur.width = 0
+    cur.height = 0
     cur = next; w = nw; h = nh
   }
 
@@ -68,7 +83,7 @@ function resampleImage(
   const out = document.createElement('canvas')
   out.width  = targetW
   out.height = targetH
-  const ctx = out.getContext('2d')!
+  const ctx = getCtx(out)
   ctx.imageSmoothingEnabled = true
   ctx.imageSmoothingQuality = 'high'
 
@@ -101,8 +116,11 @@ function resampleImage(
       const cW = Math.round(srcW), cH = Math.round(srcH)
       const crop = document.createElement('canvas')
       crop.width = cW; crop.height = cH
-      crop.getContext('2d')!.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, cW, cH)
+      getCtx(crop).drawImage(img, srcX, srcY, srcW, srcH, 0, 0, cW, cH)
       const src2 = stepDownResize(crop, cW, cH, targetW, targetH)
+      // Release crop canvas
+      crop.width = 0
+      crop.height = 0
       ctx.drawImage(src2, 0, 0, targetW, targetH)
     } else {
       ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, targetW, targetH)
@@ -197,17 +215,23 @@ function initKMeansPlusPlus(
   return centers
 }
 
-// ── K-means in LAB space ──────────────────────────────────────────────────────
-function kMeansLab(
+// ── K-means in LAB space (async — yields to main thread to prevent tab crash) ──
+// Worst case: 250k pixels × 80 colors × 20 iter = 400M distance calculations.
+// Yielding every PIXEL_BATCH pixels keeps each synchronous chunk under ~16 ms.
+const KMEANS_PIXEL_BATCH = 5000
+
+async function kMeansLab(
   pixels: [number, number, number][],
   k: number,
   iterations: number,
-): { centers: [number, number, number][]; assignments: number[] } {
+): Promise<{ centers: [number, number, number][]; assignments: number[] }> {
   let centers = initKMeansPlusPlus(pixels, k)
   let assignments = new Array(pixels.length).fill(0)
 
   for (let iter = 0; iter < iterations; iter++) {
+    // Assignment step — yield every KMEANS_PIXEL_BATCH pixels
     for (let i = 0; i < pixels.length; i++) {
+      if (i > 0 && i % KMEANS_PIXEL_BATCH === 0) await yieldToMain()
       let best = 0, bestDist = Infinity
       for (let j = 0; j < centers.length; j++) {
         const dist = deltaE(pixels[i], centers[j])
@@ -216,6 +240,7 @@ function kMeansLab(
       assignments[i] = best
     }
 
+    // Centroid update step
     const sums: [number, number, number, number][] = Array.from(
       { length: k }, () => [0, 0, 0, 0],
     )
@@ -231,22 +256,31 @@ function kMeansLab(
         ? [s[0] / s[3], s[1] / s[3], s[2] / s[3]]
         : centers[Math.floor(Math.random() * k)],
     ) as [number, number, number][]
+
+    // Yield between iterations so the browser can process events
+    await yieldToMain()
   }
 
   return { centers, assignments }
 }
 
-// ── Floyd–Steinberg dithering in LAB space ────────────────────────────────────
-function applyFloydSteinberg(
+// ── Floyd–Steinberg dithering in LAB space (async) ────────────────────────────
+const DITHER_ROW_BATCH = 20
+
+async function applyFloydSteinberg(
   labPixels: [number, number, number][],
   dmcPalette: DmcColor[],
   width: number,
   height: number,
-): number[] {
+): Promise<number[]> {
   const buf: [number, number, number][] = labPixels.map(p => [p[0], p[1], p[2]])
   const out: number[] = new Array(width * height).fill(0)
 
   for (let y = 0; y < height; y++) {
+    // Yield every DITHER_ROW_BATCH rows — error diffusion is sequential so we
+    // can only yield between rows, not within them.
+    if (y > 0 && y % DITHER_ROW_BATCH === 0) await yieldToMain()
+
     for (let x = 0; x < width; x++) {
       const i = y * width + x
       const pixel = buf[i]
@@ -281,17 +315,19 @@ function applyFloydSteinberg(
   return out
 }
 
-// ── Atkinson dithering in LAB space ──────────────────────────────────────────
-function applyAtkinson(
+// ── Atkinson dithering in LAB space (async) ───────────────────────────────────
+async function applyAtkinson(
   labPixels: [number, number, number][],
   dmcPalette: DmcColor[],
   width: number,
   height: number,
-): number[] {
+): Promise<number[]> {
   const buf: [number, number, number][] = labPixels.map(p => [p[0], p[1], p[2]])
   const out: number[] = new Array(width * height).fill(0)
 
   for (let y = 0; y < height; y++) {
+    if (y > 0 && y % DITHER_ROW_BATCH === 0) await yieldToMain()
+
     for (let x = 0; x < width; x++) {
       const i = y * width + x
       const pixel = buf[i]
@@ -326,19 +362,21 @@ function applyAtkinson(
   return out
 }
 
-// ── Ordered (Bayer 4×4) dithering in LAB space ───────────────────────────────
+// ── Ordered (Bayer 4×4) dithering in LAB space (async) ───────────────────────
 const BAYER_4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 
-function applyOrdered(
+async function applyOrdered(
   labPixels: [number, number, number][],
   dmcPalette: DmcColor[],
   width: number,
   height: number,
-): number[] {
+): Promise<number[]> {
   const out: number[] = new Array(width * height).fill(0)
   const strength = 6 // LAB units
 
   for (let y = 0; y < height; y++) {
+    if (y > 0 && y % DITHER_ROW_BATCH === 0) await yieldToMain()
+
     for (let x = 0; x < width; x++) {
       const i = y * width + x
       const t = (BAYER_4[(y % 4) * 4 + (x % 4)] / 16 - 0.5) * strength
@@ -360,15 +398,19 @@ function applyOrdered(
   return out
 }
 
-// ── Confetti cleanup — merge isolated single-pixel colors ─────────────────────
-function cleanupConfetti(
+// ── Confetti cleanup — merge isolated single-pixel colors (async) ─────────────
+const CLEANUP_ROW_BATCH = 50
+
+async function cleanupConfetti(
   grid: number[][],
   width: number,
   height: number,
-): number[][] {
+): Promise<number[][]> {
   const out = grid.map(row => [...row])
 
   for (let y = 0; y < height; y++) {
+    if (y > 0 && y % CLEANUP_ROW_BATCH === 0) await yieldToMain()
+
     for (let x = 0; x < width; x++) {
       const ci = grid[y][x]
       const neighbors: number[] = []
@@ -396,18 +438,24 @@ function cleanupConfetti(
   return out
 }
 
-// ── Similar color separation ──────────────────────────────────────────────────
-function separateSimilarColors(
+// ── Similar color separation (async) ─────────────────────────────────────────
+const SEP_ROW_BATCH = 25
+
+async function separateSimilarColors(
   grid: number[][],
   dmcMap: DmcColor[],
   threshold: number,
   width: number,
   height: number,
-): DmcColor[] {
+): Promise<DmcColor[]> {
   const result = [...dmcMap]
   const dirs: [number, number][] = [[0, 1], [1, 0], [0, -1], [-1, 0]]
+  // Pre-build ID list once — avoids rebuilding on every inner iteration
+  const allUsedIds = result.map(d => d.id)
 
   for (let y = 0; y < height; y++) {
+    if (y > 0 && y % SEP_ROW_BATCH === 0) await yieldToMain()
+
     for (let x = 0; x < width; x++) {
       const ci  = grid[y][x]
       const myD = result[ci]
@@ -421,12 +469,12 @@ function separateSimilarColors(
 
         const nbD = result[ni]
         if (deltaE(myD.lab, nbD.lab) < threshold) {
-          const allUsedIds = result.map(d => d.id)
           const exclude = allUsedIds.filter(id => id !== nbD.id).slice(0, allUsedIds.length - 3)
           const alt = findClosestDmc(nbD.lab, exclude)
 
           if (alt && deltaE(alt.lab, myD.lab) >= threshold) {
             result[ni] = alt
+            allUsedIds[ni] = alt.id
           }
         }
       }
@@ -458,7 +506,11 @@ export async function generatePattern(
   await tick()
 
   const resampled = resampleImage(imageElement, width, height, aspectMode, isHQ)
-  const imageData = resampled.getContext('2d')!.getImageData(0, 0, width, height)
+  const resampledCtx = getCtx(resampled)
+  const imageData = resampledCtx.getImageData(0, 0, width, height)
+  // Release resampled canvas once we have the pixel data
+  resampled.width = 0
+  resampled.height = 0
 
   // 2. Preprocess: gamma + contrast + saturation
   progress(18, '이미지 전처리 중...', '채도 / 대비 / 감마 보정')
@@ -487,7 +539,7 @@ export async function generatePattern(
   await tick()
 
   const k = Math.min(colorCount, labPixels.length, DMC_COLORS.length)
-  const { centers, assignments: clusterAssignments } = kMeansLab(labPixels, k, kIter)
+  const { centers, assignments: clusterAssignments } = await kMeansLab(labPixels, k, kIter)
 
   // 6. Map cluster centers → unique DMC colors (ΔE nearest)
   progress(65, 'DMC 색상 매핑 중...', 'ΔE 기반 최적 매칭')
@@ -513,11 +565,11 @@ export async function generatePattern(
 
   let assignments: number[]
   if (ditheringMode === 'floyd') {
-    assignments = applyFloydSteinberg(labPixels, dmcPalette, width, height)
+    assignments = await applyFloydSteinberg(labPixels, dmcPalette, width, height)
   } else if (ditheringMode === 'atkinson') {
-    assignments = applyAtkinson(labPixels, dmcPalette, width, height)
+    assignments = await applyAtkinson(labPixels, dmcPalette, width, height)
   } else if (ditheringMode === 'ordered') {
-    assignments = applyOrdered(labPixels, dmcPalette, width, height)
+    assignments = await applyOrdered(labPixels, dmcPalette, width, height)
   } else {
     assignments = clusterAssignments
   }
@@ -533,7 +585,7 @@ export async function generatePattern(
   if (isHQ || ditheringMode !== 'none') {
     progress(85, 'Confetti 정리 중...', '고립 픽셀 주변색으로 병합')
     await tick()
-    grid = cleanupConfetti(grid, width, height)
+    grid = await cleanupConfetti(grid, width, height)
   }
 
   const dmcMap = dmcPalette
@@ -543,7 +595,7 @@ export async function generatePattern(
   if (threshold > 0) {
     progress(92, '유사색 분리 처리 중...', `ΔE < ${threshold} 인접 셀 보정`)
     await tick()
-    const separated = separateSimilarColors(grid, dmcMap, threshold, width, height)
+    const separated = await separateSimilarColors(grid, dmcMap, threshold, width, height)
     separated.forEach((d, i) => { dmcMap[i] = d })
   }
 
