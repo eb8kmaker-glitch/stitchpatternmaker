@@ -25,13 +25,24 @@ const DEFAULT_SETTINGS: PatternSettings = {
 
 export default function HomePage() {
   const imageRef = useRef<HTMLImageElement | null>(null)
-  const [hasImage,  setHasImage]  = useState(false)
-  const [settings,  setSettings]  = useState<PatternSettings>(DEFAULT_SETTINGS)
+  const [hasImage,      setHasImage]      = useState(false)
+  const [imageDataUrl,  setImageDataUrl]  = useState<string | undefined>(undefined)
+  const [settings,      setSettings]      = useState<PatternSettings>(DEFAULT_SETTINGS)
   const { state, generate } = usePatternGenerator()
 
   function handleImageLoad(img: HTMLImageElement) {
     imageRef.current = img
     setHasImage(true)
+    // Capture data URL for PDF cover/reference pages
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width  = img.naturalWidth
+      canvas.height = img.naturalHeight
+      canvas.getContext('2d')!.drawImage(img, 0, 0)
+      setImageDataUrl(canvas.toDataURL('image/jpeg', 0.92))
+    } catch {
+      setImageDataUrl(undefined)
+    }
   }
 
   function handleGenerate() {
@@ -114,6 +125,7 @@ export default function HomePage() {
                 <ThreadList
                   threads={state.threads}
                   pattern={state.pattern}
+                  imageDataUrl={imageDataUrl}
                 />
               </div>
             )}
