@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import Script           from 'next/script'
 import Navbar          from '@/components/layout/Navbar'
 import UploadZone      from '@/components/pattern/UploadZone'
 import SettingsPanel   from '@/components/pattern/SettingsPanel'
@@ -9,6 +8,7 @@ import PatternCanvas   from '@/components/pattern/PatternCanvas'
 import ThreadList      from '@/components/pattern/ThreadList'
 import ProgressOverlay from '@/components/ui/ProgressOverlay'
 import PaletteShowcase from '@/components/ui/PaletteShowcase'
+import AdUnit from '@/components/ui/AdUnit'
 import { usePatternGenerator } from '@/hooks/usePatternGenerator'
 import type { PatternSettings } from '@/types'
 
@@ -25,8 +25,9 @@ const DEFAULT_SETTINGS: PatternSettings = {
 
 export default function HomePage() {
   const imageRef = useRef<HTMLImageElement | null>(null)
-  const [hasImage,       setHasImage]       = useState(false)
-  const [settings,       setSettings]       = useState<PatternSettings>(DEFAULT_SETTINGS)
+  const [hasImage,        setHasImage]        = useState(false)
+  const [imageDataUrl,    setImageDataUrl]    = useState<string | undefined>(undefined)
+  const [settings,        setSettings]        = useState<PatternSettings>(DEFAULT_SETTINGS)
   const [highlightDmcId,  setHighlightDmcId]  = useState<string | null>(null)
   const [replaceSourceId, setReplaceSourceId] = useState<string | null>(null)
   const { state, generate } = usePatternGenerator()
@@ -34,6 +35,15 @@ export default function HomePage() {
   function handleImageLoad(img: HTMLImageElement) {
     imageRef.current = img
     setHasImage(true)
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width  = img.naturalWidth
+      canvas.height = img.naturalHeight
+      canvas.getContext('2d')!.drawImage(img, 0, 0)
+      setImageDataUrl(canvas.toDataURL('image/jpeg', 0.92))
+    } catch {
+      setImageDataUrl(undefined)
+    }
   }
 
   function handleGenerate() {
@@ -116,6 +126,7 @@ export default function HomePage() {
                 <ThreadList
                   threads={state.threads}
                   pattern={state.pattern}
+                  imageDataUrl={imageDataUrl}
                   onHighlight={setHighlightDmcId}
                   highlightDmcId={highlightDmcId}
                   onReplaceRequest={setReplaceSourceId}
@@ -143,17 +154,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* ── 카카오 애드핏 모바일 배너 (모바일 전용) ──────────────────── */}
-        <div className="mt-7 flex justify-center lg:hidden">
-          <ins
-            className="kakao_ad_area"
-            style={{ display: 'none' }}
-            data-ad-unit="DAN-U2H1CkVwWdV3KXbA"
-            data-ad-width="320"
-            data-ad-height="50"
-          />
-        </div>
-
         {/* ── Features ──────────────────────────────────────────────────── */}
         <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           {FEATURES.map(f => (
@@ -175,26 +175,13 @@ export default function HomePage() {
           ))}
         </div>
 
+        {/* ── stitch-linen-above ─────────────────────────────────────────── */}
+        <AdUnit slot="8049858908" wrapperStyle={{ margin: '32px 0 0' }} />
+
         {/* ── Palette showcase ──────────────────────────────────────────── */}
         <PaletteShowcase />
         </div>
 
-        {/* ── 카카오 애드핏 세로형 배너 (데스크탑 전용) ────────────────── */}
-        <div className="flex-shrink-0 sticky top-4 pt-2 hidden lg:block">
-          <ins
-            className="kakao_ad_area"
-            style={{ display: 'none' }}
-            data-ad-unit="DAN-4Eyf5lz9W8UiuTJa"
-            data-ad-width="160"
-            data-ad-height="600"
-          />
-        </div>
-
-        {/* 카카오 AdFit 스크립트 */}
-        <Script
-          src="//t1.kakaocdn.net/kas/static/ba.min.js"
-          strategy="afterInteractive"
-        />
       </main>
     </div>
   )

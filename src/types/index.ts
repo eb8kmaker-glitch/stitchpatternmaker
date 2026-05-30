@@ -55,3 +55,16 @@ export interface ThreadUsage {
   symbol:       string   // the symbol shown in the pattern grid
   clusterIndex: number   // cluster index in the pattern grid
 }
+
+// ── PDF export options ────────────────────────────────────────────────────────
+export type FabricCount = 11 | 14 | 16 | 18 | 28
+export type PaperSize   = 'a4' | 'a3' | 'letter'
+
+export interface PdfOptions {
+  fabricCount:    FabricCount
+  paperSize:      PaperSize
+  showCover:      boolean
+  showReference:  boolean
+  imageDataUrl?:  string
+  threadBrand?:   string
+}

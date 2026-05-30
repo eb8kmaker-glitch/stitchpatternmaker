@@ -1,26 +1,60 @@
 'use client'
 
 import { useState } from 'react'
-import type { ThreadUsage, PatternResult } from '@/types'
+import type { ThreadUsage, PatternResult, FabricCount, PaperSize } from '@/types'
 
 interface ThreadListProps {
-  threads:          ThreadUsage[]
-  pattern:          PatternResult | null
-  onHighlight?:     (dmcId: string | null) => void
-  highlightDmcId?:  string | null
+  threads:           ThreadUsage[]
+  pattern:           PatternResult | null
+  imageDataUrl?:     string
+  onHighlight?:      (dmcId: string | null) => void
+  highlightDmcId?:   string | null
   onReplaceRequest?: (dmcId: string) => void
 }
 
-export default function ThreadList({ threads, pattern, onHighlight, highlightDmcId, onReplaceRequest }: ThreadListProps) {
-  const [exporting, setExporting] = useState(false)
-  const [pinnedId, setPinnedId] = useState<string | null>(null)
+const FABRIC_OPTIONS: { value: FabricCount; label: string }[] = [
+  { value: 18, label: '18CT' },
+  { value: 16, label: '16CT' },
+  { value: 14, label: '14CT' },
+  { value: 11, label: '11CT' },
+  { value: 28, label: '28CT' },
+]
+
+const PAPER_OPTIONS: { value: PaperSize; label: string }[] = [
+  { value: 'a4',     label: 'A4' },
+  { value: 'a3',     label: 'A3' },
+  { value: 'letter', label: 'Letter' },
+]
+
+export default function ThreadList({
+  threads, pattern, imageDataUrl,
+  onHighlight, highlightDmcId, onReplaceRequest,
+}: ThreadListProps) {
+  const [exporting,     setExporting]     = useState(false)
+  const [pinnedId,      setPinnedId]      = useState<string | null>(null)
+  const [fabricCount,   setFabricCount]   = useState<FabricCount>(14)
+  const [paperSize,     setPaperSize]     = useState<PaperSize>('a4')
+  const [showCover,     setShowCover]     = useState(true)
+  const [showReference, setShowReference] = useState(true)
+
+  const w = pattern?.width  ?? 0
+  const h = pattern?.height ?? 0
+  const finishedW = w > 0 ? (w / fabricCount * 2.54).toFixed(1) : '-'
+  const finishedH = h > 0 ? (h / fabricCount * 2.54).toFixed(1) : '-'
 
   async function handleExport() {
     if (!pattern || threads.length === 0) return
     setExporting(true)
     try {
       const { exportPatternPdf } = await import('@/lib/pdf/exporter')
-      await exportPatternPdf(pattern, threads)
+      await exportPatternPdf(pattern, threads, {
+        fabricCount,
+        paperSize,
+        showCover,
+        showReference,
+        imageDataUrl,
+        threadBrand: 'DMC',
+      })
     } finally {
       setExporting(false)
     }
@@ -103,6 +137,84 @@ export default function ThreadList({ threads, pattern, onHighlight, highlightDmc
             )}
           </div>
         ))}
+      </div>
+
+      {/* ── PDF 저장 설정 ── */}
+      <div className="mt-4 space-y-3 border-t border-linen-300/20 pt-3">
+
+        {/* CT 선택 */}
+        <div>
+          <p className="text-[9px] uppercase tracking-wider text-warm-400/70 mb-1.5">원단 규격 (CT)</p>
+          <div className="flex gap-1 flex-wrap">
+            {FABRIC_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setFabricCount(opt.value)}
+                className={`px-2 py-1 rounded text-[10px] font-mono border transition-colors
+                  ${fabricCount === opt.value
+                    ? 'bg-sage-400/25 border-sage-400/50 text-sage-600 font-bold'
+                    : 'bg-linen-100/60 border-linen-300/30 text-warm-400 hover:border-sage-400/30'
+                  }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-[9.5px] text-warm-400 font-light">
+            완성 예상 크기:{' '}
+            <span className="font-mono text-warm-500">{finishedW} × {finishedH} cm</span>
+            {w > 0 && (
+              <span className="text-warm-300"> ({w} × {h} 기준)</span>
+            )}
+          </p>
+        </div>
+
+        {/* 용지 선택 */}
+        <div>
+          <p className="text-[9px] uppercase tracking-wider text-warm-400/70 mb-1.5">인쇄 용지</p>
+          <div className="flex gap-1">
+            {PAPER_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setPaperSize(opt.value)}
+                className={`px-2 py-1 rounded text-[10px] font-mono border transition-colors
+                  ${paperSize === opt.value
+                    ? 'bg-sage-400/25 border-sage-400/50 text-sage-600 font-bold'
+                    : 'bg-linen-100/60 border-linen-300/30 text-warm-400 hover:border-sage-400/30'
+                  }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 페이지 토글 */}
+        <div className="space-y-1.5">
+          <p className="text-[9px] uppercase tracking-wider text-warm-400/70 mb-1">PDF 페이지</p>
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={showCover}
+              onChange={e => setShowCover(e.target.checked)}
+              className="accent-sage-500 w-3 h-3"
+            />
+            <span className="text-[10px] text-warm-500 group-hover:text-warm-600 transition-colors">
+              표지 페이지 (원본 이미지 · 도안 정보)
+            </span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={showReference}
+              onChange={e => setShowReference(e.target.checked)}
+              className="accent-sage-500 w-3 h-3"
+            />
+            <span className="text-[10px] text-warm-500 group-hover:text-warm-600 transition-colors">
+              참고 이미지 페이지 (마지막 페이지)
+            </span>
+          </label>
+        </div>
       </div>
 
       {/* PDF export */}
