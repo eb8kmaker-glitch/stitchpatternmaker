@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Script from 'next/script'
 import Navbar          from '@/components/layout/Navbar'
 import UploadZone      from '@/components/pattern/UploadZone'
 import SettingsPanel   from '@/components/pattern/SettingsPanel'
@@ -187,6 +188,21 @@ export default function HomePage() {
         <PaletteShowcase />
         </div>
 
+        {/* ── 카카오 애드핏 세로형 배너 (데스크탑 전용) ────────────────── */}
+        <div className="flex-shrink-0 sticky top-4 pt-2 hidden lg:block">
+          <ins
+            className="kakao_ad_area"
+            style={{ display: 'none' }}
+            data-ad-unit="DAN-4Eyf5lz9W8UiuTJa"
+            data-ad-width="160"
+            data-ad-height="600"
+          />
+        </div>
+
+        <Script
+          src="//t1.kakaocdn.net/kas/static/ba.min.js"
+          strategy="afterInteractive"
+        />
       </main>
     </div>
   )
