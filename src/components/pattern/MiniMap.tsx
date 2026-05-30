@@ -23,11 +23,9 @@ export default function MiniMap({
 
   const { width, height, grid, dmcMap } = pattern
 
-  // Hide when pattern is too small
-  if (width < 50 || height < 50) return null
-
   // Minimap pixel size: longest side → MAX_SIZE
-  const mapScale = Math.min(MAX_SIZE / width, MAX_SIZE / height, 1)
+  const tooSmall = width < 50 || height < 50
+  const mapScale = tooSmall ? 1 : Math.min(MAX_SIZE / width, MAX_SIZE / height, 1)
   const mapW     = Math.max(1, Math.round(width  * mapScale))
   const mapH     = Math.max(1, Math.round(height * mapScale))
 
@@ -124,6 +122,9 @@ export default function MiniMap({
       window.removeEventListener('mouseup',   onUp)
     }
   }, [scrollToRatio, mapW, mapH])
+
+  // All hooks called above — safe to return early now
+  if (tooSmall) return null
 
   return (
     <div
