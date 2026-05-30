@@ -106,10 +106,12 @@ export default function HomePage() {
         </div>
 
         {/* ── Main Studio ───────────────────────────────────────────────── */}
-        <div className="mt-7 flex flex-col lg:grid lg:grid-cols-[280px_1fr]
+        <div className={`mt-7 flex flex-col lg:grid
+                        ${state.threads.length > 0 ? 'lg:grid-cols-[280px_1fr_280px]' : 'lg:grid-cols-[280px_1fr]'}
                         border border-linen-300/20 rounded-panel overflow-hidden
-                        shadow-linen bg-linen-50/60 h-[calc(100vh-120px)]">
-          {/* Sidebar */}
+                        shadow-linen bg-linen-50/60`}
+             style={{ height: 'min(680px, calc(100vh - 160px))' }}>
+          {/* Left sidebar — settings */}
           <div className="flex flex-col overflow-y-auto scrollbar-linen
                           border-b lg:border-b-0 lg:border-r border-linen-300/20
                           bg-gradient-to-b from-linen-100/35 to-linen-200/20">
@@ -120,23 +122,10 @@ export default function HomePage() {
               isGenerating={isGenerating}
               hasImage={hasImage}
             />
-
-            {state.threads.length > 0 && (
-              <div className="border-t border-linen-300/18 mt-auto">
-                <ThreadList
-                  threads={state.threads}
-                  pattern={state.pattern}
-                  imageDataUrl={imageDataUrl}
-                  onHighlight={setHighlightDmcId}
-                  highlightDmcId={highlightDmcId}
-                  onReplaceRequest={setReplaceSourceId}
-                />
-              </div>
-            )}
           </div>
 
           {/* Canvas pane */}
-          <div className="relative flex flex-col h-full">
+          <div className="relative flex flex-col h-full min-h-[400px]">
             <PatternCanvas
               pattern={state.pattern}
               displayMode={settings.mode}
@@ -152,6 +141,22 @@ export default function HomePage() {
               sub={state.sub}
             />
           </div>
+
+          {/* Right panel — thread list & PDF options (도안 생성 후 표시) */}
+          {state.threads.length > 0 && (
+            <div className="flex flex-col overflow-y-auto scrollbar-linen
+                            border-t lg:border-t-0 lg:border-l border-linen-300/20
+                            bg-gradient-to-b from-linen-100/35 to-linen-200/20">
+              <ThreadList
+                threads={state.threads}
+                pattern={state.pattern}
+                imageDataUrl={imageDataUrl}
+                onHighlight={setHighlightDmcId}
+                highlightDmcId={highlightDmcId}
+                onReplaceRequest={setReplaceSourceId}
+              />
+            </div>
+          )}
         </div>
 
         {/* ── Features ──────────────────────────────────────────────────── */}
