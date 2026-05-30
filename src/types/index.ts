@@ -44,6 +44,9 @@ export interface PatternSettings {
   ditheringMode: DitheringMode
 }
 
+// ── Edit tool ─────────────────────────────────────────────────────────────────
+export type EditTool = 'none' | 'paint' | 'erase' | 'fill' | 'eyedropper'
+
 // ── Thread usage ─────────────────────────────────────────────────────────────
 export interface ThreadUsage {
   dmc:          DmcColor

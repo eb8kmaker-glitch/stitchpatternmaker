@@ -107,7 +107,6 @@ export async function exportPatternPdf(
 
   // ── Cover page ───────────────────────────────────────────────────────────────
   if (showCover) {
-    // App name header
     doc.setFillColor(247, 245, 242)
     doc.rect(0, 0, PAGE_W, PAGE_H, 'F')
 
@@ -121,27 +120,16 @@ export async function exportPatternPdf(
     doc.setTextColor(156, 148, 140)
     doc.text('Cross Stitch Pattern', PAGE_W / 2, 29, { align: 'center' })
 
-    // Divider
     doc.setDrawColor(210, 205, 198)
     doc.setLineWidth(0.3)
     doc.line(MARGIN, 33, PAGE_W - MARGIN, 33)
 
-    // Original image (if provided)
     let imageBottomY = 36
     if (imageDataUrl) {
       const maxImgW = PAGE_W - MARGIN * 2
       const maxImgH = PAGE_H * 0.42
-      // Determine image dimensions (aspect ratio from dataUrl via canvas in browser isn't available here,
-      // so we embed as-is with contain-fit logic using jsPDF addImage proportional)
       try {
-        // jsPDF can accept a dataUrl directly; we use 'JPEG' or 'PNG'
         const imgType = imageDataUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG'
-        // Center and fill maxImgW x maxImgH maintaining aspect ratio.
-        // We draw at the center position and use 0 for width/height to auto-fit:
-        // Instead, we'll use addImage with explicit maxImgW and let height auto.
-        // jsPDF doesn't auto-aspect, so we need to compute it manually.
-        // We'll create a temp image to get dimensions.
-        // Since we're in a browser context, we can use Image object.
         const imgDimensions = await new Promise<{ w: number; h: number }>((resolve) => {
           const img = new Image()
           img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight })
@@ -157,7 +145,6 @@ export async function exportPatternPdf(
         }
         const drawX = (PAGE_W - drawW) / 2
         const drawY = 36
-        // Border/shadow box
         doc.setFillColor(255, 255, 255)
         doc.setDrawColor(210, 205, 198)
         doc.setLineWidth(0.3)
@@ -169,7 +156,6 @@ export async function exportPatternPdf(
       }
     }
 
-    // Info table
     const infoData = [
       ['Date',          dateStr],
       ['Pattern Size',  `${width} × ${height} stitches`],
@@ -197,7 +183,6 @@ export async function exportPatternPdf(
       margin: { left: MARGIN, right: MARGIN },
     })
 
-    // Footer
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(7.5)
     doc.setTextColor(168, 160, 150)
@@ -232,7 +217,6 @@ export async function exportPatternPdf(
       const t = threads[data.row.index]
       if (!t) return
 
-      // Original color swatch (col 5)
       if (data.column.index === 5) {
         const [r, g, b] = t.dmc.rgb
         doc.setFillColor(r, g, b)
@@ -245,7 +229,6 @@ export async function exportPatternPdf(
         }
       }
 
-      // Work distinction color swatch (col 6)
       if (data.column.index === 6) {
         const wc = workColors[data.row.index]
         if (!wc) return
@@ -276,8 +259,7 @@ export async function exportPatternPdf(
       5: { cellWidth: 18 },
       6: { cellWidth: 18 },
     },
-    didDrawPage(data) {
-      if (!data.pageNumber) return
+    didDrawPage() {
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(7)
       doc.setTextColor(168, 160, 150)
@@ -315,50 +297,72 @@ export async function exportPatternPdf(
       doc.line(MARGIN, 13.5, PAGE_W - MARGIN, 13.5)
 
       const originY = 16
+      const chunkW  = endX - startX
+      const chunkH  = endY - startY
+
+      // Offscreen Canvas → PNG → addImage (파일 크기 대폭 감소)
+      const RENDER_SCALE = 3
+      const offCanvas    = document.createElement('canvas')
+      offCanvas.width    = chunkW * CELL_PX * RENDER_SCALE
+      offCanvas.height   = chunkH * CELL_PX * RENDER_SCALE
+      const ctx          = offCanvas.getContext('2d')!
+      ctx.scale(RENDER_SCALE, RENDER_SCALE)
 
       for (let y = startY; y < endY; y++) {
         for (let x = startX; x < endX; x++) {
-          const ci  = grid[y][x]
-          const dmc = dmcMap[ci]
-          const px  = MARGIN + (x - startX) * CELL_MM
-          const py  = originY + (y - startY) * CELL_MM
-
+          const ci       = grid[y][x]
+          const dmc      = dmcMap[ci]
           const [r, g, b] = dmc.rgb
-          doc.setFillColor(r, g, b)
-          doc.rect(px, py, CELL_MM, CELL_MM, 'F')
+          const px       = (x - startX) * CELL_PX
+          const py       = (y - startY) * CELL_PX
+
+          ctx.fillStyle = `rgb(${r},${g},${b})`
+          ctx.fillRect(px, py, CELL_PX, CELL_PX)
 
           const symbol = symbolMap.get(ci) ?? ''
           if (symbol) {
-            const luma  = (r * 299 + g * 587 + b * 114) / 1000
-            const tGray = luma > 140 ? 20 : 235
-            doc.setTextColor(tGray, tGray, tGray)
-            doc.setFont('helvetica', 'bold')
-            doc.setFontSize(2.8)
-            doc.text(symbol, px + CELL_MM / 2, py + CELL_MM * 0.70, { align: 'center' })
+            const luma = (r * 299 + g * 587 + b * 114) / 1000
+            ctx.fillStyle    = luma > 140 ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.75)'
+            ctx.font         = `bold ${CELL_PX - 2}px monospace`
+            ctx.textAlign    = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.fillText(symbol, px + CELL_PX / 2, py + CELL_PX * 0.55)
           }
 
           if ((x - startX) % 10 === 0 || (y - startY) % 10 === 0) {
-            doc.setDrawColor(90, 82, 74)
-            doc.setLineWidth(0.18)
-            doc.rect(px, py, CELL_MM, CELL_MM, 'S')
+            ctx.strokeStyle = 'rgba(60,50,40,0.45)'
+            ctx.lineWidth   = 0.6
           } else {
-            doc.setDrawColor(180, 174, 166)
-            doc.setLineWidth(0.05)
-            doc.rect(px, py, CELL_MM, CELL_MM, 'S')
+            ctx.strokeStyle = 'rgba(150,140,130,0.25)'
+            ctx.lineWidth   = 0.2
           }
+          ctx.strokeRect(px + 0.1, py + 0.1, CELL_PX - 0.2, CELL_PX - 0.2)
         }
       }
 
+      // 눈금자 x축 숫자 (Canvas에 직접)
+      ctx.fillStyle    = 'rgba(100,90,80,0.7)'
+      ctx.font         = `${CELL_PX - 1}px monospace`
+      ctx.textAlign    = 'left'
+      ctx.textBaseline = 'top'
+      for (let x = startX; x < endX; x += 10) {
+        ctx.fillText(String(x + 1), (x - startX) * CELL_PX + 1, 1)
+      }
+
+      // PNG → jsPDF addImage
+      const imgData   = offCanvas.toDataURL('image/png')
+      const printW    = PAGE_W - MARGIN * 2
+      const printHRaw = printW * (chunkH / chunkW)
+      const printH    = Math.min(printHRaw, PAGE_H - MARGIN - originY)
+      doc.addImage(imgData, 'PNG', MARGIN, originY, printW, printH)
+
+      // 눈금자 y축 숫자 (PDF 텍스트)
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(4.5)
       doc.setTextColor(110, 100, 90)
-
-      for (let x = startX; x < endX; x += 10) {
-        const px = MARGIN + (x - startX) * CELL_MM
-        doc.text(String(x + 1), px, originY - 1)
-      }
+      const cellMmFit = printW / chunkW
       for (let y = startY; y < endY; y += 10) {
-        const py = originY + (y - startY) * CELL_MM + CELL_MM / 2 + 1
+        const py = originY + (y - startY) * cellMmFit + cellMmFit / 2 + 1
         doc.text(String(y + 1), MARGIN - 2, py, { align: 'right' })
       }
     }
@@ -399,7 +403,6 @@ export async function exportPatternPdf(
       }
       const drawX = (PAGE_W - drawW) / 2
       const drawY = 26
-
       doc.setFillColor(255, 255, 255)
       doc.setDrawColor(210, 205, 198)
       doc.setLineWidth(0.3)

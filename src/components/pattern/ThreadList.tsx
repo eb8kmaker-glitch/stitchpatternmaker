@@ -4,9 +4,12 @@ import { useState } from 'react'
 import type { ThreadUsage, PatternResult, FabricCount, PaperSize } from '@/types'
 
 interface ThreadListProps {
-  threads:      ThreadUsage[]
-  pattern:      PatternResult | null
-  imageDataUrl?: string
+  threads:           ThreadUsage[]
+  pattern:           PatternResult | null
+  imageDataUrl?:     string
+  onHighlight?:      (dmcId: string | null) => void
+  highlightDmcId?:   string | null
+  onReplaceRequest?: (dmcId: string) => void
 }
 
 const FABRIC_OPTIONS: { value: FabricCount; label: string }[] = [
@@ -23,8 +26,12 @@ const PAPER_OPTIONS: { value: PaperSize; label: string }[] = [
   { value: 'letter', label: 'Letter' },
 ]
 
-export default function ThreadList({ threads, pattern, imageDataUrl }: ThreadListProps) {
+export default function ThreadList({
+  threads, pattern, imageDataUrl,
+  onHighlight, highlightDmcId, onReplaceRequest,
+}: ThreadListProps) {
   const [exporting,     setExporting]     = useState(false)
+  const [pinnedId,      setPinnedId]      = useState<string | null>(null)
   const [fabricCount,   setFabricCount]   = useState<FabricCount>(14)
   const [paperSize,     setPaperSize]     = useState<PaperSize>('a4')
   const [showCover,     setShowCover]     = useState(true)
@@ -79,9 +86,19 @@ export default function ThreadList({ threads, pattern, imageDataUrl }: ThreadLis
         {threads.map(({ dmc, cells, skeins, symbol }) => (
           <div
             key={dmc.id}
-            className="flex items-center gap-2 py-1.5
-                       border-b border-dashed border-linen-300/20 last:border-0"
+            className={`flex items-center gap-2 py-1.5 cursor-pointer
+                       border-b border-dashed border-linen-300/20 last:border-0
+                       transition-colors duration-100
+                       ${pinnedId === dmc.id ? 'bg-sage-400/10' : 'hover:bg-linen-200/40'}`}
+            onMouseEnter={() => onHighlight?.(dmc.id)}
+            onMouseLeave={() => onHighlight?.(pinnedId)}
+            onClick={() => {
+              const next = pinnedId === dmc.id ? null : dmc.id
+              setPinnedId(next)
+              onHighlight?.(next)
+            }}
           >
+            {/* Symbol chip */}
             <div
               className="w-6 h-6 rounded-[6px] bg-linen-100/90 border border-linen-300/35
                          flex items-center justify-center flex-shrink-0 shadow-sm"
@@ -91,18 +108,33 @@ export default function ThreadList({ threads, pattern, imageDataUrl }: ThreadLis
               </span>
             </div>
 
+            {/* Color chip */}
             <div
               className="w-4 h-4 rounded-[4px] border border-linen-300/25 flex-shrink-0 shadow-sm"
               style={{ background: dmc.hex }}
             />
 
+            {/* DMC number */}
             <span className="flex-1 text-[11px] text-warm-600 font-normal">
               DMC {dmc.id}
             </span>
 
+            {/* Counts */}
             <span className="text-[10px] text-warm-400 font-mono tabular-nums whitespace-nowrap">
               {cells.toLocaleString()} · {skeins}타래
             </span>
+
+            {/* Replace button */}
+            {onReplaceRequest && (
+              <button
+                onClick={e => { e.stopPropagation(); onReplaceRequest(dmc.id) }}
+                title="색상 변환"
+                className="ml-1 flex-shrink-0 w-5 h-5 rounded-[4px] flex items-center justify-center
+                           text-warm-300 hover:text-warm-600 hover:bg-linen-300/40 transition-colors"
+              >
+                <EditIcon />
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -201,6 +233,16 @@ export default function ThreadList({ threads, pattern, imageDataUrl }: ThreadLis
         )}
       </button>
     </div>
+  )
+}
+
+function EditIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
   )
 }
 

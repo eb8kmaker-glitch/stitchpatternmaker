@@ -18,6 +18,7 @@ export default function Navbar() {
       {/* Links */}
       <ul className="flex items-center gap-3 sm:gap-7 list-none">
         {[
+          { label: '갤러리',    href: '/gallery' },
           { label: '가이드',    href: '/guide' },
           { label: 'DMC 색상표', href: '/dmc-colors' },
         ].map(link => (
