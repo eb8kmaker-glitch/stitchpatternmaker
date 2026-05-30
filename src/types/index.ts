@@ -67,4 +67,5 @@ export interface PdfOptions {
   showReference:  boolean
   imageDataUrl?:  string
   threadBrand?:   string
+  workColors?:    string[]   // caller-provided; auto-generated if omitted
 }
