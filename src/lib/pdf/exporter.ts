@@ -1,13 +1,6 @@
 import { buildSymbolMap } from '@/lib/pattern/symbols'
+import { assignWorkColors } from '@/lib/pattern/workColors'
 import type { PatternResult, ThreadUsage, PdfOptions } from '@/types'
-
-// ── Work-distinction color palette (16 visually distinct colors) ──────────────
-const WORK_PALETTE = [
-  '#FF0000', '#0000FF', '#00AA00', '#FFD700',
-  '#FF6600', '#8800CC', '#00BBFF', '#FF69B4',
-  '#8B4513', '#008080', '#7FFF00', '#C71585',
-  '#000080', '#808000', '#FF4500', '#3EB489',
-]
 
 function hexToRgbArr(hex: string): [number, number, number] {
   const h = hex.replace('#', '')
@@ -18,56 +11,88 @@ function hexToRgbArr(hex: string): [number, number, number] {
   ]
 }
 
-function rgbToLab(r: number, g: number, b: number): [number, number, number] {
-  let rn = r / 255, gn = g / 255, bn = b / 255
-  rn = rn > 0.04045 ? Math.pow((rn + 0.055) / 1.055, 2.4) : rn / 12.92
-  gn = gn > 0.04045 ? Math.pow((gn + 0.055) / 1.055, 2.4) : gn / 12.92
-  bn = bn > 0.04045 ? Math.pow((bn + 0.055) / 1.055, 2.4) : bn / 12.92
-  const x = (rn * 0.4124 + gn * 0.3576 + bn * 0.1805) / 0.95047
-  const y = (rn * 0.2126 + gn * 0.7152 + bn * 0.0722) / 1.00000
-  const z = (rn * 0.0193 + gn * 0.1192 + bn * 0.9505) / 1.08883
-  const f = (t: number) => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116
-  return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))]
-}
-
-function deltaE(hex1: string, hex2: string): number {
-  const [r1, g1, b1] = hexToRgbArr(hex1)
-  const [r2, g2, b2] = hexToRgbArr(hex2)
-  const [l1, a1, bb1] = rgbToLab(r1, g1, b1)
-  const [l2, a2, bb2] = rgbToLab(r2, g2, b2)
-  return Math.sqrt((l1 - l2) ** 2 + (a1 - a2) ** 2 + (bb1 - bb2) ** 2)
-}
-
-function assignWorkColors(threads: ThreadUsage[]): string[] {
-  const assigned: string[] = []
-  for (let i = 0; i < threads.length; i++) {
-    const recent = assigned.slice(Math.max(0, i - WORK_PALETTE.length))
-    let bestColor = WORK_PALETTE[i % WORK_PALETTE.length]
-    let bestScore = -1
-
-    for (const candidate of WORK_PALETTE) {
-      if (recent.includes(candidate) && recent.length >= WORK_PALETTE.length) continue
-      let minDist = Infinity
-      for (const prev of recent) {
-        const d = deltaE(candidate, prev)
-        if (d < minDist) minDist = d
-      }
-      if (recent.length === 0) minDist = 1000
-      if (minDist > bestScore) {
-        bestScore = minDist
-        bestColor = candidate
-      }
-    }
-    assigned.push(bestColor)
-  }
-  return assigned
-}
-
 // ── Paper size definitions ────────────────────────────────────────────────────
 const PAPER_SIZES = {
   a4:     { w: 210,   h: 297,   jsPdfFormat: 'a4'     as const },
   a3:     { w: 297,   h: 420,   jsPdfFormat: 'a3'     as const },
   letter: { w: 215.9, h: 279.4, jsPdfFormat: 'letter' as const },
+}
+
+// ── Canvas helper: render a grid chunk to an offscreen canvas ────────────────
+function renderGridToCanvas(
+  grid: number[][],
+  dmcMap: { rgb: [number, number, number] }[],
+  symbolMap: Map<number, string>,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  cellPx: number,
+  renderScale: number,
+  drawSymbols: boolean,
+): HTMLCanvasElement {
+  const chunkW = endX - startX
+  const chunkH = endY - startY
+  const canvas = document.createElement('canvas')
+  canvas.width  = chunkW * cellPx * renderScale
+  canvas.height = chunkH * cellPx * renderScale
+  const ctx = canvas.getContext('2d')!
+  ctx.scale(renderScale, renderScale)
+
+  // ── Fill cells
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      const ci       = grid[y][x]
+      const dmc      = dmcMap[ci]
+      const [r, g, b] = dmc.rgb
+      const px       = (x - startX) * cellPx
+      const py       = (y - startY) * cellPx
+
+      ctx.fillStyle = `rgb(${r},${g},${b})`
+      ctx.fillRect(px, py, cellPx, cellPx)
+
+      if (drawSymbols) {
+        const symbol = symbolMap.get(ci) ?? ''
+        if (symbol) {
+          const luma = (r * 299 + g * 587 + b * 114) / 1000
+          ctx.fillStyle    = luma > 140 ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.75)'
+          ctx.font         = `bold ${cellPx - 2}px monospace`
+          ctx.textAlign    = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(symbol, px + cellPx / 2, py + cellPx * 0.55)
+        }
+      }
+
+      // light cell borders
+      ctx.strokeStyle = 'rgba(150,140,130,0.2)'
+      ctx.lineWidth   = 0.2
+      ctx.strokeRect(px + 0.1, py + 0.1, cellPx - 0.2, cellPx - 0.2)
+    }
+  }
+
+  // ── Red 10-cell grid lines (absolute coordinates)
+  ctx.strokeStyle = 'rgba(220,0,0,0.55)'
+  ctx.lineWidth   = 1.2
+  for (let x = startX; x <= endX; x++) {
+    if (x % 10 === 0) {
+      const px = (x - startX) * cellPx
+      ctx.beginPath()
+      ctx.moveTo(px, 0)
+      ctx.lineTo(px, chunkH * cellPx)
+      ctx.stroke()
+    }
+  }
+  for (let y = startY; y <= endY; y++) {
+    if (y % 10 === 0) {
+      const py = (y - startY) * cellPx
+      ctx.beginPath()
+      ctx.moveTo(0, py)
+      ctx.lineTo(chunkW * cellPx, py)
+      ctx.stroke()
+    }
+  }
+
+  return canvas
 }
 
 export async function exportPatternPdf(
@@ -84,8 +109,13 @@ export async function exportPatternPdf(
   const { jsPDF }  = await import('jspdf')
   const autoTable  = (await import('jspdf-autotable')).default
 
-  const { fabricCount, paperSize, showCover, showReference, imageDataUrl, threadBrand = 'DMC' } = options
-  const paper = PAPER_SIZES[paperSize]
+  const {
+    fabricCount, paperSize, showCover, showReference,
+    imageDataUrl, threadBrand = 'DMC',
+  } = options
+
+  const workColors = options.workColors ?? assignWorkColors(threads)
+  const paper      = PAPER_SIZES[paperSize]
 
   const CELL_PX    = 7
   const MARGIN     = 14
@@ -94,16 +124,16 @@ export async function exportPatternPdf(
   const CELL_MM    = CELL_PX * 0.352778
   const CELLS_PER_PAGE_X = Math.floor((PAGE_W - MARGIN * 2) / CELL_MM)
   const CELLS_PER_PAGE_Y = Math.floor((PAGE_H - MARGIN * 2 - 22) / CELL_MM)
+  const RENDER_SCALE = 3
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: paper.jsPdfFormat })
 
   const { grid, dmcMap, width, height } = pattern
-  const symbolMap   = buildSymbolMap(grid)
-  const workColors  = assignWorkColors(threads)
+  const symbolMap = buildSymbolMap(grid)
 
-  const finishedW   = (width  / fabricCount * 2.54).toFixed(1)
-  const finishedH   = (height / fabricCount * 2.54).toFixed(1)
-  const dateStr     = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  const finishedW = (width  / fabricCount * 2.54).toFixed(1)
+  const finishedH = (height / fabricCount * 2.54).toFixed(1)
+  const dateStr   = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
   // ── Cover page ───────────────────────────────────────────────────────────────
   if (showCover) {
@@ -139,10 +169,7 @@ export async function exportPatternPdf(
         const ratio = imgDimensions.w / imgDimensions.h
         let drawW = maxImgW
         let drawH = drawW / ratio
-        if (drawH > maxImgH) {
-          drawH = maxImgH
-          drawW = drawH * ratio
-        }
+        if (drawH > maxImgH) { drawH = maxImgH; drawW = drawH * ratio }
         const drawX = (PAGE_W - drawW) / 2
         const drawY = 36
         doc.setFillColor(255, 255, 255)
@@ -151,23 +178,19 @@ export async function exportPatternPdf(
         doc.roundedRect(drawX - 1, drawY - 1, drawW + 2, drawH + 2, 1, 1, 'FD')
         doc.addImage(imageDataUrl, imgType, drawX, drawY, drawW, drawH)
         imageBottomY = drawY + drawH + 6
-      } catch {
-        imageBottomY = 40
-      }
+      } catch { imageBottomY = 40 }
     }
-
-    const infoData = [
-      ['Date',          dateStr],
-      ['Pattern Size',  `${width} × ${height} stitches`],
-      ['Color Count',   `${threads.length} colors`],
-      ['Fabric Count',  `${fabricCount}CT`],
-      ['Finished Size', `${finishedW} × ${finishedH} cm`],
-      ['Thread Brand',  threadBrand],
-    ]
 
     autoTable(doc, {
       startY: imageBottomY,
-      body: infoData,
+      body: [
+        ['Date',          dateStr],
+        ['Pattern Size',  `${width} x ${height} stitches`],
+        ['Color Count',   `${threads.length} colors`],
+        ['Fabric Count',  `${fabricCount}CT`],
+        ['Finished Size', `${finishedW} x ${finishedH} cm`],
+        ['Thread Brand',  threadBrand],
+      ],
       styles: {
         fontSize: 9,
         cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
@@ -201,13 +224,13 @@ export async function exportPatternPdf(
   doc.setFontSize(8)
   doc.setTextColor(122, 115, 109)
   doc.text(
-    `${width} × ${height} stitches  ·  ${threads.length} colors  ·  ${fabricCount}CT  ·  ${finishedW} × ${finishedH} cm`,
+    `${width} x ${height} stitches  ·  ${threads.length} colors  ·  ${fabricCount}CT  ·  ${finishedW} x ${finishedH} cm`,
     MARGIN, 27,
   )
 
   autoTable(doc, {
     startY: 31,
-    head: [['Sym', 'DMC', 'Color Name', 'Stitches', 'Skeins', '원본색', '작업 구분색']],
+    head: [['Sym', 'DMC', 'Color Name', 'Stitches', 'Skeins', 'DMC Color', 'Work Color']],
     body: threads.map(t => [
       t.symbol, t.dmc.id, t.dmc.name,
       t.cells.toLocaleString('en-US'), String(t.skeins), '', '',
@@ -267,6 +290,57 @@ export async function exportPatternPdf(
     },
   })
 
+  // ── Pattern Overview (mini-pattern) page ─────────────────────────────────────
+  doc.addPage()
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(14)
+  doc.setTextColor(79, 74, 69)
+  doc.text('Pattern Overview', PAGE_W / 2, 16, { align: 'center' })
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(122, 115, 109)
+  doc.text(
+    `${width} x ${height} stitches · ${threads.length} colors · ${fabricCount}CT`,
+    PAGE_W / 2, 23, { align: 'center' },
+  )
+
+  doc.setDrawColor(210, 205, 198)
+  doc.setLineWidth(0.2)
+  doc.line(MARGIN, 26, PAGE_W - MARGIN, 26)
+
+  {
+    const OVERVIEW_MARGIN = 20
+    const availW = PAGE_W - OVERVIEW_MARGIN * 2
+    const availH = PAGE_H - 36 - 14   // title area + footer
+    const cellPxMini = Math.max(2, Math.floor(Math.min(availW / width, availH / height) * (96 / 25.4)))
+    // cellPxMini in screen pixels; availW/height are in mm, 1mm = 96/25.4 px
+    // Use a generous cell size (8px) and let addImage scale it down
+    const MINI_CELL = 8
+    const miniCanvas = renderGridToCanvas(
+      grid, dmcMap, symbolMap,
+      0, 0, width, height,
+      MINI_CELL, 2, false,
+    )
+    const miniImgData = miniCanvas.toDataURL('image/png')
+
+    // Fit into available area
+    const ratio = width / height
+    let drawW = availW
+    let drawH = drawW / ratio
+    if (drawH > availH) { drawH = availH; drawW = drawH * ratio }
+    const drawX = OVERVIEW_MARGIN + (availW - drawW) / 2
+    const drawY = 29
+
+    doc.addImage(miniImgData, 'PNG', drawX, drawY, drawW, drawH)
+  }
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7.5)
+  doc.setTextColor(168, 160, 150)
+  doc.text('Stitch Pattern Maker · stitchpatternmaker.app', PAGE_W / 2, PAGE_H - 7, { align: 'center' })
+
   // ── Pattern pages ────────────────────────────────────────────────────────────
   const totalPagesX = Math.ceil(width  / CELLS_PER_PAGE_X)
   const totalPagesY = Math.ceil(height / CELLS_PER_PAGE_Y)
@@ -300,63 +374,32 @@ export async function exportPatternPdf(
       const chunkW  = endX - startX
       const chunkH  = endY - startY
 
-      // Offscreen Canvas → PNG → addImage (파일 크기 대폭 감소)
-      const RENDER_SCALE = 3
-      const offCanvas    = document.createElement('canvas')
-      offCanvas.width    = chunkW * CELL_PX * RENDER_SCALE
-      offCanvas.height   = chunkH * CELL_PX * RENDER_SCALE
-      const ctx          = offCanvas.getContext('2d')!
-      ctx.scale(RENDER_SCALE, RENDER_SCALE)
+      const offCanvas = renderGridToCanvas(
+        grid, dmcMap, symbolMap,
+        startX, startY, endX, endY,
+        CELL_PX, RENDER_SCALE, true,
+      )
 
-      for (let y = startY; y < endY; y++) {
-        for (let x = startX; x < endX; x++) {
-          const ci       = grid[y][x]
-          const dmc      = dmcMap[ci]
-          const [r, g, b] = dmc.rgb
-          const px       = (x - startX) * CELL_PX
-          const py       = (y - startY) * CELL_PX
-
-          ctx.fillStyle = `rgb(${r},${g},${b})`
-          ctx.fillRect(px, py, CELL_PX, CELL_PX)
-
-          const symbol = symbolMap.get(ci) ?? ''
-          if (symbol) {
-            const luma = (r * 299 + g * 587 + b * 114) / 1000
-            ctx.fillStyle    = luma > 140 ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.75)'
-            ctx.font         = `bold ${CELL_PX - 2}px monospace`
-            ctx.textAlign    = 'center'
-            ctx.textBaseline = 'middle'
-            ctx.fillText(symbol, px + CELL_PX / 2, py + CELL_PX * 0.55)
-          }
-
-          if ((x - startX) % 10 === 0 || (y - startY) % 10 === 0) {
-            ctx.strokeStyle = 'rgba(60,50,40,0.45)'
-            ctx.lineWidth   = 0.6
-          } else {
-            ctx.strokeStyle = 'rgba(150,140,130,0.25)'
-            ctx.lineWidth   = 0.2
-          }
-          ctx.strokeRect(px + 0.1, py + 0.1, CELL_PX - 0.2, CELL_PX - 0.2)
-        }
-      }
-
-      // 눈금자 x축 숫자 (Canvas에 직접)
-      ctx.fillStyle    = 'rgba(100,90,80,0.7)'
-      ctx.font         = `${CELL_PX - 1}px monospace`
-      ctx.textAlign    = 'left'
-      ctx.textBaseline = 'top'
+      // x-axis ruler labels (drawn on canvas)
+      const rCtx = offCanvas.getContext('2d')!
+      rCtx.save()
+      rCtx.scale(1 / RENDER_SCALE, 1 / RENDER_SCALE)
+      rCtx.fillStyle    = 'rgba(100,90,80,0.7)'
+      rCtx.font         = `${(CELL_PX - 1) * RENDER_SCALE}px monospace`
+      rCtx.textAlign    = 'left'
+      rCtx.textBaseline = 'top'
       for (let x = startX; x < endX; x += 10) {
-        ctx.fillText(String(x + 1), (x - startX) * CELL_PX + 1, 1)
+        rCtx.fillText(String(x + 1), (x - startX) * CELL_PX * RENDER_SCALE + 2, 2)
       }
+      rCtx.restore()
 
-      // PNG → jsPDF addImage
       const imgData   = offCanvas.toDataURL('image/png')
       const printW    = PAGE_W - MARGIN * 2
       const printHRaw = printW * (chunkH / chunkW)
       const printH    = Math.min(printHRaw, PAGE_H - MARGIN - originY)
       doc.addImage(imgData, 'PNG', MARGIN, originY, printW, printH)
 
-      // 눈금자 y축 숫자 (PDF 텍스트)
+      // y-axis ruler labels (PDF text)
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(4.5)
       doc.setTextColor(110, 100, 90)
@@ -397,10 +440,7 @@ export async function exportPatternPdf(
       const ratio = imgDimensions.w / imgDimensions.h
       let drawW = maxW
       let drawH = drawW / ratio
-      if (drawH > maxH) {
-        drawH = maxH
-        drawW = drawH * ratio
-      }
+      if (drawH > maxH) { drawH = maxH; drawW = drawH * ratio }
       const drawX = (PAGE_W - drawW) / 2
       const drawY = 26
       doc.setFillColor(255, 255, 255)
@@ -408,14 +448,12 @@ export async function exportPatternPdf(
       doc.setLineWidth(0.3)
       doc.roundedRect(drawX - 2, drawY - 2, drawW + 4, drawH + 4, 1.5, 1.5, 'FD')
       doc.addImage(imageDataUrl, imgType, drawX, drawY, drawW, drawH)
-    } catch {
-      // image unavailable
-    }
+    } catch { /* image unavailable */ }
 
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(8.5)
     doc.setTextColor(122, 115, 109)
-    doc.text('작업 시 이 이미지를 참고하세요', PAGE_W / 2, PAGE_H - 13, { align: 'center' })
+    doc.text('Use this image as reference while stitching.', PAGE_W / 2, PAGE_H - 13, { align: 'center' })
 
     doc.setFontSize(7.5)
     doc.setTextColor(168, 160, 150)
