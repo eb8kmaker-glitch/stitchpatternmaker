@@ -288,7 +288,7 @@ export default function DmcColorsClient() {
 
       <footer className="border-t border-linen-300/20 py-8 text-center">
         <p className="text-[11px] text-warm-400 font-light">
-          © 2025 Stitch Pattern Maker —{' '}
+          © 2026 Stitch Pattern Maker —{' '}
           <Link href="/guide" className="hover:text-warm-600 transition-colors">가이드</Link>
           {' · '}
           <Link href="/" className="hover:text-warm-600 transition-colors">도안 만들기</Link>

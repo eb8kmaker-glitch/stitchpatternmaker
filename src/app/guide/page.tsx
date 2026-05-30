@@ -551,7 +551,7 @@ export default function GuidePage() {
 
       <footer className="border-t border-linen-300/20 py-8 text-center">
         <p className="text-[11px] text-warm-400 font-light">
-          © 2025 Stitch Pattern Maker —{' '}
+          © 2026 Stitch Pattern Maker —{' '}
           <Link href="/dmc-colors" className="hover:text-warm-600 transition-colors">DMC 색상표</Link>
           {' · '}
           <Link href="/guide" className="hover:text-warm-600 transition-colors">가이드</Link>
