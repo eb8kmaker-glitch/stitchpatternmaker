@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { ThreadUsage, PatternResult, FabricCount, PaperSize } from '@/types'
-import { assignWorkColors } from '@/lib/pattern/workColors'
 
 interface ThreadListProps {
   threads:           ThreadUsage[]
@@ -37,12 +36,6 @@ export default function ThreadList({
   const [paperSize,     setPaperSize]     = useState<PaperSize>('a4')
   const [showCover,     setShowCover]     = useState(true)
   const [showReference, setShowReference] = useState(true)
-  const [workColors,    setWorkColors]    = useState<string[]>(() => assignWorkColors(threads))
-
-  useEffect(() => {
-    setWorkColors(assignWorkColors(threads))
-  }, [threads])
-
   const w = pattern?.width  ?? 0
   const h = pattern?.height ?? 0
   const finishedW = w > 0 ? (w / fabricCount * 2.54).toFixed(1) : '-'
@@ -60,7 +53,6 @@ export default function ThreadList({
         showReference,
         imageDataUrl,
         threadBrand: 'DMC',
-        workColors,
       })
     } finally {
       setExporting(false)
@@ -90,7 +82,7 @@ export default function ThreadList({
 
       {/* Thread rows */}
       <div className="max-h-52 overflow-y-auto scrollbar-linen space-y-0">
-        {threads.map(({ dmc, cells, skeins, symbol }, idx) => (
+        {threads.map(({ dmc, cells, skeins, symbol }) => (
           <div
             key={dmc.id}
             className={`flex items-center gap-2 py-1.5 cursor-pointer
@@ -120,25 +112,6 @@ export default function ThreadList({
               className="w-4 h-4 rounded-[4px] border border-linen-300/25 flex-shrink-0 shadow-sm"
               style={{ background: dmc.hex }}
             />
-
-            {/* Work color swatch + picker */}
-            <div className="relative flex-shrink-0" title="Work color (click to change)">
-              <div
-                className="w-4 h-4 rounded-[4px] border border-linen-300/25 shadow-sm cursor-pointer"
-                style={{ background: workColors[idx] ?? '#cccccc' }}
-              />
-              <input
-                type="color"
-                value={workColors[idx] ?? '#cccccc'}
-                onChange={e => {
-                  const next = [...workColors]
-                  next[idx] = e.target.value
-                  setWorkColors(next)
-                }}
-                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                onClick={e => e.stopPropagation()}
-              />
-            </div>
 
             {/* DMC number */}
             <span className="flex-1 text-[11px] text-warm-600 font-normal">

@@ -1,5 +1,4 @@
 import { buildSymbolMap } from '@/lib/pattern/symbols'
-import { assignWorkColors } from '@/lib/pattern/workColors'
 import type { PatternResult, ThreadUsage, PdfOptions } from '@/types'
 
 function hexToRgbArr(hex: string): [number, number, number] {
@@ -114,7 +113,8 @@ export async function exportPatternPdf(
     imageDataUrl, threadBrand = 'DMC',
   } = options
 
-  const workColors = options.workColors ?? assignWorkColors(threads)
+  // Default: use each thread's own DMC color (only differs if caller provided overrides)
+  const workColors = options.workColors ?? threads.map(t => t.dmc.hex)
   const paper      = PAPER_SIZES[paperSize]
 
   const CELL_PX    = 7
@@ -230,7 +230,7 @@ export async function exportPatternPdf(
 
   autoTable(doc, {
     startY: 31,
-    head: [['Sym', 'DMC', 'Color Name', 'Stitches', 'Skeins', 'DMC Color', 'Work Color']],
+    head: [['Sym', 'DMC', 'Color Name', 'Stitches', 'Skeins', 'DMC Color', 'Changed Color']],
     body: threads.map(t => [
       t.symbol, t.dmc.id, t.dmc.name,
       t.cells.toLocaleString('en-US'), String(t.skeins), '', '',
