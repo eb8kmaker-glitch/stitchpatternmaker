@@ -102,7 +102,11 @@ export async function exportPatternPdf(
     fabricCount: 14,
     paperSize: 'a4',
     showCover: true,
-    showReference: true,
+    showColorChart: true,
+    showOverview: true,
+    showPattern: true,
+    showWorkOverview: true,
+    showWorkPattern: true,
   },
   title = 'Stitch Pattern Maker',
 ): Promise<void> {
@@ -110,7 +114,8 @@ export async function exportPatternPdf(
   const autoTable  = (await import('jspdf-autotable')).default
 
   const {
-    fabricCount, paperSize, showCover,
+    fabricCount, paperSize,
+    showCover, showColorChart, showOverview, showPattern, showWorkOverview, showWorkPattern,
     imageDataUrl, threadBrand = 'DMC',
   } = options
 
@@ -213,6 +218,7 @@ export async function exportPatternPdf(
   }
 
   // ── Color chart page ─────────────────────────────────────────────────────────
+  if (showColorChart) {
   if (showCover) doc.addPage()
 
   doc.setFont('helvetica', 'bold')
@@ -289,8 +295,10 @@ export async function exportPatternPdf(
       doc.text('Stitch Pattern Maker · stitchpatternmaker.app', PAGE_W / 2, PAGE_H - 5, { align: 'center' })
     },
   })
+  } // end showColorChart
 
   // ── Pattern Overview (mini-pattern) page ─────────────────────────────────────
+  if (showOverview) {
   doc.addPage()
 
   doc.setFont('helvetica', 'bold')
@@ -340,6 +348,7 @@ export async function exportPatternPdf(
   doc.setFontSize(7.5)
   doc.setTextColor(168, 160, 150)
   doc.text('Stitch Pattern Maker · stitchpatternmaker.app', PAGE_W / 2, PAGE_H - 7, { align: 'center' })
+  } // end showOverview
 
   // Build work color dmcMap: substitute each cluster's color with its assigned work color
   const workDmcMap = dmcMap.map((_dmc, clusterIdx) => {
@@ -418,9 +427,10 @@ export async function exportPatternPdf(
     }
   }
 
-  renderPatternPages(dmcMap, 'DMC Color Pattern')
+  if (showPattern) renderPatternPages(dmcMap, 'DMC Color Pattern')
 
   // ── Work Color Overview page ─────────────────────────────────────────────────
+  if (showWorkOverview) {
   doc.addPage()
 
   doc.setFont('helvetica', 'bold')
@@ -463,9 +473,10 @@ export async function exportPatternPdf(
   doc.setFontSize(7.5)
   doc.setTextColor(168, 160, 150)
   doc.text('Stitch Pattern Maker · stitchpatternmaker.app', PAGE_W / 2, PAGE_H - 7, { align: 'center' })
+  } // end showWorkOverview
 
   // ── Work Color pattern pages ─────────────────────────────────────────────────
-  renderPatternPages(workDmcMap, 'Work Color Pattern')
+  if (showWorkPattern) renderPatternPages(workDmcMap, 'Work Color Pattern')
 
   doc.save(`stitchpatternmaker-${width}x${height}.pdf`)
 }

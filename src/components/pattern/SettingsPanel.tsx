@@ -62,10 +62,15 @@ const DISPLAY_MODES: { label: string; value: DisplayMode; icon: React.ReactNode 
   { label: '혼합',   value: 'mixed',  icon: <MixedIcon /> },
 ]
 
+const MAX_CELLS = 90_000   // 300×300 — safe upper bound
+
 export default function SettingsPanel({
   settings, onChange, onGenerate, isGenerating, hasImage,
 }: SettingsPanelProps) {
   const [preset, setPreset] = useState<SizePrefixPreset>('100x100')
+
+  const totalCells = settings.width * settings.height
+  const overLimit  = totalCells > MAX_CELLS
 
   function handlePreset(v: SizePrefixPreset) {
     setPreset(v)
@@ -99,20 +104,31 @@ export default function SettingsPanel({
         </select>
 
         {preset === 'custom' && (
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="form-lbl">가로 (칸)</label>
-              <input type="number" className="input-linen" min={10} max={500}
-                     value={settings.width}
-                     onChange={e => onChange({ ...settings, width: +e.target.value })} />
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="form-lbl">가로 (칸)</label>
+                <input type="number"
+                       className={`input-linen ${overLimit ? 'border-red-400 focus:border-red-400' : ''}`}
+                       min={10} max={300}
+                       value={settings.width}
+                       onChange={e => onChange({ ...settings, width: +e.target.value })} />
+              </div>
+              <div>
+                <label className="form-lbl">세로 (칸)</label>
+                <input type="number"
+                       className={`input-linen ${overLimit ? 'border-red-400 focus:border-red-400' : ''}`}
+                       min={10} max={300}
+                       value={settings.height}
+                       onChange={e => onChange({ ...settings, height: +e.target.value })} />
+              </div>
             </div>
-            <div>
-              <label className="form-lbl">세로 (칸)</label>
-              <input type="number" className="input-linen" min={10} max={500}
-                     value={settings.height}
-                     onChange={e => onChange({ ...settings, height: +e.target.value })} />
-            </div>
-          </div>
+            {overLimit && (
+              <p className="mt-1.5 text-[10px] text-red-400 leading-snug">
+                변환불가: 최대 300 × 300 (총 90,000칸)을 초과했습니다
+              </p>
+            )}
+          </>
         )}
       </Section>
 
@@ -270,7 +286,7 @@ export default function SettingsPanel({
         <button
           className="btn-primary w-full"
           onClick={onGenerate}
-          disabled={!hasImage || isGenerating}
+          disabled={!hasImage || isGenerating || overLimit}
         >
           {isGenerating ? (
             <>

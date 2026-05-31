@@ -21,6 +21,7 @@ export default function Navbar() {
           { label: '갤러리',    href: '/gallery' },
           { label: '가이드',    href: '/guide' },
           { label: 'DMC 색상표', href: '/dmc-colors' },
+          { label: '피드백',    href: '/feedback' },
         ].map(link => (
           <li key={link.label} className="hidden sm:block">
             <Link
