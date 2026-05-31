@@ -8,6 +8,8 @@ import SettingsPanel   from '@/components/pattern/SettingsPanel'
 import PatternCanvas   from '@/components/pattern/PatternCanvas'
 import ThreadList      from '@/components/pattern/ThreadList'
 import ProgressOverlay from '@/components/ui/ProgressOverlay'
+import PaletteShowcase from '@/components/ui/PaletteShowcase'
+import AdUnit          from '@/components/ui/AdUnit'
 import { usePatternGenerator } from '@/hooks/usePatternGenerator'
 import type { PatternSettings } from '@/types'
 
@@ -157,6 +159,33 @@ export default function HomePage() {
             </div>
           )}
         </div>
+
+        {/* ── Features ──────────────────────────────────────────────────── */}
+        <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          {FEATURES.map(f => (
+            <div key={f.title}
+                 className="bg-linen-50/80 border border-linen-300/20 rounded-card p-5
+                            shadow-linen hover:shadow-linen-md hover:border-linen-300/35
+                            transition-all duration-250">
+              <div className="w-9 h-9 rounded-full bg-sage-400/12 border border-sage-400/20
+                              flex items-center justify-center mb-3 text-sage-500">
+                {f.icon}
+              </div>
+              <h4 className="font-cormorant text-[14px] text-warm-600 mb-1.5 tracking-wide">
+                {f.title}
+              </h4>
+              <p className="text-[11px] text-warm-400 font-light leading-relaxed">
+                {f.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── stitch-linen-above ─────────────────────────────────────────── */}
+        <AdUnit slot="8049858908" wrapperStyle={{ margin: '32px 0 0' }} />
+
+        {/* ── Palette showcase ──────────────────────────────────────────── */}
+        <PaletteShowcase />
         </div>
 
         {/* ── 카카오 애드핏 세로형 배너 (데스크탑 전용) ────────────────── */}
@@ -177,4 +206,40 @@ export default function HomePage() {
       </main>
     </div>
   )
+}
+
+const FEATURES = [
+  {
+    title: 'LAB 색공간 매핑',
+    desc:  '사람 눈 기준으로 가장 가까운 DMC 실 색상을 ΔE 거리로 정확하게 매핑합니다',
+    icon: <LabIcon />,
+  },
+  {
+    title: '유사색 자동 분리',
+    desc:  '인접 색상의 ΔE를 검사해 자동 보정, 구분하기 어려운 배치를 예방합니다',
+    icon: <WandIcon />,
+  },
+  {
+    title: '인쇄용 PDF 출력',
+    desc:  '실 목록, 페이지 분할, DMC 번호가 포함된 고해상도 도안을 내보냅니다',
+    icon: <PrintIcon />,
+  },
+  {
+    title: '브라우저 전용 처리',
+    desc:  '업로드한 사진은 서버로 전송되지 않아 개인 사진도 안전합니다',
+    icon: <ShieldIcon />,
+  },
+]
+
+function LabIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+}
+function WandIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2m0 14v-2M8 9H2m14 0h-2"/><line x1="4" y1="20" x2="14" y2="10"/></svg>
+}
+function PrintIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+}
+function ShieldIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
 }
