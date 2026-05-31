@@ -1,4 +1,5 @@
 import { buildSymbolMap } from '@/lib/pattern/symbols'
+import { assignWorkColors } from '@/lib/pattern/workColors'
 import type { PatternResult, ThreadUsage, PdfOptions } from '@/types'
 
 function hexToRgbArr(hex: string): [number, number, number] {
@@ -109,12 +110,11 @@ export async function exportPatternPdf(
   const autoTable  = (await import('jspdf-autotable')).default
 
   const {
-    fabricCount, paperSize, showCover, showReference,
+    fabricCount, paperSize, showCover,
     imageDataUrl, threadBrand = 'DMC',
   } = options
 
-  // Default: use each thread's own DMC color (only differs if caller provided overrides)
-  const workColors = options.workColors ?? threads.map(t => t.dmc.hex)
+  const workColors = assignWorkColors(threads)
   const paper      = PAPER_SIZES[paperSize]
 
   const CELL_PX    = 7
@@ -230,7 +230,7 @@ export async function exportPatternPdf(
 
   autoTable(doc, {
     startY: 31,
-    head: [['Sym', 'DMC', 'Color Name', 'Stitches', 'Skeins', 'DMC Color', 'Changed Color']],
+    head: [['Sym', 'DMC', 'Color Name', 'Stitches', 'Skeins', 'DMC Color', 'Work Color']],
     body: threads.map(t => [
       t.symbol, t.dmc.id, t.dmc.name,
       t.cells.toLocaleString('en-US'), String(t.skeins), '', '',
@@ -341,124 +341,131 @@ export async function exportPatternPdf(
   doc.setTextColor(168, 160, 150)
   doc.text('Stitch Pattern Maker · stitchpatternmaker.app', PAGE_W / 2, PAGE_H - 7, { align: 'center' })
 
+  // Build work color dmcMap: substitute each cluster's color with its assigned work color
+  const workDmcMap = dmcMap.map((_dmc, clusterIdx) => {
+    const threadIdx = threads.findIndex(t => t.clusterIndex === clusterIdx)
+    const wc = threadIdx >= 0 ? hexToRgbArr(workColors[threadIdx]) : ([200, 200, 200] as [number, number, number])
+    return { rgb: wc }
+  })
+
   // ── Pattern pages ────────────────────────────────────────────────────────────
-  const totalPagesX = Math.ceil(width  / CELLS_PER_PAGE_X)
-  const totalPagesY = Math.ceil(height / CELLS_PER_PAGE_Y)
-  const totalPages  = totalPagesX * totalPagesY
-  let pageNum = 1
+  function renderPatternPages(colorMap: { rgb: [number, number, number] }[], sectionTitle: string) {
+    const totalPagesX = Math.ceil(width  / CELLS_PER_PAGE_X)
+    const totalPagesY = Math.ceil(height / CELLS_PER_PAGE_Y)
+    const totalPages  = totalPagesX * totalPagesY
+    let pageNum = 1
 
-  for (let pageY = 0; pageY < totalPagesY; pageY++) {
-    for (let pageX = 0; pageX < totalPagesX; pageX++) {
-      doc.addPage()
+    for (let pageY = 0; pageY < totalPagesY; pageY++) {
+      for (let pageX = 0; pageX < totalPagesX; pageX++) {
+        doc.addPage()
 
-      const startX = pageX * CELLS_PER_PAGE_X
-      const startY = pageY * CELLS_PER_PAGE_Y
-      const endX   = Math.min(startX + CELLS_PER_PAGE_X, width)
-      const endY   = Math.min(startY + CELLS_PER_PAGE_Y, height)
+        const startX = pageX * CELLS_PER_PAGE_X
+        const startY = pageY * CELLS_PER_PAGE_Y
+        const endX   = Math.min(startX + CELLS_PER_PAGE_X, width)
+        const endY   = Math.min(startY + CELLS_PER_PAGE_Y, height)
 
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7.5)
-      doc.setTextColor(150, 142, 134)
-      doc.text(
-        `Page ${pageNum} / ${totalPages}  |  Area [${startX + 1}-${endX}, ${startY + 1}-${endY}]`,
-        MARGIN, 11,
-      )
-      doc.text(title, PAGE_W - MARGIN, 11, { align: 'right' })
-      pageNum++
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(7.5)
+        doc.setTextColor(150, 142, 134)
+        doc.text(
+          `${sectionTitle}  ·  Page ${pageNum} / ${totalPages}  |  Area [${startX + 1}-${endX}, ${startY + 1}-${endY}]`,
+          MARGIN, 11,
+        )
+        doc.text(title, PAGE_W - MARGIN, 11, { align: 'right' })
+        pageNum++
 
-      doc.setDrawColor(210, 205, 198)
-      doc.setLineWidth(0.2)
-      doc.line(MARGIN, 13.5, PAGE_W - MARGIN, 13.5)
+        doc.setDrawColor(210, 205, 198)
+        doc.setLineWidth(0.2)
+        doc.line(MARGIN, 13.5, PAGE_W - MARGIN, 13.5)
 
-      const originY = 16
-      const chunkW  = endX - startX
-      const chunkH  = endY - startY
+        const originY = 16
+        const chunkW  = endX - startX
+        const chunkH  = endY - startY
 
-      const offCanvas = renderGridToCanvas(
-        grid, dmcMap, symbolMap,
-        startX, startY, endX, endY,
-        CELL_PX, RENDER_SCALE, true,
-      )
+        const offCanvas = renderGridToCanvas(
+          grid, colorMap, symbolMap,
+          startX, startY, endX, endY,
+          CELL_PX, RENDER_SCALE, true,
+        )
 
-      // x-axis ruler labels (drawn on canvas)
-      const rCtx = offCanvas.getContext('2d')!
-      rCtx.save()
-      rCtx.scale(1 / RENDER_SCALE, 1 / RENDER_SCALE)
-      rCtx.fillStyle    = 'rgba(100,90,80,0.7)'
-      rCtx.font         = `${(CELL_PX - 1) * RENDER_SCALE}px monospace`
-      rCtx.textAlign    = 'left'
-      rCtx.textBaseline = 'top'
-      for (let x = startX; x < endX; x += 10) {
-        rCtx.fillText(String(x + 1), (x - startX) * CELL_PX * RENDER_SCALE + 2, 2)
-      }
-      rCtx.restore()
+        const rCtx = offCanvas.getContext('2d')!
+        rCtx.save()
+        rCtx.scale(1 / RENDER_SCALE, 1 / RENDER_SCALE)
+        rCtx.fillStyle    = 'rgba(100,90,80,0.7)'
+        rCtx.font         = `${(CELL_PX - 1) * RENDER_SCALE}px monospace`
+        rCtx.textAlign    = 'left'
+        rCtx.textBaseline = 'top'
+        for (let x = startX; x < endX; x += 10) {
+          rCtx.fillText(String(x + 1), (x - startX) * CELL_PX * RENDER_SCALE + 2, 2)
+        }
+        rCtx.restore()
 
-      const imgData   = offCanvas.toDataURL('image/png')
-      const printW    = PAGE_W - MARGIN * 2
-      const printHRaw = printW * (chunkH / chunkW)
-      const printH    = Math.min(printHRaw, PAGE_H - MARGIN - originY)
-      doc.addImage(imgData, 'PNG', MARGIN, originY, printW, printH)
+        const imgData   = offCanvas.toDataURL('image/png')
+        const printW    = PAGE_W - MARGIN * 2
+        const printHRaw = printW * (chunkH / chunkW)
+        const printH    = Math.min(printHRaw, PAGE_H - MARGIN - originY)
+        doc.addImage(imgData, 'PNG', MARGIN, originY, printW, printH)
 
-      // y-axis ruler labels (PDF text)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(4.5)
-      doc.setTextColor(110, 100, 90)
-      const cellMmFit = printW / chunkW
-      for (let y = startY; y < endY; y += 10) {
-        const py = originY + (y - startY) * cellMmFit + cellMmFit / 2 + 1
-        doc.text(String(y + 1), MARGIN - 2, py, { align: 'right' })
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(4.5)
+        doc.setTextColor(110, 100, 90)
+        const cellMmFit = printW / chunkW
+        for (let y = startY; y < endY; y += 10) {
+          const py = originY + (y - startY) * cellMmFit + cellMmFit / 2 + 1
+          doc.text(String(y + 1), MARGIN - 2, py, { align: 'right' })
+        }
       }
     }
   }
 
-  // ── Reference image page ─────────────────────────────────────────────────────
-  if (showReference && imageDataUrl) {
-    doc.addPage()
+  renderPatternPages(dmcMap, 'DMC Color Pattern')
 
-    doc.setFillColor(247, 245, 242)
-    doc.rect(0, 0, PAGE_W, PAGE_H, 'F')
+  // ── Work Color Overview page ─────────────────────────────────────────────────
+  doc.addPage()
 
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(14)
-    doc.setTextColor(79, 74, 69)
-    doc.text('Reference Image', PAGE_W / 2, 18, { align: 'center' })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(14)
+  doc.setTextColor(79, 74, 69)
+  doc.text('Work Color Overview', PAGE_W / 2, 16, { align: 'center' })
 
-    doc.setDrawColor(210, 205, 198)
-    doc.setLineWidth(0.3)
-    doc.line(MARGIN, 22, PAGE_W - MARGIN, 22)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(122, 115, 109)
+  doc.text(
+    `${width} x ${height} stitches · ${threads.length} colors · each DMC replaced by its work color`,
+    PAGE_W / 2, 23, { align: 'center' },
+  )
 
-    try {
-      const imgType = imageDataUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG'
-      const imgDimensions = await new Promise<{ w: number; h: number }>((resolve) => {
-        const img = new Image()
-        img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight })
-        img.onerror = () => resolve({ w: 1, h: 1 })
-        img.src = imageDataUrl
-      })
-      const maxW = PAGE_W - MARGIN * 2
-      const maxH = PAGE_H - 42
-      const ratio = imgDimensions.w / imgDimensions.h
-      let drawW = maxW
-      let drawH = drawW / ratio
-      if (drawH > maxH) { drawH = maxH; drawW = drawH * ratio }
-      const drawX = (PAGE_W - drawW) / 2
-      const drawY = 26
-      doc.setFillColor(255, 255, 255)
-      doc.setDrawColor(210, 205, 198)
-      doc.setLineWidth(0.3)
-      doc.roundedRect(drawX - 2, drawY - 2, drawW + 4, drawH + 4, 1.5, 1.5, 'FD')
-      doc.addImage(imageDataUrl, imgType, drawX, drawY, drawW, drawH)
-    } catch { /* image unavailable */ }
+  doc.setDrawColor(210, 205, 198)
+  doc.setLineWidth(0.2)
+  doc.line(MARGIN, 26, PAGE_W - MARGIN, 26)
 
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8.5)
-    doc.setTextColor(122, 115, 109)
-    doc.text('Use this image as reference while stitching.', PAGE_W / 2, PAGE_H - 13, { align: 'center' })
-
-    doc.setFontSize(7.5)
-    doc.setTextColor(168, 160, 150)
-    doc.text('Stitch Pattern Maker · stitchpatternmaker.app', PAGE_W / 2, PAGE_H - 7, { align: 'center' })
+  {
+    const OVERVIEW_MARGIN = 20
+    const availW = PAGE_W - OVERVIEW_MARGIN * 2
+    const availH = PAGE_H - 36 - 14
+    const MINI_CELL = 8
+    const miniCanvas = renderGridToCanvas(
+      grid, workDmcMap, symbolMap,
+      0, 0, width, height,
+      MINI_CELL, 2, false,
+    )
+    const miniImgData = miniCanvas.toDataURL('image/png')
+    const ratio = width / height
+    let drawW = availW
+    let drawH = drawW / ratio
+    if (drawH > availH) { drawH = availH; drawW = drawH * ratio }
+    const drawX = OVERVIEW_MARGIN + (availW - drawW) / 2
+    doc.addImage(miniImgData, 'PNG', drawX, 29, drawW, drawH)
   }
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7.5)
+  doc.setTextColor(168, 160, 150)
+  doc.text('Stitch Pattern Maker · stitchpatternmaker.app', PAGE_W / 2, PAGE_H - 7, { align: 'center' })
+
+  // ── Work Color pattern pages ─────────────────────────────────────────────────
+  renderPatternPages(workDmcMap, 'Work Color Pattern')
 
   doc.save(`stitchpatternmaker-${width}x${height}.pdf`)
 }
