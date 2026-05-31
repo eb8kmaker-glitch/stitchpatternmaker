@@ -1,33 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useForm, ValidationError } from '@formspree/react'
 import Navbar from '@/components/layout/Navbar'
 
-const FORMSPREE_ID = process.env.NEXT_PUBLIC_FORMSPREE_ID ?? 'xpwreazq'
-
 export default function FeedbackPage() {
-  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setStatus('sending')
-    const form = e.currentTarget
-    try {
-      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
-        method: 'POST',
-        headers: { Accept: 'application/json' },
-        body: new FormData(form),
-      })
-      if (res.ok) {
-        setStatus('success')
-        form.reset()
-      } else {
-        setStatus('error')
-      }
-    } catch {
-      setStatus('error')
-    }
-  }
+  const [state, handleSubmit] = useForm('mjgzdern')
 
   return (
     <div className="min-h-screen">
@@ -45,63 +22,70 @@ export default function FeedbackPage() {
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-linen-50/80 border border-linen-300/20 rounded-panel p-6 shadow-linen space-y-4"
-        >
-          <div>
-            <label className="form-lbl">이메일 (선택)</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="your@email.com"
-              className="input-linen"
-            />
-          </div>
-
-          <div>
-            <label className="form-lbl">제목 <span className="text-red-400">*</span></label>
-            <input
-              type="text"
-              name="subject"
-              required
-              placeholder="제목을 입력해주세요"
-              className="input-linen"
-            />
-          </div>
-
-          <div>
-            <label className="form-lbl">내용 <span className="text-red-400">*</span></label>
-            <textarea
-              name="message"
-              required
-              rows={6}
-              placeholder="내용을 입력해주세요"
-              className="input-linen resize-none"
-            />
-          </div>
-
-          {status === 'success' && (
+        {state.succeeded ? (
+          <div className="bg-linen-50/80 border border-linen-300/20 rounded-panel p-6 shadow-linen">
             <p className="text-[12px] text-sage-500 bg-sage-400/10 border border-sage-400/20
                            rounded-[8px] px-4 py-3">
               메시지가 전송되었습니다. 감사합니다!
             </p>
-          )}
-          {status === 'error' && (
-            <p className="text-[12px] text-red-400 bg-red-50 border border-red-200
-                           rounded-[8px] px-4 py-3">
-              전송에 실패했습니다. 다시 시도해 주세요.
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={status === 'sending' || status === 'success'}
-            className="btn-primary w-full"
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="bg-linen-50/80 border border-linen-300/20 rounded-panel p-6 shadow-linen space-y-4"
           >
-            {status === 'sending' ? '전송 중...' : 'Send'}
-          </button>
-        </form>
+            <div>
+              <label className="form-lbl">이메일 (선택)</label>
+              <input
+                type="email"
+                name="email"
+                placeholder="your@email.com"
+                className="input-linen"
+              />
+              <ValidationError field="email" prefix="이메일" errors={state.errors}
+                className="mt-1 text-[11px] text-red-400" />
+            </div>
+
+            <div>
+              <label className="form-lbl">제목 <span className="text-red-400">*</span></label>
+              <input
+                type="text"
+                name="subject"
+                required
+                placeholder="제목을 입력해주세요"
+                className="input-linen"
+              />
+            </div>
+
+            <div>
+              <label className="form-lbl">내용 <span className="text-red-400">*</span></label>
+              <textarea
+                name="message"
+                required
+                rows={6}
+                placeholder="내용을 입력해주세요"
+                className="input-linen resize-none"
+              />
+              <ValidationError field="message" prefix="내용" errors={state.errors}
+                className="mt-1 text-[11px] text-red-400" />
+            </div>
+
+            {state.errors && state.errors.length > 0 && (
+              <p className="text-[12px] text-red-400 bg-red-50 border border-red-200
+                             rounded-[8px] px-4 py-3">
+                전송에 실패했습니다. 다시 시도해 주세요.
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={state.submitting}
+              className="btn-primary w-full"
+            >
+              {state.submitting ? '전송 중...' : 'Send'}
+            </button>
+          </form>
+        )}
       </main>
     </div>
   )
