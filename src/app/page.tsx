@@ -123,7 +123,7 @@ export default function HomePage() {
           </div>
 
           {/* Canvas pane */}
-          <div className="relative flex flex-col h-full min-h-[280px]">
+          <div className="relative flex flex-col flex-1 min-h-[280px] lg:h-full">
             <PatternCanvas
               pattern={state.pattern}
               displayMode={settings.mode}
