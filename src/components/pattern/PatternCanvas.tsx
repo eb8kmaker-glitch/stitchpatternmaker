@@ -482,7 +482,7 @@ export default function PatternCanvas({
         )}
 
         <span className="ml-auto flex items-center gap-3 text-[10px] text-warm-400 font-light tracking-wider">
-          <span className="opacity-60">
+          <span className="opacity-90">
             Ctrl+휠로 줌 · Space+드래그로 이동
           </span>
           {Math.round(scale * 100)}%
