@@ -111,7 +111,7 @@ export default function HomePage() {
                         ${state.threads.length > 0 ? 'lg:grid-cols-[280px_1fr_280px]' : 'lg:grid-cols-[280px_1fr]'}
                         border border-linen-300/20 rounded-panel overflow-hidden
                         shadow-linen bg-linen-50/60`}
-             style={{ height: 'min(680px, calc(100vh - 160px))' }}>
+             style={{ height: 'min(560px, calc(100vh - 200px))' }}>
           {/* Left sidebar — settings */}
           <div className="flex flex-col overflow-y-auto scrollbar-linen
                           border-b lg:border-b-0 lg:border-r border-linen-300/20
@@ -126,7 +126,7 @@ export default function HomePage() {
           </div>
 
           {/* Canvas pane */}
-          <div className="relative flex flex-col h-full min-h-[400px]">
+          <div className="relative flex flex-col h-full min-h-[280px]">
             <PatternCanvas
               pattern={state.pattern}
               displayMode={settings.mode}
