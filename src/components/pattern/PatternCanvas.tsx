@@ -501,7 +501,7 @@ export default function PatternCanvas({
       {/* ── Canvas area ──────────────────────────────────────────────────────── */}
       <div
         ref={containerRef}
-        className="flex-1 relative overflow-hidden min-h-[500px] select-none"
+        className="flex-1 relative overflow-hidden min-h-[300px] select-none"
         style={{
           touchAction: 'none',
           backgroundImage: `
