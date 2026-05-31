@@ -61,11 +61,15 @@ export type FabricCount = 11 | 14 | 16 | 18 | 28
 export type PaperSize   = 'a4' | 'a3' | 'letter'
 
 export interface PdfOptions {
-  fabricCount:    FabricCount
-  paperSize:      PaperSize
-  showCover:      boolean
-  showReference:  boolean
-  imageDataUrl?:  string
-  threadBrand?:   string
-  workColors?:    string[]   // caller-provided; auto-generated if omitted
+  fabricCount:      FabricCount
+  paperSize:        PaperSize
+  showCover:        boolean
+  showColorChart:   boolean
+  showOverview:     boolean
+  showPattern:      boolean
+  showWorkOverview: boolean
+  showWorkPattern:  boolean
+  imageDataUrl?:    string
+  threadBrand?:     string
+  workColors?:      string[]
 }

@@ -30,12 +30,16 @@ export default function ThreadList({
   threads, pattern, imageDataUrl,
   onHighlight, highlightDmcId, onReplaceRequest,
 }: ThreadListProps) {
-  const [exporting,     setExporting]     = useState(false)
-  const [pinnedId,      setPinnedId]      = useState<string | null>(null)
-  const [fabricCount,   setFabricCount]   = useState<FabricCount>(14)
-  const [paperSize,     setPaperSize]     = useState<PaperSize>('a4')
-  const [showCover,     setShowCover]     = useState(true)
-  const [showReference, setShowReference] = useState(true)
+  const [exporting,        setExporting]        = useState(false)
+  const [pinnedId,         setPinnedId]         = useState<string | null>(null)
+  const [fabricCount,      setFabricCount]      = useState<FabricCount>(14)
+  const [paperSize,        setPaperSize]        = useState<PaperSize>('a4')
+  const [showCover,        setShowCover]        = useState(true)
+  const [showColorChart,   setShowColorChart]   = useState(true)
+  const [showOverview,     setShowOverview]     = useState(true)
+  const [showPattern,      setShowPattern]      = useState(true)
+  const [showWorkOverview, setShowWorkOverview] = useState(true)
+  const [showWorkPattern,  setShowWorkPattern]  = useState(true)
   const w = pattern?.width  ?? 0
   const h = pattern?.height ?? 0
   const finishedW = w > 0 ? (w / fabricCount * 2.54).toFixed(1) : '-'
@@ -50,7 +54,11 @@ export default function ThreadList({
         fabricCount,
         paperSize,
         showCover,
-        showReference,
+        showColorChart,
+        showOverview,
+        showPattern,
+        showWorkOverview,
+        showWorkPattern,
         imageDataUrl,
         threadBrand: 'DMC',
       })
@@ -62,7 +70,7 @@ export default function ThreadList({
   if (threads.length === 0) return null
 
   return (
-    <div className="px-[18px] py-3.5">
+    <div className="px-[18px] py-3.5 flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
         <p className="sec-label mb-0">실 목록 · 범례</p>
@@ -81,7 +89,7 @@ export default function ThreadList({
       </div>
 
       {/* Thread rows */}
-      <div className="max-h-52 overflow-y-auto scrollbar-linen space-y-0">
+      <div className="flex-1 overflow-y-auto scrollbar-linen space-y-0 min-h-0">
         {threads.map(({ dmc, cells, skeins, symbol }) => (
           <div
             key={dmc.id}
@@ -191,28 +199,26 @@ export default function ThreadList({
         {/* 페이지 토글 */}
         <div className="space-y-1.5">
           <p className="text-[9px] uppercase tracking-wider text-warm-400/70 mb-1">PDF 페이지</p>
-          <label className="flex items-center gap-2 cursor-pointer group">
-            <input
-              type="checkbox"
-              checked={showCover}
-              onChange={e => setShowCover(e.target.checked)}
-              className="accent-sage-500 w-3 h-3"
-            />
-            <span className="text-[10px] text-warm-500 group-hover:text-warm-600 transition-colors">
-              표지 페이지 (원본 이미지 · 도안 정보)
-            </span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer group">
-            <input
-              type="checkbox"
-              checked={showReference}
-              onChange={e => setShowReference(e.target.checked)}
-              className="accent-sage-500 w-3 h-3"
-            />
-            <span className="text-[10px] text-warm-500 group-hover:text-warm-600 transition-colors">
-              참고 이미지 페이지 (마지막 페이지)
-            </span>
-          </label>
+          {([
+            [showCover,        setShowCover,        '① 표지 — 원본 이미지 · 도안 정보'],
+            [showColorChart,   setShowColorChart,   '② 색상표 — DMC 실 번호 · 기호 범례'],
+            [showOverview,     setShowOverview,     '③ 패턴 오버뷰 — 전체 도안 축소판'],
+            [showPattern,      setShowPattern,      '④ 패턴 — 실제 작업용 격자 페이지'],
+            [showWorkOverview, setShowWorkOverview, '⑤ 워크컬러 오버뷰 — 전체보기'],
+            [showWorkPattern,  setShowWorkPattern,  '⑥ 워크컬러 패턴 — 격자 페이지'],
+          ] as [boolean, (v: boolean) => void, string][]).map(([checked, setter, label]) => (
+            <label key={label} className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={e => setter(e.target.checked)}
+                className="accent-sage-500 w-3 h-3"
+              />
+              <span className="text-[10px] text-warm-500 group-hover:text-warm-600 transition-colors">
+                {label}
+              </span>
+            </label>
+          ))}
         </div>
       </div>
 

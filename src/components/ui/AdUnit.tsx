@@ -21,7 +21,7 @@ export default function AdUnit({ slot, style, wrapperStyle }: AdUnitProps) {
   }, [])
 
   return (
-    <div style={{ width: '100%', overflow: 'hidden', ...wrapperStyle }}>
+    <div style={{ width: '100%', overflow: 'hidden', maxHeight: 260, ...wrapperStyle }}>
       <span style={{
         display: 'block',
         fontSize: 10,
