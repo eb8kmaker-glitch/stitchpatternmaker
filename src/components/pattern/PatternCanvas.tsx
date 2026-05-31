@@ -501,8 +501,9 @@ export default function PatternCanvas({
       {/* ── Canvas area ──────────────────────────────────────────────────────── */}
       <div
         ref={containerRef}
-        className="flex-1 relative overflow-hidden min-h-[300px] select-none"
+        className="flex-1 relative overflow-hidden select-none"
         style={{
+          minHeight: '400px',
           touchAction: 'none',
           backgroundImage: `
             repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(168,178,161,0.05) 23px, rgba(168,178,161,0.05) 24px),

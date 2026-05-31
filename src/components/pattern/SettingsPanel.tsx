@@ -81,7 +81,7 @@ export default function SettingsPanel({
   }
 
   return (
-    <aside className="bg-linen-sidebar border-r border-linen-300/20 overflow-y-auto max-h-full scrollbar-linen">
+    <aside className="bg-linen-sidebar border-r border-linen-300/20 overflow-y-auto scrollbar-linen" style={{ maxHeight: 'calc(100vh - 140px)' }}>
       {/* Header */}
       <div className="px-5 py-4 border-b border-linen-300/18">
         <h2 className="font-cormorant text-[15px] text-warm-600 tracking-wide flex items-center gap-2">

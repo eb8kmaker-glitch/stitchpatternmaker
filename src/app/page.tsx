@@ -144,7 +144,8 @@ export default function HomePage() {
           {state.threads.length > 0 && (
             <div className="flex flex-col overflow-y-auto scrollbar-linen
                             border-t lg:border-t-0 lg:border-l border-linen-300/20
-                            bg-gradient-to-b from-linen-100/35 to-linen-200/20">
+                            bg-gradient-to-b from-linen-100/35 to-linen-200/20"
+                 style={{ maxHeight: 'calc(100vh - 140px)' }}>
               <ThreadList
                 threads={state.threads}
                 pattern={state.pattern}
