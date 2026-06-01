@@ -158,6 +158,85 @@ export default function SettingsPanel({
         </p>
       </Section>
 
+      {/* Image adjustments */}
+      <Section label="이미지 조정">
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[13px] text-warm-400">☾</span>
+              <span className="form-lbl mb-0">명도</span>
+              <span className="text-[13px] text-warm-500">☀</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className={`text-[11px] font-mono ${settings.brightness !== 0 ? 'text-sage-500' : 'text-warm-400'}`}>
+                {settings.brightness > 0 ? `+${settings.brightness}` : settings.brightness}
+              </span>
+              {settings.brightness !== 0 && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-400/12 border border-sage-400/20 text-sage-500 tracking-wide cursor-pointer"
+                      onClick={e => { e.stopPropagation(); onChange({ ...settings, brightness: 0 }) }}>
+                  기본값
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="relative">
+            <input
+              type="range" min={-100} max={100} step={1}
+              value={settings.brightness}
+              style={{ touchAction: 'none' }}
+              className={`w-full h-1 rounded-full appearance-none cursor-pointer
+                         ${settings.brightness !== 0 ? 'accent-sage-500' : 'accent-warm-400'}`}
+              onChange={e => onChange({ ...settings, brightness: +e.target.value })}
+            />
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                             w-px h-2 bg-warm-400/40 pointer-events-none" />
+          </div>
+        </div>
+
+        <div className="mb-2">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[13px] text-warm-400">○</span>
+              <span className="form-lbl mb-0">명암</span>
+              <span className="text-[13px] text-warm-500">◑</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className={`text-[11px] font-mono ${settings.contrast !== 0 ? 'text-sage-500' : 'text-warm-400'}`}>
+                {settings.contrast > 0 ? `+${settings.contrast}` : settings.contrast}
+              </span>
+              {settings.contrast !== 0 && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-400/12 border border-sage-400/20 text-sage-500 tracking-wide cursor-pointer"
+                      onClick={e => { e.stopPropagation(); onChange({ ...settings, contrast: 0 }) }}>
+                  기본값
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="relative">
+            <input
+              type="range" min={-100} max={100} step={1}
+              value={settings.contrast}
+              style={{ touchAction: 'none' }}
+              className={`w-full h-1 rounded-full appearance-none cursor-pointer
+                         ${settings.contrast !== 0 ? 'accent-sage-500' : 'accent-warm-400'}`}
+              onChange={e => onChange({ ...settings, contrast: +e.target.value })}
+            />
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                             w-px h-2 bg-warm-400/40 pointer-events-none" />
+          </div>
+        </div>
+
+        {(settings.brightness !== 0 || settings.contrast !== 0) && (
+          <button
+            className="mt-1 w-full py-1 text-[10px] text-warm-400 border border-linen-300/30
+                       rounded-chip hover:bg-linen-100/50 transition-all duration-150 cursor-pointer"
+            onClick={() => onChange({ ...settings, brightness: 0, contrast: 0 })}
+          >
+            초기화
+          </button>
+        )}
+      </Section>
+
       {/* Colors */}
       <Section label="색상 설정">
         <div className="mb-2">

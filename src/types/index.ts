@@ -42,6 +42,8 @@ export interface PatternSettings {
   qualityMode:   QualityMode
   aspectMode:    AspectMode
   ditheringMode: DitheringMode
+  brightness:    number   // -100 ~ 100, default 0
+  contrast:      number   // -100 ~ 100, default 0
 }
 
 // ── Edit tool ─────────────────────────────────────────────────────────────────

@@ -4,12 +4,14 @@ import { useRef, useState, useCallback } from 'react'
 
 interface UploadZoneProps {
   onImageLoad: (img: HTMLImageElement, file: File) => void
+  brightness?: number
+  contrast?:   number
 }
 
-export default function UploadZone({ onImageLoad }: UploadZoneProps) {
+export default function UploadZone({ onImageLoad, brightness = 0, contrast = 0 }: UploadZoneProps) {
   const inputRef  = useRef<HTMLInputElement>(null)
   const [drag, setDrag]     = useState(false)
-  const [loaded, setLoaded] = useState<{ name: string; size: string } | null>(null)
+  const [loaded, setLoaded] = useState<{ name: string; size: string; src: string } | null>(null)
 
   const processFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return
@@ -20,6 +22,7 @@ export default function UploadZone({ onImageLoad }: UploadZoneProps) {
         setLoaded({
           name: file.name,
           size: `${img.width} × ${img.height}px`,
+          src:  ev.target?.result as string,
         })
         onImageLoad(img, file)
       }
@@ -80,6 +83,12 @@ export default function UploadZone({ onImageLoad }: UploadZoneProps) {
 
       {loaded ? (
         <>
+          <img
+            src={loaded.src}
+            alt={loaded.name}
+            className="w-full h-28 object-cover rounded-[10px] mb-3"
+            style={{ filter: `brightness(${1 + brightness / 100}) contrast(${1 + contrast / 100})` }}
+          />
           <p className="font-cormorant text-base italic text-warm-600 mb-1">{loaded.name}</p>
           <p className="text-xs text-warm-400 font-light">{loaded.size}</p>
           <p className="text-[10px] text-sage-400 mt-2 font-light tracking-wide">
