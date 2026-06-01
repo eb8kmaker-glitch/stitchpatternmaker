@@ -198,15 +198,18 @@ function initKMeansPlusPlus(
 }
 
 // ── K-means in LAB space ──────────────────────────────────────────────────────
-function kMeansLab(
+async function kMeansLab(
   pixels: [number, number, number][],
   k: number,
   iterations: number,
-): { centers: [number, number, number][]; assignments: number[] } {
+  onIter?: (iter: number) => void,
+): Promise<{ centers: [number, number, number][]; assignments: number[] }> {
   let centers = initKMeansPlusPlus(pixels, k)
   let assignments = new Array(pixels.length).fill(0)
 
   for (let iter = 0; iter < iterations; iter++) {
+    await tick()
+    onIter?.(iter)
     for (let i = 0; i < pixels.length; i++) {
       let best = 0, bestDist = Infinity
       for (let j = 0; j < centers.length; j++) {
@@ -487,7 +490,10 @@ export async function generatePattern(
   await tick()
 
   const k = Math.min(colorCount, labPixels.length, DMC_COLORS.length)
-  const { centers, assignments: clusterAssignments } = kMeansLab(labPixels, k, kIter)
+  const { centers, assignments: clusterAssignments } = await kMeansLab(
+    labPixels, k, kIter,
+    (iter) => progress(45 + Math.round((iter / kIter) * 18), '색상 군집화 중...', `K-means++ (${iter + 1}/${kIter})`)
+  )
 
   // 6. Map cluster centers → unique DMC colors (ΔE nearest)
   progress(65, 'DMC 색상 매핑 중...', 'ΔE 기반 최적 매칭')
