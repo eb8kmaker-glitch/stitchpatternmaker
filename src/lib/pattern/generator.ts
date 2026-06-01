@@ -439,6 +439,20 @@ function separateSimilarColors(
   return result
 }
 
+// ── Brightness / Contrast adjustment ─────────────────────────────────────────
+function applyBrightnessContrast(data: Uint8ClampedArray, brightness: number, contrast: number): void {
+  if (brightness === 0 && contrast === 0) return
+  const b = (brightness / 100) * 255
+  const c = contrast
+  const factor = (259 * (c + 255)) / (255 * (259 - c))
+  const clamp = (v: number) => Math.min(255, Math.max(0, Math.round(v)))
+  for (let i = 0; i < data.length; i += 4) {
+    data[i]     = clamp(factor * (data[i]     + b - 128) + 128)
+    data[i + 1] = clamp(factor * (data[i + 1] + b - 128) + 128)
+    data[i + 2] = clamp(factor * (data[i + 2] + b - 128) + 128)
+  }
+}
+
 // ── Main generator ────────────────────────────────────────────────────────────
 export async function generatePattern(
   imageElement: HTMLImageElement,
@@ -450,9 +464,11 @@ export async function generatePattern(
   aspectMode: AspectMode,
   ditheringMode: DitheringMode,
   onProgress?: ProgressCallback,
+  brightness = 0,
+  contrast = 0,
 ): Promise<PatternResult> {
   const progress = onProgress ?? (() => {})
-  const { sat, contrast, gamma, sharpen, kIter } = QUALITY_PARAMS[qualityMode]
+  const { sat, contrast: contrastBoost, gamma, sharpen, kIter } = QUALITY_PARAMS[qualityMode]
   const isHQ = qualityMode === 'hq'
 
   // 1. Resample with aspect ratio control
@@ -463,10 +479,17 @@ export async function generatePattern(
   const resampled = resampleImage(imageElement, width, height, aspectMode, isHQ)
   const imageData = resampled.getContext('2d')!.getImageData(0, 0, width, height)
 
-  // 2. Preprocess: gamma + contrast + saturation
+  // 2. Apply user brightness/contrast adjustment
+  if (brightness !== 0 || contrast !== 0) {
+    progress(14, '명도 / 명암 조정 중...', '')
+    await tick()
+    applyBrightnessContrast(imageData.data, brightness, contrast)
+  }
+
+  // 3. Preprocess: gamma + contrast + saturation
   progress(18, '이미지 전처리 중...', '채도 / 대비 / 감마 보정')
   await tick()
-  preprocessPixels(imageData.data, sat, contrast, gamma)
+  preprocessPixels(imageData.data, sat, contrastBoost, gamma)
 
   // 3. Unsharp mask (HQ only)
   if (sharpen) {

@@ -22,6 +22,8 @@ const DEFAULT_SETTINGS: PatternSettings = {
   qualityMode:   'balanced',
   aspectMode:    'fit',
   ditheringMode: 'floyd',
+  brightness:    0,
+  contrast:      0,
 }
 
 export default function HomePage() {
@@ -101,7 +103,11 @@ export default function HomePage() {
 
           {/* Right — upload */}
           <div className="flex items-center justify-center py-8 sm:py-14 sm:pl-12">
-            <UploadZone onImageLoad={handleImageLoad} />
+            <UploadZone
+              onImageLoad={handleImageLoad}
+              brightness={settings.brightness}
+              contrast={settings.contrast}
+            />
           </div>
         </div>
 

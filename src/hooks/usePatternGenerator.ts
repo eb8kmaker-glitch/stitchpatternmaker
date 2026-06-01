@@ -42,6 +42,8 @@ export function usePatternGenerator() {
           (pct, label, sub = '') => {
             setState(s => ({ ...s, progress: pct, label, sub }))
           },
+          settings.brightness,
+          settings.contrast,
         )
 
         const threads = calcThreadUsage(pattern.grid, pattern.dmcMap)
