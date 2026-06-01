@@ -70,13 +70,6 @@ export default function FeedbackPage() {
                 className="mt-1 text-[11px] text-red-400" />
             </div>
 
-            {state.errors && state.errors.length > 0 && (
-              <p className="text-[12px] text-red-400 bg-red-50 border border-red-200
-                             rounded-[8px] px-4 py-3">
-                전송에 실패했습니다. 다시 시도해 주세요.
-              </p>
-            )}
-
             <button
               type="submit"
               disabled={state.submitting}
