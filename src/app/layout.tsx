@@ -8,19 +8,19 @@ export const viewport: Viewport = {
   maximumScale: 5,
 }
 
-const SITE_URL = 'https://stitchpatternmaker.app'
+const SITE_URL  = 'https://stitchpatternmaker.app'
 const SITE_NAME = 'Stitch Pattern Maker'
-const OG_IMAGE = `${SITE_URL}/og-image.png`
+const OG_IMAGE  = `${SITE_URL}/og-image.png`
+const SITE_DESC = 'Turn any photo into a print-ready DMC cross stitch pattern. Free, browser-only processing — no account required.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
 
   title: {
-    default: `Free Cross Stitch Pattern Maker | Photo to DMC Pattern — ${SITE_NAME}`,
+    default:  'Free Cross Stitch Pattern Maker | Photo to DMC Pattern',
     template: `%s | ${SITE_NAME}`,
   },
-  description:
-    'Turn any photo into a print-ready DMC cross stitch pattern. Free, browser-only, no account required.',
+  description: SITE_DESC,
   keywords: [
     'cross stitch pattern',
     'cross stitch generator',
@@ -34,47 +34,51 @@ export const metadata: Metadata = {
     '크로스스티치',
     '자수 도안',
   ],
-  authors: [{ name: SITE_NAME, url: SITE_URL }],
-  creator: SITE_NAME,
+  authors:   [{ name: SITE_NAME, url: SITE_URL }],
+  creator:   SITE_NAME,
   publisher: SITE_NAME,
 
   openGraph: {
-    title: `Free Cross Stitch Pattern Maker — Photo to DMC Pattern`,
-    description: 'Turn any photo into a print-ready DMC cross stitch pattern. Free, browser-only, no account required.',
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    type: 'website',
-    locale: 'en_US',
+    title:       'Free Cross Stitch Pattern Maker — Photo to DMC Pattern',
+    description: SITE_DESC,
+    url:         SITE_URL,
+    siteName:    SITE_NAME,
+    type:        'website',
+    locale:      'en_US',
     images: [
       {
-        url: OG_IMAGE,
-        width: 1200,
+        url:    OG_IMAGE,
+        width:  1200,
         height: 630,
-        alt: 'Stitch Pattern Maker — Free photo to cross stitch pattern generator',
+        alt:    'Stitch Pattern Maker — Free photo to cross stitch pattern generator',
       },
     ],
   },
 
   twitter: {
-    card: 'summary_large_image',
-    title: `Free Cross Stitch Pattern Maker — Photo to DMC Pattern`,
-    description: 'Turn any photo into a print-ready DMC cross stitch pattern. Free, browser-only, no account required.',
-    images: [OG_IMAGE],
+    card:        'summary_large_image',
+    title:       'Free Cross Stitch Pattern Maker — Photo to DMC Pattern',
+    description: SITE_DESC,
+    images:      [OG_IMAGE],
   },
 
   robots: {
-    index: true,
+    index:  true,
     follow: true,
     googleBot: {
-      index: true,
-      follow: true,
+      index:               true,
+      follow:              true,
       'max-image-preview': 'large',
-      'max-snippet': -1,
+      'max-snippet':       -1,
     },
   },
 
   alternates: {
     canonical: SITE_URL,
+    languages: {
+      'en':        SITE_URL,
+      'x-default': SITE_URL,
+    },
   },
 }
 

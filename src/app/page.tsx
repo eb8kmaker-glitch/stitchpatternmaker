@@ -11,6 +11,7 @@ import ProgressOverlay from '@/components/ui/ProgressOverlay'
 import PaletteShowcase from '@/components/ui/PaletteShowcase'
 import AdUnit          from '@/components/ui/AdUnit'
 import { usePatternGenerator } from '@/hooks/usePatternGenerator'
+import HomeFAQ from '@/components/ui/HomeFAQ'
 import type { PatternSettings } from '@/types'
 
 const DEFAULT_SETTINGS: PatternSettings = {
@@ -210,6 +211,8 @@ export default function HomePage() {
           strategy="afterInteractive"
         />
       </main>
+
+      <HomeFAQ />
     </div>
   )
 }
