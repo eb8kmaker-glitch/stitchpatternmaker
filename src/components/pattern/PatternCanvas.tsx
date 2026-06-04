@@ -102,6 +102,9 @@ export default function PatternCanvas({
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || !pattern || !effectiveGrid) return
+    // Guard against one-cycle mismatch where new pattern arrived but editableGrid
+    // hasn't been reset yet (pattern reset effect runs after this render cycle)
+    if (effectiveGrid.length !== pattern.height || effectiveGrid[0]?.length !== pattern.width) return
     renderPattern(canvas, { ...pattern, dmcMap: effectiveDmcMap, grid: effectiveGrid },
       { cellSize, showGrid, displayMode, highlightDmcId })
   }, [effectiveGrid, effectiveDmcMap, pattern, displayMode, cellSize, showGrid, highlightDmcId])
