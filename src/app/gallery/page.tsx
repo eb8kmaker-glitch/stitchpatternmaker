@@ -1,5 +1,31 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
+
+export const metadata: Metadata = {
+  title: '도안 갤러리 — 설정별 비교 | Stitch Pattern Maker',
+  description: '비율 모드·색상 수·품질·디더링·유사색 분리 설정별 도안 비교 갤러리. 어떤 옵션이 내 사진에 맞는지 미리 확인하세요.',
+  openGraph: {
+    title: '도안 갤러리 — 설정별 비교 | Stitch Pattern Maker',
+    description: '비율 모드·색상 수·품질·디더링 설정별 도안 비교 갤러리',
+    type: 'website',
+    images: [
+      {
+        url: 'https://stitchpatternmaker.app/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Stitch Pattern Maker — Free photo to cross stitch pattern generator',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['https://stitchpatternmaker.app/og-image.png'],
+  },
+  alternates: {
+    canonical: 'https://stitchpatternmaker.app/gallery',
+  },
+}
 
 // ── 설정 옵션 목록 ────────────────────────────────────────────────────────────
 const ASPECT_MODES = [

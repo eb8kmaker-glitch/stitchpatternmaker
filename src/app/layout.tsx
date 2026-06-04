@@ -10,16 +10,17 @@ export const viewport: Viewport = {
 
 const SITE_URL = 'https://stitchpatternmaker.app'
 const SITE_NAME = 'Stitch Pattern Maker'
+const OG_IMAGE = `${SITE_URL}/og-image.png`
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
 
   title: {
-    default: `${SITE_NAME} — 십자수 도안 생성기`,
+    default: `Free Cross Stitch Pattern Maker | Photo to DMC Pattern — ${SITE_NAME}`,
     template: `%s | ${SITE_NAME}`,
   },
   description:
-    'Convert photos into beautiful cross stitch patterns instantly. Free DMC thread color mapping with LAB color space analysis. 사진을 DMC 십자수 도안으로 즉시 변환.',
+    'Turn any photo into a print-ready DMC cross stitch pattern. Free, browser-only, no account required.',
   keywords: [
     'cross stitch pattern',
     'cross stitch generator',
@@ -38,18 +39,27 @@ export const metadata: Metadata = {
   publisher: SITE_NAME,
 
   openGraph: {
-    title: SITE_NAME,
-    description: 'Convert images into cross stitch patterns instantly.',
+    title: `Free Cross Stitch Pattern Maker — Photo to DMC Pattern`,
+    description: 'Turn any photo into a print-ready DMC cross stitch pattern. Free, browser-only, no account required.',
     url: SITE_URL,
     siteName: SITE_NAME,
     type: 'website',
-    locale: 'ko_KR',
+    locale: 'en_US',
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: 'Stitch Pattern Maker — Free photo to cross stitch pattern generator',
+      },
+    ],
   },
 
   twitter: {
     card: 'summary_large_image',
-    title: SITE_NAME,
-    description: 'Convert images into cross stitch patterns instantly.',
+    title: `Free Cross Stitch Pattern Maker — Photo to DMC Pattern`,
+    description: 'Turn any photo into a print-ready DMC cross stitch pattern. Free, browser-only, no account required.',
+    images: [OG_IMAGE],
   },
 
   robots: {

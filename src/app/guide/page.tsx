@@ -14,6 +14,18 @@ export const metadata: Metadata = {
     title: '십자수 완전 입문 가이드 | Stitch Pattern Maker',
     description: '준비물부터 PDF 도안 인쇄까지 — 십자수 초보자를 위한 완전 실전 가이드',
     type: 'article',
+    images: [
+      {
+        url: 'https://stitchpatternmaker.app/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Stitch Pattern Maker — Free photo to cross stitch pattern generator',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['https://stitchpatternmaker.app/og-image.png'],
   },
   alternates: {
     canonical: 'https://stitchpatternmaker.app/guide',
