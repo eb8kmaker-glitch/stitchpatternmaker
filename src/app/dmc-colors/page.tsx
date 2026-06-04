@@ -13,6 +13,18 @@ export const metadata: Metadata = {
     title: 'DMC 실 색상표 전체 | Stitch Pattern Maker',
     description: 'DMC 자수실 전체 색상을 번호·이름으로 검색하고 색상군별로 탐색하세요.',
     type: 'website',
+    images: [
+      {
+        url: 'https://stitchpatternmaker.app/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Stitch Pattern Maker — Free photo to cross stitch pattern generator',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['https://stitchpatternmaker.app/og-image.png'],
   },
   alternates: {
     canonical: 'https://stitchpatternmaker.app/dmc-colors',
