@@ -42,7 +42,7 @@ export default function MiniMap({
       for (let mx = 0; mx < mapW; mx++) {
         const gy = Math.min(Math.floor(my * step), height - 1)
         const gx = Math.min(Math.floor(mx * step), width  - 1)
-        ctx.fillStyle = dmcMap[grid[gy][gx]].hex
+        ctx.fillStyle = dmcMap[grid[gy]?.[gx]]?.hex ?? '#f7f5f2'
         ctx.fillRect(mx, my, 1, 1)
       }
     }
