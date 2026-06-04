@@ -1,30 +1,34 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
+import GuideLanguageToggle from '@/components/guide/GuideLanguageToggle'
+import GuideEnContent from '@/components/guide/GuideEnContent'
 
 export const metadata: Metadata = {
-  title: '십자수 완전 입문 가이드 — 초보자를 위한 시작부터 완성까지 | Stitch Pattern Maker',
+  title: "Cross Stitch Beginner's Guide — Tools, DMC Threads & Pattern Tips",
   description:
-    '십자수를 처음 시작하는 분들을 위한 완전 가이드. 준비물, DMC 실 번호 체계, 도안 읽는 방법, 색상 수 선택, 실 보관법, PDF 인쇄 팁까지 — 실제 작업에 바로 쓸 수 있는 정보만 모았습니다.',
+    "Everything you need to start cross stitching: choosing fabric and needles, reading DMC thread numbers, understanding pattern grids, managing thread colors, and printing PDF patterns.",
   keywords: [
-    '십자수', '십자수 입문', '크로스스티치', 'DMC 실', '십자수 준비물',
-    '자수 도안', '십자수 초보', '십자수 바늘', '에이다', '십자수 원단',
+    'cross stitch guide', 'cross stitch for beginners', 'DMC thread numbers',
+    'aida cloth', 'cross stitch supplies', 'embroidery pattern guide',
+    '십자수', '십자수 입문', 'DMC 실', '십자수 초보',
   ],
   openGraph: {
-    title: '십자수 완전 입문 가이드 | Stitch Pattern Maker',
-    description: '준비물부터 PDF 도안 인쇄까지 — 십자수 초보자를 위한 완전 실전 가이드',
+    title: "Cross Stitch Beginner's Guide | Stitch Pattern Maker",
+    description: "From supplies to PDF printing — a complete practical guide for cross stitch beginners.",
     type: 'article',
+    locale: 'en_US',
     images: [
       {
-        url: 'https://stitchpatternmaker.app/og-image.png',
-        width: 1200,
+        url:    'https://stitchpatternmaker.app/og-image.png',
+        width:  1200,
         height: 630,
-        alt: 'Stitch Pattern Maker — Free photo to cross stitch pattern generator',
+        alt:    'Stitch Pattern Maker — Free photo to cross stitch pattern generator',
       },
     ],
   },
   twitter: {
-    card: 'summary_large_image',
+    card:   'summary_large_image',
     images: ['https://stitchpatternmaker.app/og-image.png'],
   },
   alternates: {
@@ -157,7 +161,9 @@ export default function GuidePage() {
           </div>
         </header>
 
-        <article className="space-y-14">
+        <GuideLanguageToggle
+          ko={
+            <article className="space-y-14">
           {/* Section 1 */}
           <section id="section-1">
             <SectionLabel num={1} />
@@ -558,7 +564,10 @@ export default function GuidePage() {
               무료로 도안 만들기
             </Link>
           </div>
-        </article>
+            </article>
+          }
+          en={<GuideEnContent />}
+        />
       </main>
 
       <footer className="border-t border-linen-300/20 py-8 text-center">
