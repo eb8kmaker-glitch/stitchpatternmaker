@@ -8,18 +8,19 @@ export const viewport: Viewport = {
   maximumScale: 5,
 }
 
-const SITE_URL = 'https://stitchpatternmaker.app'
+const SITE_URL  = 'https://stitchpatternmaker.app'
 const SITE_NAME = 'Stitch Pattern Maker'
+const OG_IMAGE  = `${SITE_URL}/og-image.png`
+const SITE_DESC = 'Turn any photo into a print-ready DMC cross stitch pattern. Free, browser-only processing — no account required.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
 
   title: {
-    default: `${SITE_NAME} — 십자수 도안 생성기`,
+    default:  'Free Cross Stitch Pattern Maker | Photo to DMC Pattern',
     template: `%s | ${SITE_NAME}`,
   },
-  description:
-    'Convert photos into beautiful cross stitch patterns instantly. Free DMC thread color mapping with LAB color space analysis. 사진을 DMC 십자수 도안으로 즉시 변환.',
+  description: SITE_DESC,
   keywords: [
     'cross stitch pattern',
     'cross stitch generator',
@@ -33,38 +34,51 @@ export const metadata: Metadata = {
     '크로스스티치',
     '자수 도안',
   ],
-  authors: [{ name: SITE_NAME, url: SITE_URL }],
-  creator: SITE_NAME,
+  authors:   [{ name: SITE_NAME, url: SITE_URL }],
+  creator:   SITE_NAME,
   publisher: SITE_NAME,
 
   openGraph: {
-    title: SITE_NAME,
-    description: 'Convert images into cross stitch patterns instantly.',
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    type: 'website',
-    locale: 'ko_KR',
+    title:       'Free Cross Stitch Pattern Maker — Photo to DMC Pattern',
+    description: SITE_DESC,
+    url:         SITE_URL,
+    siteName:    SITE_NAME,
+    type:        'website',
+    locale:      'en_US',
+    images: [
+      {
+        url:    OG_IMAGE,
+        width:  1200,
+        height: 630,
+        alt:    'Stitch Pattern Maker — Free photo to cross stitch pattern generator',
+      },
+    ],
   },
 
   twitter: {
-    card: 'summary_large_image',
-    title: SITE_NAME,
-    description: 'Convert images into cross stitch patterns instantly.',
+    card:        'summary_large_image',
+    title:       'Free Cross Stitch Pattern Maker — Photo to DMC Pattern',
+    description: SITE_DESC,
+    images:      [OG_IMAGE],
   },
 
   robots: {
-    index: true,
+    index:  true,
     follow: true,
     googleBot: {
-      index: true,
-      follow: true,
+      index:               true,
+      follow:              true,
       'max-image-preview': 'large',
-      'max-snippet': -1,
+      'max-snippet':       -1,
     },
   },
 
   alternates: {
     canonical: SITE_URL,
+    languages: {
+      'en':        SITE_URL,
+      'x-default': SITE_URL,
+    },
   },
 }
 
