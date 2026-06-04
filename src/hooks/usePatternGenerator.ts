@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { generatePattern, calcThreadUsage } from '@/lib/pattern/generator'
 import type { PatternResult, PatternSettings, ThreadUsage } from '@/types'
 
@@ -25,8 +25,12 @@ export function usePatternGenerator() {
     error:    null,
   })
 
+  // Incremented on every generate() call so stale async results are discarded
+  const genIdRef = useRef(0)
+
   const generate = useCallback(
     async (image: HTMLImageElement, settings: PatternSettings) => {
+      const myId = ++genIdRef.current
       setState(s => ({ ...s, status: 'generating', error: null, progress: 0 }))
 
       try {
@@ -40,11 +44,14 @@ export function usePatternGenerator() {
           settings.aspectMode,
           settings.ditheringMode,
           (pct, label, sub = '') => {
+            if (genIdRef.current !== myId) return
             setState(s => ({ ...s, progress: pct, label, sub }))
           },
           settings.brightness,
           settings.contrast,
         )
+
+        if (genIdRef.current !== myId) return
 
         const threads = calcThreadUsage(pattern.grid, pattern.dmcMap)
 
@@ -58,6 +65,7 @@ export function usePatternGenerator() {
           sub:     '',
         }))
       } catch (err) {
+        if (genIdRef.current !== myId) return
         setState(s => ({
           ...s,
           status: 'error',
@@ -69,6 +77,7 @@ export function usePatternGenerator() {
   )
 
   const reset = useCallback(() => {
+    genIdRef.current++
     setState({
       status:   'idle',
       progress: 0,
