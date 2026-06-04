@@ -25,7 +25,6 @@ export function usePatternGenerator() {
     error:    null,
   })
 
-  // Incremented on every generate() call so stale async results are discarded
   const genIdRef = useRef(0)
 
   const generate = useCallback(

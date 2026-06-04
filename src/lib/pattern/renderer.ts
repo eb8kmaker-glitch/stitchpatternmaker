@@ -31,7 +31,7 @@ export function renderPattern(
     for (let x = 0; x < width; x++) {
       const ci  = grid[y][x]
       const dmc = dmcMap[ci]
-      if (!dmc) continue   // safety guard: stale grid/dmcMap mismatch
+      if (!dmc) continue
       const px  = x * cs
       const py  = y * cs
 
