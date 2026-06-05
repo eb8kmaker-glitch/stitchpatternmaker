@@ -14,7 +14,7 @@ export default function ProgressOverlay({
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4
                     bg-linen-50/86 backdrop-blur-[6px] animate-fade-in">
       <p className="font-cormorant text-lg italic font-light text-warm-600">
-        {label || '도안을 만들고 있어요...'}
+        {label}
       </p>
 
       {/* Progress bar */}

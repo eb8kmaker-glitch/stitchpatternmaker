@@ -89,6 +89,8 @@ export interface Translations {
     }
     generate: string
     generating: string
+    progressDone: string
+    progressError: string
   }
   features: [
     { title: string; desc: string },
@@ -120,6 +122,8 @@ export interface Translations {
   palette: {
     sectionTag: string
     subtitle: string
+    showcaseTitle: string
+    showcaseSubtitle: string
   }
   gallery: {
     heroTitle: string
@@ -190,7 +194,7 @@ export interface Translations {
 
 const KO: Translations = {
   meta: {
-    title: 'Free Cross Stitch Pattern Maker | Photo to DMC Pattern',
+    title: '무료 십자수 도안 만들기 | 사진을 DMC 십자수 도안으로 | Stitch Pattern Maker',
     description: '사진을 DMC 십자수 도안으로 즉시 변환. 브라우저에서 완전 무료, 계정 불필요.',
     ogLocale: 'ko_KR',
     htmlLang: 'ko',
@@ -277,6 +281,8 @@ const KO: Translations = {
     },
     generate: '도안 생성',
     generating: '생성 중...',
+    progressDone: '완성되었습니다',
+    progressError: '알 수 없는 오류',
   },
   features: [
     { title: 'LAB 색공간 매핑',    desc: '사람 눈 기준으로 가장 가까운 DMC 실 색상을 ΔE 거리로 정확하게 매핑합니다' },
@@ -317,6 +323,8 @@ const KO: Translations = {
   palette: {
     sectionTag: 'DMC 팔레트',
     subtitle: '465가지 색상',
+    showcaseTitle: '추천 DMC 컬러 — Linen Collection',
+    showcaseSubtitle: '장미 정원 · 코튼 · 린넨 계열',
   },
   gallery: {
     heroTitle: '설정 옵션 예시 갤러리',
@@ -474,6 +482,8 @@ const EN: Translations = {
     },
     generate: 'Generate Pattern',
     generating: 'Generating…',
+    progressDone: 'Pattern complete',
+    progressError: 'Unknown error',
   },
   features: [
     { title: 'LAB Color Mapping',      desc: 'Maps the closest DMC thread color using CIE ΔE distance — tuned to how humans perceive color.' },
@@ -514,6 +524,8 @@ const EN: Translations = {
   palette: {
     sectionTag: 'DMC Palette',
     subtitle: '465 colors',
+    showcaseTitle: 'Featured DMC Colors — Linen Collection',
+    showcaseSubtitle: 'Rose Garden · Cotton · Linen tones',
   },
   gallery: {
     heroTitle: 'Pattern Settings Gallery',
@@ -671,6 +683,8 @@ const JA: Translations = {
     },
     generate: '図案を生成',
     generating: '生成中...',
+    progressDone: '完成しました',
+    progressError: '不明なエラー',
   },
   features: [
     { title: 'LAB色空間マッピング',  desc: 'CIE LAB色空間でΔE距離を使い、人の目に最も近いDMC糸色を正確にマッピング。' },
@@ -711,6 +725,8 @@ const JA: Translations = {
   palette: {
     sectionTag: 'DMCパレット',
     subtitle: '465色',
+    showcaseTitle: 'おすすめDMCカラー — リネンコレクション',
+    showcaseSubtitle: 'ローズガーデン · コットン · リネン系',
   },
   gallery: {
     heroTitle: '設定オプションサンプルギャラリー',

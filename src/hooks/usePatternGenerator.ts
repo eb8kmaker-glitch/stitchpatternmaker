@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { generatePattern, calcThreadUsage } from '@/lib/pattern/generator'
+import { useLang } from '@/lib/i18n/context'
 import type { PatternResult, PatternSettings, ThreadUsage } from '@/types'
 
 export interface GeneratorState {
@@ -15,6 +16,7 @@ export interface GeneratorState {
 }
 
 export function usePatternGenerator() {
+  const { t } = useLang()
   const [state, setState] = useState<GeneratorState>({
     status:   'idle',
     progress: 0,
@@ -60,7 +62,7 @@ export function usePatternGenerator() {
           pattern,
           threads,
           progress: 100,
-          label:   '완성되었습니다',
+          label:   t.settings.progressDone,
           sub:     '',
         }))
       } catch (err) {
@@ -68,7 +70,7 @@ export function usePatternGenerator() {
         setState(s => ({
           ...s,
           status: 'error',
-          error:  err instanceof Error ? err.message : '알 수 없는 오류',
+          error:  err instanceof Error ? err.message : t.settings.progressError,
         }))
       }
     },
