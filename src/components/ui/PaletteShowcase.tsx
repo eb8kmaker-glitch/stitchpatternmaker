@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { DMC_COLORS } from '@/lib/dmc/database'
+import { useLang } from '@/lib/i18n/context'
 
 // Curated linen/cotton palette for showcase
 const LINEN_COLLECTION_IDS = [
@@ -14,6 +15,7 @@ const LINEN_COLLECTION_IDS = [
 
 export default function PaletteShowcase() {
   const [tooltip, setTooltip] = useState<string | null>(null)
+  const { t } = useLang()
 
   const palette = LINEN_COLLECTION_IDS
     .map(id => DMC_COLORS.find(c => c.id === id))
@@ -23,10 +25,10 @@ export default function PaletteShowcase() {
     <section className="mt-7 bg-linen-50/80 border border-linen-300/20 rounded-card p-5 shadow-linen">
       <div className="flex items-baseline gap-2.5 mb-3.5">
         <h3 className="font-cormorant text-[15px] text-warm-600 tracking-wide">
-          추천 DMC 컬러 — Linen Collection
+          {t.palette.showcaseTitle}
         </h3>
         <span className="text-[10px] text-warm-400 font-light tracking-wide">
-          장미 정원 · 코튼 · 린넨 계열
+          {t.palette.showcaseSubtitle}
         </span>
       </div>
 
