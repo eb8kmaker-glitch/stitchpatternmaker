@@ -28,6 +28,12 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://stitchpatternmaker.app/dmc-colors',
+    languages: {
+      'en':        'https://stitchpatternmaker.app/dmc-colors',
+      'ko':        'https://stitchpatternmaker.app/ko/dmc-colors',
+      'ja':        'https://stitchpatternmaker.app/ja/dmc-colors',
+      'x-default': 'https://stitchpatternmaker.app/dmc-colors',
+    },
   },
 }
 

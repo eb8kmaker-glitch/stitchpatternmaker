@@ -1,20 +1,36 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import { useLang } from '@/lib/i18n/context'
+import { localePath, stripLocale } from '@/lib/i18n/routing'
+import { useLocalePath } from '@/hooks/useLocalePath'
 import type { Locale } from '@/lib/i18n/locales'
 
 const LOCALES: Locale[] = ['ko', 'en', 'ja']
 
 export default function Navbar() {
-  const { lang, t, setLang } = useLang()
+  const { lang, t } = useLang()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const galleryPath   = useLocalePath('/gallery')
+  const guidePath     = useLocalePath('/guide')
+  const dmcColorsPath = useLocalePath('/dmc-colors')
+  const feedbackPath  = useLocalePath('/feedback')
+  const homePath      = useLocalePath('/')
 
   const navLinks = [
-    { label: t.nav.gallery,   href: '/gallery' },
-    { label: t.nav.guide,     href: '/guide' },
-    { label: t.nav.dmcColors, href: '/dmc-colors' },
-    { label: t.nav.feedback,  href: '/feedback' },
+    { label: t.nav.gallery,   href: galleryPath },
+    { label: t.nav.guide,     href: guidePath },
+    { label: t.nav.dmcColors, href: dmcColorsPath },
+    { label: t.nav.feedback,  href: feedbackPath },
   ]
+
+  function switchLang(l: Locale) {
+    const bare = stripLocale(pathname)
+    router.push(localePath(l, bare))
+  }
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-9 py-4 sm:py-5
@@ -42,7 +58,7 @@ export default function Navbar() {
               )}
               <button
                 type="button"
-                onClick={() => setLang(l)}
+                onClick={() => switchLang(l)}
                 className={`text-[10px] tracking-widest uppercase transition-colors duration-150 cursor-pointer
                   ${lang === l
                     ? 'text-warm-700 font-semibold'
@@ -70,7 +86,7 @@ export default function Navbar() {
 
         <li>
           <Link
-            href="/"
+            href={homePath}
             className="px-4 sm:px-5 py-2 bg-warm-600 text-linen-50 text-xs
                        rounded-pill cursor-pointer no-underline
                        hover:bg-warm-500 transition-colors duration-200"

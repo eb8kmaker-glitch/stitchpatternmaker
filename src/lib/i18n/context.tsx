@@ -13,21 +13,28 @@ interface LangContextValue {
 }
 
 const LangContext = createContext<LangContextValue>({
-  lang: 'ko',
-  t:    locales.ko,
+  lang: 'en',
+  t:    locales.en,
   setLang: () => {},
 })
 
-export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Locale>('ko')
+export function LangProvider({
+  children,
+  initialLang,
+}: {
+  children: ReactNode
+  initialLang?: Locale
+}) {
+  const [lang, setLangState] = useState<Locale>(initialLang ?? 'en')
 
-  // Read from localStorage on mount
+  // Read from localStorage on mount — skip when locale comes from URL
   useEffect(() => {
+    if (initialLang) return
     try {
       const stored = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale | null
       if (stored && stored in locales) setLangState(stored)
     } catch { /* SSR / private mode */ }
-  }, [])
+  }, [initialLang])
 
   // Sync html[lang], og:locale, title, description on lang change
   useEffect(() => {

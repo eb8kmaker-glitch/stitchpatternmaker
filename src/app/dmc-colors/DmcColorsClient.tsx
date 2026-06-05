@@ -5,22 +5,24 @@ import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
 import { DMC_COLORS } from '@/lib/dmc/database'
 import { deltaE, contrastColor } from '@/lib/color/lab'
+import { useLang } from '@/lib/i18n/context'
+import { useLocalePath } from '@/hooks/useLocalePath'
 import type { DmcColor } from '@/types'
 
 // ── Color group helpers ───────────────────────────────────────────────────────
 
 type GroupId = 'all' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'brown' | 'neutral'
 
-const GROUPS: { id: GroupId; label: string; dot: string }[] = [
-  { id: 'all',     label: '전체',       dot: '#A8B2A1' },
-  { id: 'red',     label: '빨강·핑크',  dot: '#D85060' },
-  { id: 'orange',  label: '주황·피치',  dot: '#E87828' },
-  { id: 'yellow',  label: '노랑·골드',  dot: '#F0C020' },
-  { id: 'green',   label: '초록',       dot: '#409858' },
-  { id: 'blue',    label: '파랑·청록',  dot: '#3878B0' },
-  { id: 'purple',  label: '보라·라벤더', dot: '#8050A8' },
-  { id: 'brown',   label: '브라운',     dot: '#906040' },
-  { id: 'neutral', label: '중성·무채색', dot: '#A8A8A0' },
+const GROUP_IDS: { id: GroupId; dot: string }[] = [
+  { id: 'all',     dot: '#A8B2A1' },
+  { id: 'red',     dot: '#D85060' },
+  { id: 'orange',  dot: '#E87828' },
+  { id: 'yellow',  dot: '#F0C020' },
+  { id: 'green',   dot: '#409858' },
+  { id: 'blue',    dot: '#3878B0' },
+  { id: 'purple',  dot: '#8050A8' },
+  { id: 'brown',   dot: '#906040' },
+  { id: 'neutral', dot: '#A8A8A0' },
 ]
 
 function getColorGroup(hex: string, name: string): GroupId {
@@ -80,6 +82,13 @@ const POPULAR_COLORS = POPULAR_IDS
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function DmcColorsClient() {
+  const { t } = useLang()
+  const guidePath = useLocalePath('/guide')
+  const homePath  = useLocalePath('/')
+  const dc = t.dmcColors
+
+  const GROUPS = GROUP_IDS.map(g => ({ ...g, label: dc.groups[g.id] }))
+
   const [search, setSearch]               = useState('')
   const [activeGroup, setActiveGroup]     = useState<GroupId>('all')
   const [selectedColor, setSelectedColor] = useState<typeof COLORS_WITH_GROUP[0] | null>(null)
@@ -116,9 +125,9 @@ export default function DmcColorsClient() {
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="px-6 md:px-12 pt-10 pb-8 border-b border-linen-300/20">
         <nav className="flex items-center gap-2 mb-5 text-[11px] text-warm-400 font-light">
-          <Link href="/" className="hover:text-warm-600 transition-colors">홈</Link>
+          <Link href={homePath} className="hover:text-warm-600 transition-colors">{t.nav.subtitle}</Link>
           <span>/</span>
-          <span className="text-warm-600">DMC 색상표</span>
+          <span className="text-warm-600">{dc.breadcrumb}</span>
         </nav>
 
         <div className="flex items-center gap-2.5 mb-3">
@@ -126,11 +135,10 @@ export default function DmcColorsClient() {
           <div className="h-px w-10 bg-sage-400/50" />
         </div>
         <h1 className="font-playfair text-[34px] md:text-[40px] text-warm-700 mb-3 tracking-[-0.01em]">
-          DMC 실 색상표
+          {dc.pageTitle}
         </h1>
         <p className="text-[14px] text-warm-500 font-light leading-relaxed max-w-xl">
-          DMC 자수실 전체 색상을 번호·이름으로 검색하고 색상군별로 탐색하세요.
-          색상 카드를 클릭하면 HEX·RGB 값과 유사색을 확인할 수 있습니다.
+          {dc.pageDesc}
         </p>
 
         {/* About DMC */}
@@ -145,7 +153,7 @@ export default function DmcColorsClient() {
 
       {/* ── Popular colors ──────────────────────────────────────────────────── */}
       <div className="px-6 md:px-12 pt-8 pb-6 border-b border-linen-300/15">
-        <p className="text-[10px] uppercase tracking-[0.14em] text-sage-400 mb-4">자주 쓰는 인기 색상</p>
+        <p className="text-[10px] uppercase tracking-[0.14em] text-sage-400 mb-4">{dc.popularLabel}</p>
         <div className="flex flex-wrap gap-3">
           {POPULAR_COLORS.map(c => (
             <button
@@ -171,7 +179,7 @@ export default function DmcColorsClient() {
       {/* ── Beginner set ────────────────────────────────────────────────────── */}
       <div className="px-6 md:px-12 pt-6 pb-6 border-b border-linen-300/15
                       bg-gradient-to-r from-sage-400/5 to-transparent">
-        <p className="text-[10px] uppercase tracking-[0.14em] text-sage-400 mb-3">십자수 초보 추천 기본 세트</p>
+        <p className="text-[10px] uppercase tracking-[0.14em] text-sage-400 mb-3">{dc.beginnerSetLabel}</p>
         <p className="text-[12px] text-warm-400 font-light mb-4 max-w-lg">
           처음 십자수를 시작할 때 갖춰두면 유용한 색상 조합입니다.
           대부분의 입문 도안을 커버할 수 있습니다.
@@ -202,7 +210,7 @@ export default function DmcColorsClient() {
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="번호 또는 색상 이름으로 검색 (예: 310, Red, Sage...)"
+          placeholder={dc.searchPlaceholder}
           className="w-full max-w-md px-4 py-2 text-[13px] font-light text-warm-600
                      bg-linen-50 border border-linen-300/40 rounded-chip
                      outline-none focus:border-sage-400/60 focus:ring-2 focus:ring-sage-400/20
@@ -235,11 +243,11 @@ export default function DmcColorsClient() {
       {/* ── Color grid ──────────────────────────────────────────────────────── */}
       <div className="px-6 md:px-12 py-6">
         <p className="text-[11px] text-warm-400 font-light mb-4">
-          {filtered.length.toLocaleString()}가지 색상
+          {dc.colorCount.replace('465', filtered.length.toLocaleString())}
         </p>
         {filtered.length === 0 ? (
           <div className="py-20 text-center text-warm-400 font-light text-[14px]">
-            검색 결과가 없습니다.
+            {dc.noResults}
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
@@ -277,11 +285,11 @@ export default function DmcColorsClient() {
 
         <div className="mt-8 text-center">
           <Link
-            href="/guide"
+            href={guidePath}
             className="inline-flex items-center gap-2 text-[13px] text-sage-500
                        hover:text-sage-600 transition-colors font-light no-underline"
           >
-            ← 십자수 입문 가이드 보기
+            {dc.guideLink}
           </Link>
         </div>
       </div>
@@ -289,9 +297,9 @@ export default function DmcColorsClient() {
       <footer className="border-t border-linen-300/20 py-8 text-center">
         <p className="text-[11px] text-warm-400 font-light">
           © 2026 Stitch Pattern Maker —{' '}
-          <Link href="/guide" className="hover:text-warm-600 transition-colors">가이드</Link>
+          <Link href={guidePath} className="hover:text-warm-600 transition-colors">{t.nav.guide}</Link>
           {' · '}
-          <Link href="/" className="hover:text-warm-600 transition-colors">도안 만들기</Link>
+          <Link href={homePath} className="hover:text-warm-600 transition-colors">{dc.createLink}</Link>
         </p>
       </footer>
 
@@ -358,7 +366,7 @@ export default function DmcColorsClient() {
 
               {/* Similar colors */}
               <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-warm-400 mb-2.5">유사색</p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-warm-400 mb-2.5">{dc.similarColors}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {similarColors.map(c => (
                     <button
@@ -384,7 +392,7 @@ export default function DmcColorsClient() {
                            border border-linen-300/30 rounded-btn
                            hover:bg-linen-100/50 transition-colors cursor-pointer"
               >
-                닫기
+                {dc.close}
               </button>
             </div>
           </div>

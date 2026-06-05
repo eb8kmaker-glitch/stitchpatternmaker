@@ -78,6 +78,8 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
     languages: {
       'en':        SITE_URL,
+      'ko':        `${SITE_URL}/ko`,
+      'ja':        `${SITE_URL}/ja`,
       'x-default': SITE_URL,
     },
   },
@@ -89,7 +91,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ko">
+    <html lang="en">
       <head>
         <script
           async
