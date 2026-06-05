@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useLang } from '@/lib/i18n/context'
 import type {
   PatternSettings, SepLevel, DisplayMode, SizePrefixPreset,
   QualityMode, AspectMode, DitheringMode,
@@ -15,58 +16,53 @@ interface SettingsPanelProps {
   hasImage:     boolean
 }
 
-const PRESETS: { label: string; value: SizePrefixPreset; w: number; h: number }[] = [
-  { label: '50 × 50',   value: '50x50',   w: 50,  h: 50  },
-  { label: '100 × 100', value: '100x100', w: 100, h: 100 },
-  { label: '150 × 200', value: '150x200', w: 150, h: 200 },
-  { label: '200 × 200', value: '200x200', w: 200, h: 200 },
-  { label: '직접 입력', value: 'custom',  w: 0,   h: 0   },
-]
-
-const COLOR_COUNTS = [
-  { label: '20색 — 단순',  value: 20 },
-  { label: '40색 — 균형',  value: 40 },
-  { label: '60색 — 세밀',  value: 60 },
-  { label: '80색 — 정교',  value: 80 },
-]
-
-const QUALITY_MODES: { label: string; value: QualityMode; hint: string }[] = [
-  { label: 'Fast',     value: 'fast',     hint: '빠른 생성 — 플랫 컬러' },
-  { label: 'Balanced', value: 'balanced', hint: '균형 — 디더링 지원' },
-  { label: 'HQ',       value: 'hq',       hint: '최고 품질 — 샤픈 + Confetti 정리' },
-]
-
-const ASPECT_MODES: { label: string; value: AspectMode; hint: string }[] = [
-  { label: 'Fit',     value: 'fit',     hint: '원본 비율 유지 + 여백 채움' },
-  { label: 'Crop',    value: 'crop',    hint: '중앙 기준 크롭 — 여백 없음' },
-  { label: 'Stretch', value: 'stretch', hint: '격자에 맞게 늘림' },
-]
-
-const DITHERING_MODES: { label: string; value: DitheringMode; hint: string }[] = [
-  { label: 'None',     value: 'none',     hint: '플랫 컬러 — 선명한 경계' },
-  { label: 'Floyd',    value: 'floyd',    hint: 'Floyd–Steinberg 디더링' },
-  { label: 'Atkinson', value: 'atkinson', hint: 'Atkinson — 부드러운 디더링' },
-  { label: 'Ordered',  value: 'ordered',  hint: 'Bayer 4×4 매트릭스 패턴' },
-]
-
-const SEP_LEVELS: { label: string; value: SepLevel; hint: string }[] = [
-  { label: 'OFF',   value: 'off',    hint: '유사색 분리 OFF' },
-  { label: '약하게', value: 'weak',   hint: 'ΔE < 8 보정' },
-  { label: '보통',  value: 'medium', hint: 'ΔE < 15 보정' },
-  { label: '강하게', value: 'strong', hint: 'ΔE < 25 보정' },
-]
-
-const DISPLAY_MODES: { label: string; value: DisplayMode; icon: React.ReactNode }[] = [
-  { label: '컬러',   value: 'color',  icon: <ColorIcon /> },
-  { label: '기호',   value: 'symbol', icon: <SymbolIcon /> },
-  { label: '혼합',   value: 'mixed',  icon: <MixedIcon /> },
-]
-
 const MAX_CELLS = 90_000   // 300×300 — safe upper bound
 
 export default function SettingsPanel({
   settings, onChange, onGenerate, isGenerating, hasImage,
 }: SettingsPanelProps) {
+  const { t } = useLang()
+  const PRESETS_DEFS = [
+    { label: '50 × 50',   value: '50x50'  as SizePrefixPreset, w: 50,  h: 50  },
+    { label: '100 × 100', value: '100x100' as SizePrefixPreset, w: 100, h: 100 },
+    { label: '150 × 200', value: '150x200' as SizePrefixPreset, w: 150, h: 200 },
+    { label: '200 × 200', value: '200x200' as SizePrefixPreset, w: 200, h: 200 },
+    { label: t.settings.size.custom, value: 'custom' as SizePrefixPreset, w: 0, h: 0 },
+  ]
+  const COLOR_COUNTS_DEFS = [
+    { label: t.settings.color.counts[0], value: 20 },
+    { label: t.settings.color.counts[1], value: 40 },
+    { label: t.settings.color.counts[2], value: 60 },
+    { label: t.settings.color.counts[3], value: 80 },
+  ]
+  const QUALITY_MODES_DEFS = [
+    { label: 'Fast',     value: 'fast'     as QualityMode, hint: t.settings.quality.fast.hint },
+    { label: 'Balanced', value: 'balanced' as QualityMode, hint: t.settings.quality.balanced.hint },
+    { label: 'HQ',       value: 'hq'       as QualityMode, hint: t.settings.quality.hq.hint },
+  ]
+  const ASPECT_MODES_DEFS = [
+    { label: t.settings.aspect.fit.label,     value: 'fit'     as AspectMode, hint: t.settings.aspect.fit.hint },
+    { label: t.settings.aspect.crop.label,    value: 'crop'    as AspectMode, hint: t.settings.aspect.crop.hint },
+    { label: t.settings.aspect.stretch.label, value: 'stretch' as AspectMode, hint: t.settings.aspect.stretch.hint },
+  ]
+  const DITHERING_MODES_DEFS = [
+    { label: 'None',     value: 'none'     as DitheringMode, hint: t.settings.dither.none.hint },
+    { label: 'Floyd',    value: 'floyd'    as DitheringMode, hint: t.settings.dither.floyd.hint },
+    { label: 'Atkinson', value: 'atkinson' as DitheringMode, hint: t.settings.dither.atkinson.hint },
+    { label: 'Ordered',  value: 'ordered'  as DitheringMode, hint: t.settings.dither.ordered.hint },
+  ]
+  const SEP_LEVELS_DEFS = [
+    { label: t.settings.sep.off.label,    value: 'off'    as SepLevel, hint: t.settings.sep.off.hint },
+    { label: t.settings.sep.weak.label,   value: 'weak'   as SepLevel, hint: t.settings.sep.weak.hint },
+    { label: t.settings.sep.medium.label, value: 'medium' as SepLevel, hint: t.settings.sep.medium.hint },
+    { label: t.settings.sep.strong.label, value: 'strong' as SepLevel, hint: t.settings.sep.strong.hint },
+  ]
+  const DISPLAY_MODES_DEFS = [
+    { label: t.settings.display.color,  value: 'color'  as DisplayMode, icon: <ColorIcon /> },
+    { label: t.settings.display.symbol, value: 'symbol' as DisplayMode, icon: <SymbolIcon /> },
+    { label: t.settings.display.mixed,  value: 'mixed'  as DisplayMode, icon: <MixedIcon /> },
+  ]
+
   const [preset, setPreset] = useState<SizePrefixPreset>('100x100')
 
   const totalCells = settings.width * settings.height
@@ -74,7 +70,7 @@ export default function SettingsPanel({
 
   function handlePreset(v: SizePrefixPreset) {
     setPreset(v)
-    const p = PRESETS.find(p => p.value === v)
+    const p = PRESETS_DEFS.find(p => p.value === v)
     if (p && v !== 'custom') {
       onChange({ ...settings, width: p.w, height: p.h })
     }
@@ -86,19 +82,19 @@ export default function SettingsPanel({
       <div className="px-5 py-4 border-b border-linen-300/18">
         <h2 className="font-cormorant text-[15px] text-warm-600 tracking-wide flex items-center gap-2">
           <SliderIcon />
-          도안 설정
+          {t.settings.panelTitle}
         </h2>
       </div>
 
       {/* Size */}
-      <Section label="도안 크기">
-        <label className="form-lbl">프리셋</label>
+      <Section label={t.settings.size.section}>
+        <label className="form-lbl">{t.settings.size.preset}</label>
         <select
           className="input-linen mb-2"
           value={preset}
           onChange={e => handlePreset(e.target.value as SizePrefixPreset)}
         >
-          {PRESETS.map(p => (
+          {PRESETS_DEFS.map(p => (
             <option key={p.value} value={p.value}>{p.label}</option>
           ))}
         </select>
@@ -107,7 +103,7 @@ export default function SettingsPanel({
           <>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="form-lbl">가로 (칸)</label>
+                <label className="form-lbl">{t.settings.size.width}</label>
                 <input type="number"
                        className={`input-linen ${overLimit ? 'border-red-400 focus:border-red-400' : ''}`}
                        min={10} max={300}
@@ -115,7 +111,7 @@ export default function SettingsPanel({
                        onChange={e => onChange({ ...settings, width: +e.target.value })} />
               </div>
               <div>
-                <label className="form-lbl">세로 (칸)</label>
+                <label className="form-lbl">{t.settings.size.height}</label>
                 <input type="number"
                        className={`input-linen ${overLimit ? 'border-red-400 focus:border-red-400' : ''}`}
                        min={10} max={300}
@@ -125,7 +121,7 @@ export default function SettingsPanel({
             </div>
             {overLimit && (
               <p className="mt-1.5 text-[10px] text-red-400 leading-snug">
-                변환불가: 최대 300 × 300 (총 90,000칸)을 초과했습니다
+                {t.settings.size.overLimit}
               </p>
             )}
           </>
@@ -133,12 +129,12 @@ export default function SettingsPanel({
       </Section>
 
       {/* Aspect mode */}
-      <Section label="비율 모드">
+      <Section label={t.settings.aspect.section}>
         <p className="text-[10px] text-warm-400 font-light leading-relaxed mb-2.5">
-          원본 이미지를 격자에<br />매핑하는 방식을 선택합니다
+          {t.settings.aspect.desc.split('\n').map((ln, i) => (<span key={i}>{ln}{i===0&&<br/>}</span>))}
         </p>
         <div className="flex gap-1 mb-2">
-          {ASPECT_MODES.map(a => (
+          {ASPECT_MODES_DEFS.map(a => (
             <button
               key={a.value}
               onClick={() => onChange({ ...settings, aspectMode: a.value })}
@@ -154,17 +150,17 @@ export default function SettingsPanel({
           ))}
         </div>
         <p className="text-[10px] text-sage-400 font-light">
-          {ASPECT_MODES.find(a => a.value === settings.aspectMode)?.hint}
+          {ASPECT_MODES_DEFS.find(a => a.value === settings.aspectMode)?.hint}
         </p>
       </Section>
 
       {/* Image adjustments */}
-      <Section label="이미지 조정">
+      <Section label={t.settings.adjust.section}>
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-1.5">
               <span className="text-[13px] text-warm-400">☾</span>
-              <span className="form-lbl mb-0">명도</span>
+              <span className="form-lbl mb-0">{t.settings.adjust.brightness}</span>
               <span className="text-[13px] text-warm-500">☀</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -174,7 +170,7 @@ export default function SettingsPanel({
               {settings.brightness !== 0 && (
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-400/12 border border-sage-400/20 text-sage-500 tracking-wide cursor-pointer"
                       onClick={e => { e.stopPropagation(); onChange({ ...settings, brightness: 0 }) }}>
-                  기본값
+                  {t.settings.adjust.defaultBadge}
                 </span>
               )}
             </div>
@@ -197,7 +193,7 @@ export default function SettingsPanel({
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-1.5">
               <span className="text-[13px] text-warm-400">○</span>
-              <span className="form-lbl mb-0">명암</span>
+              <span className="form-lbl mb-0">{t.settings.adjust.contrast}</span>
               <span className="text-[13px] text-warm-500">◑</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -207,7 +203,7 @@ export default function SettingsPanel({
               {settings.contrast !== 0 && (
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-400/12 border border-sage-400/20 text-sage-500 tracking-wide cursor-pointer"
                       onClick={e => { e.stopPropagation(); onChange({ ...settings, contrast: 0 }) }}>
-                  기본값
+                  {t.settings.adjust.defaultBadge}
                 </span>
               )}
             </div>
@@ -232,26 +228,26 @@ export default function SettingsPanel({
                        rounded-chip hover:bg-linen-100/50 transition-all duration-150 cursor-pointer"
             onClick={() => onChange({ ...settings, brightness: 0, contrast: 0 })}
           >
-            초기화
+            {t.settings.adjust.reset}
           </button>
         )}
       </Section>
 
       {/* Colors */}
-      <Section label="색상 설정">
+      <Section label={t.settings.color.section}>
         <div className="mb-2">
-          <label className="form-lbl">실 브랜드</label>
+          <label className="form-lbl">{t.settings.color.brand}</label>
           <select className="input-linen">
             <option>DMC</option>
-            <option disabled>Anchor (준비 중)</option>
+            <option disabled>{t.settings.color.anchorHint}</option>
           </select>
         </div>
         <div>
-          <label className="form-lbl">최대 색상 수</label>
+          <label className="form-lbl">{t.settings.color.count}</label>
           <select className="input-linen"
                   value={settings.colorCount}
                   onChange={e => onChange({ ...settings, colorCount: +e.target.value })}>
-            {COLOR_COUNTS.map(c => (
+            {COLOR_COUNTS_DEFS.map(c => (
               <option key={c.value} value={c.value}>{c.label}</option>
             ))}
           </select>
@@ -259,12 +255,12 @@ export default function SettingsPanel({
       </Section>
 
       {/* Quality mode */}
-      <Section label="렌더링 품질">
+      <Section label={t.settings.quality.section}>
         <p className="text-[10px] text-warm-400 font-light leading-relaxed mb-2.5">
-          전처리 강도와 리샘플링<br />방식을 선택합니다
+          {t.settings.quality.desc.split('\n').map((ln, i) => (<span key={i}>{ln}{i===0&&<br/>}</span>))}
         </p>
         <div className="flex gap-1 mb-2">
-          {QUALITY_MODES.map(q => (
+          {QUALITY_MODES_DEFS.map(q => (
             <button
               key={q.value}
               onClick={() => onChange({ ...settings, qualityMode: q.value })}
@@ -280,17 +276,17 @@ export default function SettingsPanel({
           ))}
         </div>
         <p className="text-[10px] text-sage-400 font-light">
-          {QUALITY_MODES.find(q => q.value === settings.qualityMode)?.hint}
+          {QUALITY_MODES_DEFS.find(q => q.value === settings.qualityMode)?.hint}
         </p>
       </Section>
 
       {/* Dithering mode */}
-      <Section label="디더링">
+      <Section label={t.settings.dither.section}>
         <p className="text-[10px] text-warm-400 font-light leading-relaxed mb-2.5">
-          색상 양자화 시 적용할<br />디더링 알고리즘을 선택합니다
+          {t.settings.dither.desc.split('\n').map((ln, i) => (<span key={i}>{ln}{i===0&&<br/>}</span>))}
         </p>
         <div className="flex gap-1 mb-2">
-          {DITHERING_MODES.map(d => (
+          {DITHERING_MODES_DEFS.map(d => (
             <button
               key={d.value}
               onClick={() => onChange({ ...settings, ditheringMode: d.value })}
@@ -306,17 +302,17 @@ export default function SettingsPanel({
           ))}
         </div>
         <p className="text-[10px] text-sage-400 font-light">
-          {DITHERING_MODES.find(d => d.value === settings.ditheringMode)?.hint}
+          {DITHERING_MODES_DEFS.find(d => d.value === settings.ditheringMode)?.hint}
         </p>
       </Section>
 
       {/* Separation */}
-      <Section label="유사색 자동 분리">
+      <Section label={t.settings.sep.section}>
         <p className="text-[10px] text-warm-400 font-light leading-relaxed mb-2.5">
-          인접 유사색을 자동 보정해<br />작업 난이도를 낮춥니다
+          {t.settings.sep.desc.split('\n').map((ln, i) => (<span key={i}>{ln}{i===0&&<br/>}</span>))}
         </p>
         <div className="flex gap-1 mb-2">
-          {SEP_LEVELS.map(s => (
+          {SEP_LEVELS_DEFS.map(s => (
             <button
               key={s.value}
               onClick={() => onChange({ ...settings, sepLevel: s.value })}
@@ -332,14 +328,14 @@ export default function SettingsPanel({
           ))}
         </div>
         <p className="text-[10px] text-sage-400 font-light">
-          {SEP_LEVELS.find(s => s.value === settings.sepLevel)?.hint}
+          {SEP_LEVELS_DEFS.find(s => s.value === settings.sepLevel)?.hint}
         </p>
       </Section>
 
       {/* Display mode */}
-      <Section label="표시 모드">
+      <Section label={t.settings.display.section}>
         <div className="grid grid-cols-3 gap-1.5">
-          {DISPLAY_MODES.map(m => (
+          {DISPLAY_MODES_DEFS.map(m => (
             <button
               key={m.value}
               onClick={() => onChange({ ...settings, mode: m.value })}
@@ -370,12 +366,12 @@ export default function SettingsPanel({
           {isGenerating ? (
             <>
               <SpinIcon />
-              생성 중...
+              {t.settings.generating}
             </>
           ) : (
             <>
               <WandIcon />
-              도안 생성
+              {t.settings.generate}
             </>
           )}
         </button>

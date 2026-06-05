@@ -11,6 +11,7 @@ import ProgressOverlay from '@/components/ui/ProgressOverlay'
 import PaletteShowcase from '@/components/ui/PaletteShowcase'
 import AdUnit          from '@/components/ui/AdUnit'
 import { usePatternGenerator } from '@/hooks/usePatternGenerator'
+import { useLang } from '@/lib/i18n/context'
 import HomeFAQ from '@/components/ui/HomeFAQ'
 import type { PatternSettings } from '@/types'
 
@@ -28,6 +29,11 @@ const DEFAULT_SETTINGS: PatternSettings = {
 }
 
 export default function HomePage() {
+  const { t } = useLang()
+  const FEATURES = t.features.map((f, i) => ({
+    ...f,
+    icon: [<LabIcon key={0}/>, <WandIcon key={1}/>, <PrintIcon key={2}/>, <ShieldIcon key={3}/>][i],
+  }))
   const imageRef = useRef<HTMLImageElement | null>(null)
   const [hasImage,        setHasImage]        = useState(false)
   const [imageDataUrl,    setImageDataUrl]    = useState<string | undefined>(undefined)
@@ -75,22 +81,23 @@ export default function HomePage() {
           <div className="flex flex-col justify-center py-10 sm:py-14 sm:pr-12 sm:border-r border-linen-300/20">
             <div className="flex items-center gap-2.5 mb-5">
               <span className="text-[10px] uppercase tracking-[0.18em] text-sage-400 font-light">
-                Photo to Cross Stitch Pattern Generator
+                {t.hero.eyebrow}
               </span>
               <div className="h-px w-12 bg-sage-400/50 hidden sm:block" />
             </div>
             <h1 className="font-playfair text-[32px] sm:text-[40px] leading-[1.2] text-warm-700 mb-2
                            tracking-[-0.01em]">
-              사진을<br />
-              <em className="text-warm-500 not-italic font-playfair italic">십자수 도안으로</em>
+              {t.hero.h1a}<br />
+              <em className="text-warm-500 not-italic font-playfair italic">{t.hero.h1b}</em>
             </h1>
             <p className="font-cormorant text-[16px] sm:text-[17px] italic font-light text-warm-500
                           leading-[1.7] mb-7 sm:mb-9 max-w-xs">
-              소중한 순간을 실 한 올로 담아내는<br />
-              조용하고 감성적인 도안 작업실
+              {t.hero.tagline.split('\n').map((ln, i) => (
+                <span key={i}>{ln}{i === 0 && <br />}</span>
+              ))}
             </p>
             <div className="flex gap-4 sm:gap-5 flex-wrap">
-              {['사진 업로드', '옵션 설정', '도안 생성', 'PDF 저장'].map((step, i) => (
+              {t.hero.steps.map((step, i) => (
                 <div key={step} className="flex items-center gap-2">
                   <span className="w-[22px] h-[22px] rounded-full border border-linen-300/40
                                    flex items-center justify-center text-[10px] text-warm-500">
@@ -217,28 +224,6 @@ export default function HomePage() {
   )
 }
 
-const FEATURES = [
-  {
-    title: 'LAB 색공간 매핑',
-    desc:  '사람 눈 기준으로 가장 가까운 DMC 실 색상을 ΔE 거리로 정확하게 매핑합니다',
-    icon: <LabIcon />,
-  },
-  {
-    title: '유사색 자동 분리',
-    desc:  '인접 색상의 ΔE를 검사해 자동 보정, 구분하기 어려운 배치를 예방합니다',
-    icon: <WandIcon />,
-  },
-  {
-    title: '인쇄용 PDF 출력',
-    desc:  '실 목록, 페이지 분할, DMC 번호가 포함된 고해상도 도안을 내보냅니다',
-    icon: <PrintIcon />,
-  },
-  {
-    title: '브라우저 전용 처리',
-    desc:  '업로드한 사진은 서버로 전송되지 않아 개인 사진도 안전합니다',
-    icon: <ShieldIcon />,
-  },
-]
 
 function LabIcon() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>

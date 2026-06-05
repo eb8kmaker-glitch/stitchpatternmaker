@@ -1,0 +1,459 @@
+export type Locale = 'ko' | 'en' | 'ja'
+
+export interface Translations {
+  meta: {
+    title: string
+    description: string
+    ogLocale: string
+    htmlLang: string
+  }
+  nav: {
+    subtitle: string
+    gallery: string
+    guide: string
+    dmcColors: string
+    feedback: string
+    cta: string
+  }
+  hero: {
+    eyebrow: string
+    h1a: string
+    h1b: string
+    tagline: string
+    steps: [string, string, string, string]
+  }
+  upload: {
+    prompt: string
+    dragHint: string
+    replace: string
+  }
+  settings: {
+    panelTitle: string
+    size: {
+      section: string
+      preset: string
+      custom: string
+      width: string
+      height: string
+      overLimit: string
+    }
+    aspect: {
+      section: string
+      desc: string
+      fit:     { label: string; hint: string }
+      crop:    { label: string; hint: string }
+      stretch: { label: string; hint: string }
+    }
+    adjust: {
+      section: string
+      brightness: string
+      contrast: string
+      defaultBadge: string
+      reset: string
+    }
+    color: {
+      section: string
+      brand: string
+      count: string
+      anchorHint: string
+      counts: [string, string, string, string]
+    }
+    quality: {
+      section: string
+      desc: string
+      fast:     { hint: string }
+      balanced: { hint: string }
+      hq:       { hint: string }
+    }
+    dither: {
+      section: string
+      desc: string
+      none:     { hint: string }
+      floyd:    { hint: string }
+      atkinson: { hint: string }
+      ordered:  { hint: string }
+    }
+    sep: {
+      section: string
+      desc: string
+      off:    { label: string; hint: string }
+      weak:   { label: string; hint: string }
+      medium: { label: string; hint: string }
+      strong: { label: string; hint: string }
+    }
+    display: {
+      section: string
+      color:  string
+      symbol: string
+      mixed:  string
+    }
+    generate: string
+    generating: string
+  }
+  features: [
+    { title: string; desc: string },
+    { title: string; desc: string },
+    { title: string; desc: string },
+    { title: string; desc: string },
+  ]
+  faq: {
+    sectionLabel: string
+    title: string
+    items: Array<{ q: string; a: string }>
+  }
+  palette: {
+    sectionTag: string
+    subtitle: string
+  }
+}
+
+const KO: Translations = {
+  meta: {
+    title: 'Free Cross Stitch Pattern Maker | Photo to DMC Pattern',
+    description: '사진을 DMC 십자수 도안으로 즉시 변환. 브라우저에서 완전 무료, 계정 불필요.',
+    ogLocale: 'ko_KR',
+    htmlLang: 'ko',
+  },
+  nav: {
+    subtitle: 'Cross Stitch Pattern Generator',
+    gallery: '갤러리',
+    guide: '가이드',
+    dmcColors: 'DMC 색상표',
+    feedback: '피드백',
+    cta: '무료 시작',
+  },
+  hero: {
+    eyebrow: 'Photo to Cross Stitch Pattern Generator',
+    h1a: '사진을',
+    h1b: '십자수 도안으로',
+    tagline: '소중한 순간을 실 한 올로 담아내는\n조용하고 감성적인 도안 작업실',
+    steps: ['사진 업로드', '옵션 설정', '도안 생성', 'PDF 저장'],
+  },
+  upload: {
+    prompt: '사진을 올려주세요',
+    dragHint: '드래그하거나 클릭하여\n이미지를 불러오세요',
+    replace: '클릭하여 다른 사진으로 교체',
+  },
+  settings: {
+    panelTitle: '도안 설정',
+    size: {
+      section: '도안 크기',
+      preset: '프리셋',
+      custom: '직접 입력',
+      width: '가로 (칸)',
+      height: '세로 (칸)',
+      overLimit: '변환불가: 최대 300 × 300 (총 90,000칸)을 초과했습니다',
+    },
+    aspect: {
+      section: '비율 모드',
+      desc: '원본 이미지를 격자에\n매핑하는 방식을 선택합니다',
+      fit:     { label: 'Fit',     hint: '원본 비율 유지 + 여백 채움' },
+      crop:    { label: 'Crop',    hint: '중앙 기준 크롭 — 여백 없음' },
+      stretch: { label: 'Stretch', hint: '격자에 맞게 늘림' },
+    },
+    adjust: {
+      section: '이미지 조정',
+      brightness: '명도',
+      contrast: '명암',
+      defaultBadge: '기본값',
+      reset: '초기화',
+    },
+    color: {
+      section: '색상 설정',
+      brand: '실 브랜드',
+      count: '최대 색상 수',
+      anchorHint: 'Anchor (준비 중)',
+      counts: ['20색 — 단순', '40색 — 균형', '60색 — 세밀', '80색 — 정교'],
+    },
+    quality: {
+      section: '렌더링 품질',
+      desc: '전처리 강도와 리샘플링\n방식을 선택합니다',
+      fast:     { hint: '빠른 생성 — 플랫 컬러' },
+      balanced: { hint: '균형 — 디더링 지원' },
+      hq:       { hint: '최고 품질 — 샤픈 + Confetti 정리' },
+    },
+    dither: {
+      section: '디더링',
+      desc: '색상 양자화 시 적용할\n디더링 알고리즘을 선택합니다',
+      none:     { hint: '플랫 컬러 — 선명한 경계' },
+      floyd:    { hint: 'Floyd–Steinberg 디더링' },
+      atkinson: { hint: 'Atkinson — 부드러운 디더링' },
+      ordered:  { hint: 'Bayer 4×4 매트릭스 패턴' },
+    },
+    sep: {
+      section: '유사색 자동 분리',
+      desc: '인접 유사색을 자동 보정해\n작업 난이도를 낮춥니다',
+      off:    { label: 'OFF',   hint: '유사색 분리 OFF' },
+      weak:   { label: '약하게', hint: 'ΔE < 8 보정' },
+      medium: { label: '보통',  hint: 'ΔE < 15 보정' },
+      strong: { label: '강하게', hint: 'ΔE < 25 보정' },
+    },
+    display: {
+      section: '표시 모드',
+      color:  '컬러',
+      symbol: '기호',
+      mixed:  '혼합',
+    },
+    generate: '도안 생성',
+    generating: '생성 중...',
+  },
+  features: [
+    { title: 'LAB 색공간 매핑',    desc: '사람 눈 기준으로 가장 가까운 DMC 실 색상을 ΔE 거리로 정확하게 매핑합니다' },
+    { title: '유사색 자동 분리',    desc: '인접 색상의 ΔE를 검사해 자동 보정, 구분하기 어려운 배치를 예방합니다' },
+    { title: '인쇄용 PDF 출력',    desc: '실 목록, 페이지 분할, DMC 번호가 포함된 고해상도 도안을 내보냅니다' },
+    { title: '브라우저 전용 처리',  desc: '업로드한 사진은 서버로 전송되지 않아 개인 사진도 안전합니다' },
+  ],
+  faq: {
+    sectionLabel: 'FAQ',
+    title: '자주 묻는 질문',
+    items: [
+      { q: 'Stitch Pattern Maker는 정말 무료인가요?', a: 'Yes — completely free, with no hidden costs. Upload a photo, adjust the settings, and download your PDF pattern without creating an account.' },
+      { q: '사진이 서버에서 처리되나요?', a: 'No. Everything runs entirely in your browser. Your images are never uploaded to any server, so your photos stay private.' },
+      { q: '지원하는 이미지 형식은 무엇인가요?', a: 'JPEG, PNG, WebP, and GIF are all supported. For best results use a photo with clear subjects and good contrast.' },
+      { q: 'DMC 실 색상은 몇 가지까지 사용할 수 있나요?', a: 'You can set anywhere from 5 to 80 colors. For beginners, 10–20 colors keeps the project manageable.' },
+      { q: '도안을 인쇄할 수 있나요?', a: 'Yes. Use the PDF export button to download a print-ready file. Print at 100% scale on A4 paper — the grid lines, color symbols, and DMC thread list are all included.' },
+      { q: '어떤 크기의 도안을 생성해야 할까요?', a: 'Start with 50×50 to 100×100 stitches. At 14-count Aida fabric that gives a finished piece of roughly 9–18 cm — ideal for a first project.' },
+      { q: '\'유사색 분리\' 설정이란 무엇인가요?', a: 'Color separation merges thread colors that look very similar (measured in CIE LAB color space). Setting it to Medium or Strong reduces the total number of threads you need to buy.' },
+      { q: '생성된 도안을 상업적으로 사용할 수 있나요?', a: 'Patterns generated by this tool are yours to use however you like. Note that the underlying photo must be one you own or have rights to.' },
+    ],
+  },
+  palette: {
+    sectionTag: 'DMC 팔레트',
+    subtitle: '465가지 색상',
+  },
+}
+
+const EN: Translations = {
+  meta: {
+    title: 'Free Cross Stitch Pattern Maker | Photo to DMC Pattern',
+    description: 'Turn any photo into a print-ready DMC cross stitch pattern. Free, browser-only processing — no account required.',
+    ogLocale: 'en_US',
+    htmlLang: 'en',
+  },
+  nav: {
+    subtitle: 'Cross Stitch Pattern Generator',
+    gallery: 'Gallery',
+    guide: 'Guide',
+    dmcColors: 'DMC Colors',
+    feedback: 'Feedback',
+    cta: 'Start Free',
+  },
+  hero: {
+    eyebrow: 'Photo to Cross Stitch Pattern Generator',
+    h1a: 'Your Photo,',
+    h1b: 'Cross-Stitched',
+    tagline: 'Turn any precious moment into a stitch-by-stitch pattern —\na quiet, beautiful embroidery studio.',
+    steps: ['Upload Photo', 'Set Options', 'Generate', 'Save PDF'],
+  },
+  upload: {
+    prompt: 'Upload a photo',
+    dragHint: 'Drag and drop or click\nto load an image',
+    replace: 'Click to replace with another photo',
+  },
+  settings: {
+    panelTitle: 'Pattern Settings',
+    size: {
+      section: 'Pattern Size',
+      preset: 'Preset',
+      custom: 'Custom',
+      width: 'Width (stitches)',
+      height: 'Height (stitches)',
+      overLimit: 'Too large: maximum is 300 × 300 (90,000 stitches)',
+    },
+    aspect: {
+      section: 'Aspect Mode',
+      desc: 'Choose how the source image\nis mapped onto the stitch grid',
+      fit:     { label: 'Fit',     hint: 'Preserve ratio + fill margins' },
+      crop:    { label: 'Crop',    hint: 'Centre crop — no margins' },
+      stretch: { label: 'Stretch', hint: 'Stretch to fill the grid' },
+    },
+    adjust: {
+      section: 'Image Adjustments',
+      brightness: 'Brightness',
+      contrast: 'Contrast',
+      defaultBadge: 'Default',
+      reset: 'Reset',
+    },
+    color: {
+      section: 'Color Settings',
+      brand: 'Thread Brand',
+      count: 'Max Color Count',
+      anchorHint: 'Anchor (coming soon)',
+      counts: ['20 — Simple', '40 — Balanced', '60 — Detailed', '80 — Fine'],
+    },
+    quality: {
+      section: 'Rendering Quality',
+      desc: 'Processing intensity and\nresampling method',
+      fast:     { hint: 'Fast generation — flat color' },
+      balanced: { hint: 'Balanced — dithering supported' },
+      hq:       { hint: 'Best quality — sharpen + confetti cleanup' },
+    },
+    dither: {
+      section: 'Dithering',
+      desc: 'Algorithm applied during\ncolor quantization',
+      none:     { hint: 'Flat color — sharp edges' },
+      floyd:    { hint: 'Floyd–Steinberg dithering' },
+      atkinson: { hint: 'Atkinson — smooth dithering' },
+      ordered:  { hint: 'Bayer 4×4 matrix pattern' },
+    },
+    sep: {
+      section: 'Similar Color Separation',
+      desc: 'Auto-correct adjacent similar colors\nto reduce project difficulty',
+      off:    { label: 'OFF',    hint: 'No color separation' },
+      weak:   { label: 'Weak',   hint: 'ΔE < 8 correction' },
+      medium: { label: 'Medium', hint: 'ΔE < 15 correction' },
+      strong: { label: 'Strong', hint: 'ΔE < 25 correction' },
+    },
+    display: {
+      section: 'Display Mode',
+      color:  'Color',
+      symbol: 'Symbol',
+      mixed:  'Mixed',
+    },
+    generate: 'Generate Pattern',
+    generating: 'Generating…',
+  },
+  features: [
+    { title: 'LAB Color Mapping',      desc: 'Maps the closest DMC thread color using CIE ΔE distance — tuned to how humans perceive color.' },
+    { title: 'Similar Color Merging',  desc: 'Inspects ΔE between adjacent colors and auto-corrects ambiguous placements.' },
+    { title: 'Print-Ready PDF',        desc: 'Export a high-resolution pattern with the thread list, page tiles, and DMC numbers.' },
+    { title: 'Browser-Only',           desc: 'Your photos are never uploaded to a server — all processing stays on your device.' },
+  ],
+  faq: {
+    sectionLabel: 'FAQ',
+    title: 'Frequently Asked Questions',
+    items: [
+      { q: 'Is Stitch Pattern Maker really free?', a: 'Yes — completely free, with no hidden costs. Upload a photo, adjust the settings, and download your PDF pattern without creating an account.' },
+      { q: 'Does it process my photo on the server?', a: 'No. Everything runs entirely in your browser. Your images are never uploaded to any server, so your photos stay private.' },
+      { q: 'What image formats are supported?', a: 'JPEG, PNG, WebP, and GIF are all supported. For best results use a photo with clear subjects and good contrast. Portraits, pets, landscapes, and simple illustrations all work well.' },
+      { q: 'How many DMC thread colors can I use?', a: 'You can set anywhere from 5 to 80 colors. For beginners, 10–20 colors keeps the project manageable. Increasing the color count produces more detailed patterns that closely match the original photo.' },
+      { q: 'Can I print the pattern?', a: 'Yes. Use the PDF export button to download a print-ready file. Print at 100% scale on A4 paper — the grid lines, color symbols, and DMC thread list are all included.' },
+      { q: 'What size pattern should I generate?', a: 'Start with 50×50 to 100×100 stitches. At 14-count Aida fabric that gives a finished piece of roughly 9–18 cm — ideal for a first project. You can go larger once you are comfortable with the process.' },
+      { q: 'What is the "color separation" setting?', a: 'Color separation merges thread colors that look very similar (measured in CIE LAB color space). Setting it to Medium or Strong reduces the total number of threads you need to buy and makes it easier to tell colors apart while stitching.' },
+      { q: 'Can I use generated patterns for commercial products?', a: 'Patterns generated by this tool are yours to use however you like. Note that the underlying photo must be one you own or have rights to — the tool does not grant rights to third-party images.' },
+    ],
+  },
+  palette: {
+    sectionTag: 'DMC Palette',
+    subtitle: '465 colors',
+  },
+}
+
+const JA: Translations = {
+  meta: {
+    title: '無料クロスステッチ図案メーカー | 写真からDMC図案へ',
+    description: '写真をDMCクロスステッチ図案に即変換。完全無料、ブラウザのみ処理、アカウント不要。',
+    ogLocale: 'ja_JP',
+    htmlLang: 'ja',
+  },
+  nav: {
+    subtitle: 'クロスステッチ図案ジェネレーター',
+    gallery: 'ギャラリー',
+    guide: 'ガイド',
+    dmcColors: 'DMC色見本',
+    feedback: 'フィードバック',
+    cta: '無料で始める',
+  },
+  hero: {
+    eyebrow: '写真からクロスステッチ図案ジェネレーター',
+    h1a: '写真を',
+    h1b: 'クロスステッチ図案に',
+    tagline: '大切な瞬間を一針ずつ刺繍に —\n静かで温かな図案アトリエ',
+    steps: ['写真をアップロード', 'オプション設定', '図案を生成', 'PDF保存'],
+  },
+  upload: {
+    prompt: '写真をアップロード',
+    dragHint: 'ドラッグするかクリックして\n画像を読み込む',
+    replace: 'クリックして別の写真に変更',
+  },
+  settings: {
+    panelTitle: '図案設定',
+    size: {
+      section: '図案サイズ',
+      preset: 'プリセット',
+      custom: 'カスタム入力',
+      width: '横 (マス)',
+      height: '縦 (マス)',
+      overLimit: '変換不可: 最大300×300 (90,000マス)を超えています',
+    },
+    aspect: {
+      section: '比率モード',
+      desc: '元画像をグリッドにマッピングする\n方法を選択します',
+      fit:     { label: 'Fit',     hint: '元の比率を維持 + 余白を埋める' },
+      crop:    { label: 'Crop',    hint: '中央基準でクロップ — 余白なし' },
+      stretch: { label: 'Stretch', hint: 'グリッドに合わせて引き伸ばす' },
+    },
+    adjust: {
+      section: '画像調整',
+      brightness: '明るさ',
+      contrast: 'コントラスト',
+      defaultBadge: 'デフォルト',
+      reset: 'リセット',
+    },
+    color: {
+      section: 'カラー設定',
+      brand: '刺繍糸ブランド',
+      count: '最大カラー数',
+      anchorHint: 'Anchor (準備中)',
+      counts: ['20色 — シンプル', '40色 — バランス', '60色 — 詳細', '80色 — 精細'],
+    },
+    quality: {
+      section: 'レンダリング品質',
+      desc: '前処理の強度と\nリサンプリング方式を選択',
+      fast:     { hint: '高速生成 — フラットカラー' },
+      balanced: { hint: 'バランス — ディザリング対応' },
+      hq:       { hint: '最高品質 — シャープン+コンフェッティ整理' },
+    },
+    dither: {
+      section: 'ディザリング',
+      desc: '色量子化時に適用する\nアルゴリズムを選択します',
+      none:     { hint: 'フラットカラー — 明確な境界' },
+      floyd:    { hint: 'Floyd–Steinberg ディザリング' },
+      atkinson: { hint: 'Atkinson — 滑らかなディザリング' },
+      ordered:  { hint: 'Bayer 4×4 マトリクスパターン' },
+    },
+    sep: {
+      section: '類似色自動分離',
+      desc: '隣接する類似色を自動補正して\n難易度を下げます',
+      off:    { label: 'OFF',  hint: '類似色分離OFF' },
+      weak:   { label: '弱め',  hint: 'ΔE < 8 補正' },
+      medium: { label: '中程度', hint: 'ΔE < 15 補正' },
+      strong: { label: '強め',  hint: 'ΔE < 25 補正' },
+    },
+    display: {
+      section: '表示モード',
+      color:  'カラー',
+      symbol: '記号',
+      mixed:  '混合',
+    },
+    generate: '図案を生成',
+    generating: '生成中...',
+  },
+  features: [
+    { title: 'LAB色空間マッピング',  desc: 'CIE LAB色空間でΔE距離を使い、人の目に最も近いDMC糸色を正確にマッピング。' },
+    { title: '類似色自動分離',       desc: '隣接色のΔEを検査して自動補正、識別困難な配置を予防します。' },
+    { title: '印刷用PDF出力',        desc: '糸リスト・ページ分割・DMC番号入りの高解像度図案を出力。' },
+    { title: 'ブラウザのみで処理',   desc: 'アップロードした写真はサーバーに送信されず、プライバシーが守られます。' },
+  ],
+  faq: {
+    sectionLabel: 'FAQ',
+    title: 'よくある質問',
+    items: [
+      { q: 'Stitch Pattern Makerは本当に無料ですか？', a: 'Yes — completely free, with no hidden costs. Upload a photo, adjust the settings, and download your PDF pattern without creating an account.' },
+      { q: '写真はサーバーで処理されますか？', a: 'No. Everything runs entirely in your browser. Your images are never uploaded to any server, so your photos stay private.' },
+      { q: '対応している画像フォーマットは？', a: 'JPEG, PNG, WebP, and GIF are all supported. For best results use a photo with clear subjects and good contrast.' },
+      { q: 'DMC糸は何色まで使えますか？', a: 'You can set anywhere from 5 to 80 colors. For beginners, 10–20 colors keeps the project manageable.' },
+      { q: '図案を印刷できますか？', a: 'Yes. Use the PDF export button to download a print-ready file. Print at 100% scale on A4 paper — the grid lines, color symbols, and DMC thread list are all included.' },
+      { q: 'どのくらいのサイズの図案を作ればいいですか？', a: 'Start with 50×50 to 100×100 stitches. At 14-count Aida fabric that gives a finished piece of roughly 9–18 cm — ideal for a first project.' },
+      { q: '「類似色分離」設定とは何ですか？', a: 'Color separation merges thread colors that look very similar (measured in CIE LAB color space). Setting it to Medium or Strong reduces the total number of threads you need to buy.' },
+      { q: '生成した図案を商品に使用できますか？', a: 'Patterns generated by this tool are yours to use however you like. Note that the underlying photo must be one you own or have rights to.' },
+    ],
+  },
+  palette: {
+    sectionTag: 'DMCパレット',
+    subtitle: '465色',
+  },
+}
+
+export const locales: Record<Locale, Translations> = { ko: KO, en: EN, ja: JA }
+export const LOCALE_STORAGE_KEY = 'spm_lang'

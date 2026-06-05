@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useCallback } from 'react'
+import { useLang } from '@/lib/i18n/context'
 
 interface UploadZoneProps {
   onImageLoad: (img: HTMLImageElement, file: File) => void
@@ -9,6 +10,7 @@ interface UploadZoneProps {
 }
 
 export default function UploadZone({ onImageLoad, brightness = 0, contrast = 0 }: UploadZoneProps) {
+  const { t } = useLang()
   const inputRef  = useRef<HTMLInputElement>(null)
   const [drag, setDrag]     = useState(false)
   const [loaded, setLoaded] = useState<{ name: string; size: string; src: string } | null>(null)
@@ -92,16 +94,18 @@ export default function UploadZone({ onImageLoad, brightness = 0, contrast = 0 }
           <p className="font-cormorant text-base italic text-warm-600 mb-1">{loaded.name}</p>
           <p className="text-xs text-warm-400 font-light">{loaded.size}</p>
           <p className="text-[10px] text-sage-400 mt-2 font-light tracking-wide">
-            클릭하여 다른 사진으로 교체
+            {t.upload.replace}
           </p>
         </>
       ) : (
         <>
           <p className="font-cormorant text-base italic text-warm-600 mb-1.5">
-            사진을 올려주세요
+            {t.upload.prompt}
           </p>
           <p className="text-xs text-warm-400 font-light leading-relaxed">
-            드래그하거나 클릭하여<br />이미지를 불러오세요
+            {t.upload.dragHint.split('\n').map((line, i) => (
+              <span key={i}>{line}{i === 0 && <br />}</span>
+            ))}
           </p>
           <div className="flex justify-center gap-2 mt-4">
             {['JPG', 'PNG'].map(t => (
