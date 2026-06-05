@@ -121,6 +121,71 @@ export interface Translations {
     sectionTag: string
     subtitle: string
   }
+  gallery: {
+    heroTitle: string
+    heroDesc: string
+    combinationLabel: string
+    optionCountSuffix: string
+    combinationSuffix: string
+    heroCombinationPrefix: string
+    sectionSubtitles: {
+      aspect: string
+      colorCount: string
+      quality: string
+      dithering: string
+      sep: string
+      display: string
+    }
+    ctaMessage: string
+    ctaButton: string
+  }
+  feedback: {
+    title: string
+    subtitle: string
+    emailLabel: string
+    subjectLabel: string
+    messageLabel: string
+    emailPlaceholder: string
+    subjectPlaceholder: string
+    messagePlaceholder: string
+    submitText: string
+    submittingText: string
+    successMessage: string
+  }
+  guide: {
+    breadcrumbHome: string
+    ctaTitle: string
+    ctaDesc: string
+    ctaButton: string
+    faqTitle: string
+    footerDmc: string
+    footerGuide: string
+  }
+  dmcColors: {
+    groups: {
+      all: string
+      red: string
+      orange: string
+      yellow: string
+      green: string
+      blue: string
+      purple: string
+      brown: string
+      neutral: string
+    }
+    searchPlaceholder: string
+    colorCount: string
+    pageTitle: string
+    pageDesc: string
+    breadcrumb: string
+    popularLabel: string
+    beginnerSetLabel: string
+    noResults: string
+    similarColors: string
+    close: string
+    guideLink: string
+    createLink: string
+  }
 }
 
 const KO: Translations = {
@@ -252,6 +317,71 @@ const KO: Translations = {
   palette: {
     sectionTag: 'DMC 팔레트',
     subtitle: '465가지 색상',
+  },
+  gallery: {
+    heroTitle: '설정 옵션 예시 갤러리',
+    heroDesc: '같은 사진도 설정에 따라 완전히 다른 도안이 만들어집니다. 각 옵션별 비교 예시를 확인해보세요.',
+    combinationLabel: '전체 설정 조합 계산',
+    optionCountSuffix: '가지 옵션',
+    combinationSuffix: '가지 조합',
+    heroCombinationPrefix: '각 설정별 대표 예시',
+    sectionSubtitles: {
+      aspect:     '원본 이미지를 격자에 매핑하는 방식',
+      colorCount: '사용할 DMC 실 색상의 최대 개수',
+      quality:    '전처리 강도와 리샘플링 방식',
+      dithering:  '색상 양자화 시 적용할 알고리즘',
+      sep:        '인접 유사색을 자동 보정해 작업 난이도 낮춤',
+      display:    '도안 캔버스 렌더링 방식',
+    },
+    ctaMessage: '마음에 드는 스타일을 찾으셨나요?',
+    ctaButton:  '도안 만들러 가기 →',
+  },
+  feedback: {
+    title:              '피드백 보내기',
+    subtitle:           '버그 제보, 기능 제안, 개선 의견을 자유롭게 남겨주세요.',
+    emailLabel:         '이메일 (선택)',
+    subjectLabel:       '제목',
+    messageLabel:       '내용',
+    emailPlaceholder:   'your@email.com',
+    subjectPlaceholder: '제목을 입력해주세요',
+    messagePlaceholder: '내용을 입력해주세요',
+    submitText:         'Send',
+    submittingText:     '전송 중...',
+    successMessage:     '메시지가 전송되었습니다. 감사합니다!',
+  },
+  guide: {
+    breadcrumbHome: '홈',
+    ctaTitle:       '도안을 직접 만들어 볼 준비가 됐나요?',
+    ctaDesc:        '사진을 올리면 DMC 실 색상이 매핑된 십자수 도안을 바로 만들 수 있습니다.',
+    ctaButton:      '무료로 도안 만들기',
+    faqTitle:       '자주 묻는 질문',
+    footerDmc:      'DMC 색상표',
+    footerGuide:    '가이드',
+  },
+  dmcColors: {
+    groups: {
+      all:     '전체',
+      red:     '빨강·핑크',
+      orange:  '주황·피치',
+      yellow:  '노랑·골드',
+      green:   '초록',
+      blue:    '파랑·청록',
+      purple:  '보라·라벤더',
+      brown:   '브라운',
+      neutral: '중성·무채색',
+    },
+    searchPlaceholder:  '번호 또는 이름으로 검색...',
+    colorCount:         '465색',
+    pageTitle:          'DMC 실 색상표',
+    pageDesc:           'DMC 자수실 전체 색상을 번호·이름·색상군별로 검색하세요.',
+    breadcrumb:         'DMC 색상표',
+    popularLabel:       '자주 쓰는 인기 색상',
+    beginnerSetLabel:   '십자수 초보 추천 기본 세트',
+    noResults:          '검색 결과가 없습니다.',
+    similarColors:      '유사색',
+    close:              '닫기',
+    guideLink:          '← 십자수 입문 가이드 보기',
+    createLink:         '도안 만들기',
   },
 }
 
@@ -385,6 +515,71 @@ const EN: Translations = {
     sectionTag: 'DMC Palette',
     subtitle: '465 colors',
   },
+  gallery: {
+    heroTitle: 'Pattern Settings Gallery',
+    heroDesc: 'The same photo looks completely different depending on the settings. Compare examples for each option.',
+    combinationLabel: 'Total Setting Combinations',
+    optionCountSuffix: 'options',
+    combinationSuffix: 'combinations',
+    heroCombinationPrefix: 'representative samples per setting:',
+    sectionSubtitles: {
+      aspect:     'How the source image maps to the stitch grid',
+      colorCount: 'Maximum number of DMC thread colors',
+      quality:    'Pre-processing intensity and resampling method',
+      dithering:  'Algorithm applied during color quantization',
+      sep:        'Auto-corrects adjacent similar colors to reduce difficulty',
+      display:    'Canvas rendering style',
+    },
+    ctaMessage: 'Found a style you like?',
+    ctaButton:  'Create your pattern →',
+  },
+  feedback: {
+    title:              'Send Feedback',
+    subtitle:           'Bug reports, feature requests, and improvement suggestions are all welcome.',
+    emailLabel:         'Email (optional)',
+    subjectLabel:       'Subject',
+    messageLabel:       'Message',
+    emailPlaceholder:   'your@email.com',
+    subjectPlaceholder: 'Enter a subject',
+    messagePlaceholder: 'Enter your message',
+    submitText:         'Send',
+    submittingText:     'Sending...',
+    successMessage:     'Message sent. Thank you!',
+  },
+  guide: {
+    breadcrumbHome: 'Home',
+    ctaTitle:       'Ready to create your own pattern?',
+    ctaDesc:        'Upload a photo and get a DMC cross stitch pattern in seconds — free, no account needed.',
+    ctaButton:      'Create a free pattern',
+    faqTitle:       'Frequently Asked Questions',
+    footerDmc:      'DMC Colors',
+    footerGuide:    'Guide',
+  },
+  dmcColors: {
+    groups: {
+      all:     'All',
+      red:     'Red · Pink',
+      orange:  'Orange · Peach',
+      yellow:  'Yellow · Gold',
+      green:   'Green',
+      blue:    'Blue · Teal',
+      purple:  'Purple · Lavender',
+      brown:   'Brown',
+      neutral: 'Neutral · Achromatic',
+    },
+    searchPlaceholder:  'Search by number or name...',
+    colorCount:         '465 colors',
+    pageTitle:          'DMC Color Chart',
+    pageDesc:           'Browse all 465 DMC embroidery thread colors by number, name, or color group.',
+    breadcrumb:         'DMC Colors',
+    popularLabel:       'Popular Colors',
+    beginnerSetLabel:   'Beginner Starter Set',
+    noResults:          'No results found.',
+    similarColors:      'Similar Colors',
+    close:              'Close',
+    guideLink:          '← View Cross Stitch Beginner Guide',
+    createLink:         'Create Pattern',
+  },
 }
 
 const JA: Translations = {
@@ -516,6 +711,71 @@ const JA: Translations = {
   palette: {
     sectionTag: 'DMCパレット',
     subtitle: '465色',
+  },
+  gallery: {
+    heroTitle: '設定オプションサンプルギャラリー',
+    heroDesc: '同じ写真でも設定次第でまったく異なる図案になります。各オプションの比較サンプルをご覧ください。',
+    combinationLabel: '設定の全組み合わせ数',
+    optionCountSuffix: '種類',
+    combinationSuffix: '通りの組み合わせ',
+    heroCombinationPrefix: '各設定の代表サンプル',
+    sectionSubtitles: {
+      aspect:     '元の画像をグリッドにマッピングする方法',
+      colorCount: '使用するDMC糸色の最大数',
+      quality:    '前処理の強度とリサンプリング方式',
+      dithering:  '色量子化に使用するアルゴリズム',
+      sep:        '隣接する類似色を自動補正して難易度を下げる',
+      display:    '図案キャンバスの表示スタイル',
+    },
+    ctaMessage: 'お気に入りのスタイルは見つかりましたか？',
+    ctaButton:  '図案を作成する →',
+  },
+  feedback: {
+    title:              'フィードバックを送る',
+    subtitle:           'バグ報告、機能リクエスト、改善提案などお気軽にどうぞ。',
+    emailLabel:         'メールアドレス（任意）',
+    subjectLabel:       '件名',
+    messageLabel:       'メッセージ',
+    emailPlaceholder:   'your@email.com',
+    subjectPlaceholder: '件名を入力してください',
+    messagePlaceholder: 'メッセージを入力してください',
+    submitText:         '送信',
+    submittingText:     '送信中...',
+    successMessage:     'メッセージを送信しました。ありがとうございます！',
+  },
+  guide: {
+    breadcrumbHome: 'ホーム',
+    ctaTitle:       'あなただけの図案を作る準備はできていますか？',
+    ctaDesc:        '写真をアップロードするだけで、DMCクロスステッチ図案をすぐに生成できます。',
+    ctaButton:      '無料で図案を作成',
+    faqTitle:       'よくある質問',
+    footerDmc:      'DMC色見本',
+    footerGuide:    'ガイド',
+  },
+  dmcColors: {
+    groups: {
+      all:     '全色',
+      red:     'レッド・ピンク',
+      orange:  'オレンジ・ピーチ',
+      yellow:  'イエロー・ゴールド',
+      green:   'グリーン',
+      blue:    'ブルー・ティール',
+      purple:  'パープル・ラベンダー',
+      brown:   'ブラウン',
+      neutral: 'ニュートラル・無彩色',
+    },
+    searchPlaceholder:  '番号または名前で検索...',
+    colorCount:         '465色',
+    pageTitle:          'DMC糸色見本',
+    pageDesc:           'DMC刺繍糸の全465色を番号・名前・カラーグループで検索できます。',
+    breadcrumb:         'DMC色見本',
+    popularLabel:       '人気カラー',
+    beginnerSetLabel:   '初心者向けスターターセット',
+    noResults:          '検索結果がありません。',
+    similarColors:      '類似色',
+    close:              '閉じる',
+    guideLink:          '← クロスステッチ入門ガイドを見る',
+    createLink:         '図案を作成',
   },
 }
 
