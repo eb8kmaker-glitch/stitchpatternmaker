@@ -5,6 +5,7 @@ import { renderPattern } from '@/lib/pattern/renderer'
 import type { PatternResult, DisplayMode, EditTool, DmcColor } from '@/types'
 import MiniMap from './MiniMap'
 import ColorReplaceModal from './ColorReplaceModal'
+import { useLang } from '@/lib/i18n/context'
 
 interface PatternCanvasProps {
   pattern:          PatternResult | null
@@ -44,6 +45,7 @@ export default function PatternCanvas({
   pattern, displayMode, highlightDmcId,
   replaceRequest, onReplaceClose,
 }: PatternCanvasProps) {
+  const { t } = useLang()
   const canvasRef     = useRef<HTMLCanvasElement>(null)
   const containerRef  = useRef<HTMLDivElement>(null)
   const spaceDown     = useRef(false)
@@ -433,29 +435,29 @@ export default function PatternCanvas({
                       bg-linen-50/70 flex-wrap relative">
         <ToolBtn onClick={() => zoomStep(1)}  label="확대"><ZoomInIcon /></ToolBtn>
         <ToolBtn onClick={() => zoomStep(-1)} label="축소"><ZoomOutIcon /></ToolBtn>
-        <ToolBtn onClick={() => zoomStep(0)}  label="맞춤">
-          <FitIcon /> <span className="text-[11px]">맞춤</span>
+        <ToolBtn onClick={() => zoomStep(0)}  label={t.toolbar.fit}>
+          <FitIcon /> <span className="text-[11px]">{t.toolbar.fit}</span>
         </ToolBtn>
         <div className="w-px h-4 bg-linen-300/30 mx-1" />
-        <ToolBtn onClick={() => setShowGrid(g => !g)} active={showGrid} label="격자">
-          <GridIcon /> <span className="text-[11px]">격자</span>
+        <ToolBtn onClick={() => setShowGrid(g => !g)} active={showGrid} label={t.toolbar.grid}>
+          <GridIcon /> <span className="text-[11px]">{t.toolbar.grid}</span>
         </ToolBtn>
 
         <div className="w-px h-4 bg-linen-300/30 mx-1" />
         <ToolBtn
-          onClick={() => setEditTool(t => t === 'paint' ? 'none' : 'paint')}
-          active={editTool === 'paint'} label="그리기"
-        ><PaintIcon /> <span className="text-[11px]">그리기</span></ToolBtn>
+          onClick={() => setEditTool(et => et === 'paint' ? 'none' : 'paint')}
+          active={editTool === 'paint'} label={t.toolbar.draw}
+        ><PaintIcon /> <span className="text-[11px]">{t.toolbar.draw}</span></ToolBtn>
         <ToolBtn
-          onClick={() => setEditTool(t => t === 'erase' ? 'none' : 'erase')}
-          active={editTool === 'erase'} label="지우개"
-        ><EraseIcon /> <span className="text-[11px]">지우개</span></ToolBtn>
+          onClick={() => setEditTool(et => et === 'erase' ? 'none' : 'erase')}
+          active={editTool === 'erase'} label={t.toolbar.erase}
+        ><EraseIcon /> <span className="text-[11px]">{t.toolbar.erase}</span></ToolBtn>
         <ToolBtn
-          onClick={() => setEditTool(t => t === 'fill' ? 'none' : 'fill')}
-          active={editTool === 'fill'} label="채우기"
-        ><FillIcon /> <span className="text-[11px]">채우기</span></ToolBtn>
+          onClick={() => setEditTool(et => et === 'fill' ? 'none' : 'fill')}
+          active={editTool === 'fill'} label={t.toolbar.fill}
+        ><FillIcon /> <span className="text-[11px]">{t.toolbar.fill}</span></ToolBtn>
         <ToolBtn
-          onClick={() => setEditTool(t => t === 'eyedropper' ? 'none' : 'eyedropper')}
+          onClick={() => setEditTool(et => et === 'eyedropper' ? 'none' : 'eyedropper')}
           active={editTool === 'eyedropper'} label="스포이드"
         ><EyedropIcon /></ToolBtn>
 
@@ -469,7 +471,7 @@ export default function PatternCanvas({
             <button
               onClick={() => setShowPalette(p => !p)}
               className="flex items-center gap-1.5 btn-ghost"
-              aria-label="색상 선택"
+              aria-label={t.toolbar.colorPick}
             >
               <div
                 className="w-4 h-4 rounded-[4px] border border-linen-300/40 flex-shrink-0 shadow-sm"
@@ -478,7 +480,7 @@ export default function PatternCanvas({
                   : '#fff' }}
               />
               <span className="text-[11px]">
-                {selectedDmcId ? `DMC ${selectedDmcId}` : '색상 선택'}
+                {selectedDmcId ? `DMC ${selectedDmcId}` : t.toolbar.colorPick}
               </span>
             </button>
           </>
@@ -486,7 +488,7 @@ export default function PatternCanvas({
 
         <span className="ml-auto flex items-center gap-3 text-[10px] text-warm-400 font-light tracking-wider">
           <span className="opacity-90">
-            Ctrl+휠로 줌 · Space+드래그로 이동
+            {t.toolbar.zoomHint}
           </span>
           {Math.round(scale * 100)}%
         </span>
@@ -525,7 +527,9 @@ export default function PatternCanvas({
               <ArtboardIcon />
             </div>
             <p className="font-cormorant text-sm italic text-warm-400 text-center leading-relaxed font-light">
-              사진을 업로드하고<br />도안 생성을 눌러주세요
+              {t.toolbar.placeholder.split('\n').map((ln, i) => (
+                <span key={i}>{ln}{i === 0 && <br />}</span>
+              ))}
             </p>
           </div>
         )}
@@ -562,9 +566,9 @@ export default function PatternCanvas({
       {pattern && (
         <div className="flex items-center gap-4 px-4 py-2 border-t border-linen-300/20
                         bg-linen-50/60 flex-wrap text-[10px] text-warm-400 font-light tracking-wide">
-          <InfoChip label="크기" value={`${pattern.width}×${pattern.height}`} />
-          <InfoChip label="색상" value={`${new Set(effectiveGrid?.flat() ?? []).size}색`} />
-          <InfoChip label="총 칸" value={`${(pattern.width * pattern.height).toLocaleString()}칸`} />
+          <InfoChip label={t.toolbar.infoSize} value={`${pattern.width}×${pattern.height}`} />
+          <InfoChip label={t.toolbar.infoColors} value={`${new Set(effectiveGrid?.flat() ?? []).size}${t.toolbar.infoColorsSuffix}`} />
+          <InfoChip label={t.toolbar.infoTotal} value={`${(pattern.width * pattern.height).toLocaleString()}${t.toolbar.infoTotalSuffix}`} />
           {hovered && <span className="ml-auto text-warm-500 font-normal">{hovered}</span>}
         </div>
       )}
@@ -591,13 +595,14 @@ function PalettePicker({
   onSelect:   (id: string) => void
   onClose:    () => void
 }) {
+  const { t } = useLang()
   return (
     <>
       <div className="fixed inset-0 z-10" onClick={onClose} />
       <div className="absolute top-full left-0 mt-1 z-20
                       bg-linen-50/95 backdrop-blur-sm border border-linen-300/30
                       rounded-card shadow-linen-md p-3 min-w-[220px]">
-        <p className="text-[9px] uppercase tracking-wider text-warm-400 mb-2">DMC 색상 선택</p>
+        <p className="text-[9px] uppercase tracking-wider text-warm-400 mb-2">{t.toolbar.dmcPicker}</p>
         <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto scrollbar-linen">
           {colors.map(dmc => (
             <button
