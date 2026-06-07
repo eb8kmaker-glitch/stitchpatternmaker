@@ -116,8 +116,22 @@ export async function exportPatternPdf(
   const {
     fabricCount, paperSize,
     showCover, showColorChart, showOverview, showPattern, showWorkOverview, showWorkPattern,
-    imageDataUrl, threadBrand = 'DMC',
+    imageDataUrl, threadBrand = 'DMC', labels,
   } = options
+
+  const L = {
+    pageCover:        labels?.pageCover        ?? 'Cover',
+    pageColorChart:   labels?.pageColorChart   ?? 'Color Chart',
+    pageOverview:     labels?.pageOverview     ?? 'Pattern Overview',
+    pagePattern:      labels?.pagePattern      ?? 'Pattern Pages',
+    pageWorkOverview: labels?.pageWorkOverview ?? 'Work Color Overview',
+    pageWorkPattern:  labels?.pageWorkPattern  ?? 'Work Color Pattern',
+    symbolHeader:     labels?.symbolHeader     ?? 'Sym',
+    dmcHeader:        labels?.dmcHeader        ?? 'DMC',
+    usageHeader:      labels?.usageHeader      ?? 'Stitches',
+    skeins:           labels?.skeins           ?? '{n} skeins',
+    skein:            labels?.skein            ?? '{n} skein',
+  }
 
   const workColors = assignWorkColors(threads)
   const paper      = PAPER_SIZES[paperSize]
@@ -224,7 +238,7 @@ export async function exportPatternPdf(
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(14)
   doc.setTextColor(79, 74, 69)
-  doc.text('Color Chart · Thread List', MARGIN, 20)
+  doc.text(L.pageColorChart, MARGIN, 20)
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
@@ -236,10 +250,10 @@ export async function exportPatternPdf(
 
   autoTable(doc, {
     startY: 31,
-    head: [['Sym', 'DMC', 'Color Name', 'Stitches', 'Skeins', 'DMC Color', 'Work Color']],
-    body: threads.map(t => [
-      t.symbol, t.dmc.id, t.dmc.name,
-      t.cells.toLocaleString('en-US'), String(t.skeins), '', '',
+    head: [[L.symbolHeader, L.dmcHeader, 'Color Name', L.usageHeader, 'Skeins', 'DMC Color', 'Work Color']],
+    body: threads.map(th => [
+      th.symbol, th.dmc.id, th.dmc.name,
+      th.cells.toLocaleString(), (th.skeins === 1 ? L.skein : L.skeins).replace('{n}', String(th.skeins)), '', '',
     ]),
     didDrawCell(data) {
       if (data.section !== 'body') return
@@ -304,7 +318,7 @@ export async function exportPatternPdf(
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(14)
   doc.setTextColor(79, 74, 69)
-  doc.text('Pattern Overview', PAGE_W / 2, 16, { align: 'center' })
+  doc.text(L.pageOverview, PAGE_W / 2, 16, { align: 'center' })
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
@@ -427,7 +441,7 @@ export async function exportPatternPdf(
     }
   }
 
-  if (showPattern) renderPatternPages(dmcMap, 'DMC Color Pattern')
+  if (showPattern) renderPatternPages(dmcMap, L.pagePattern)
 
   // ── Work Color Overview page ─────────────────────────────────────────────────
   if (showWorkOverview) {
@@ -436,7 +450,7 @@ export async function exportPatternPdf(
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(14)
   doc.setTextColor(79, 74, 69)
-  doc.text('Work Color Overview', PAGE_W / 2, 16, { align: 'center' })
+  doc.text(L.pageWorkOverview, PAGE_W / 2, 16, { align: 'center' })
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
@@ -476,7 +490,7 @@ export async function exportPatternPdf(
   } // end showWorkOverview
 
   // ── Work Color pattern pages ─────────────────────────────────────────────────
-  if (showWorkPattern) renderPatternPages(workDmcMap, 'Work Color Pattern')
+  if (showWorkPattern) renderPatternPages(workDmcMap, L.pageWorkPattern)
 
   doc.save(`stitchpatternmaker-${width}x${height}.pdf`)
 }

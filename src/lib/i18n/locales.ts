@@ -118,6 +118,68 @@ export interface Translations {
     infoTotal: string
     infoTotalSuffix: string
     dmcPicker: string
+    eyedropper: string
+    undo: string
+    redo: string
+    zoomIn: string
+    zoomOut: string
+  }
+  threadList: {
+    title: string
+    colorCount: string
+    symbolHeader: string
+    dmcHeader: string
+    usageHeader: string
+    skeins: string
+    skein: string
+    replaceTitle: string
+    fabricCount: string
+    finishedSize: string
+    finishedSizeBasis: string
+    paperSize: string
+    pdfPages: string
+    pageCover: string
+    pageColorChart: string
+    pageOverview: string
+    pagePattern: string
+    pageWorkOverview: string
+    pageWorkPattern: string
+    downloadPdf: string
+    exporting: string
+  }
+  colorReplace: {
+    title: string
+    noSelection: string
+    tabPattern: string
+    tabAll: string
+    noOtherColors: string
+    searchPlaceholder: string
+    inUse: string
+    noResults: string
+    cancel: string
+    confirm: string
+  }
+  progress: {
+    resampling: string
+    adjusting: string
+    preprocessing: string
+    sharpening: string
+    convertingLab: string
+    clustering: string
+    mappingDmc: string
+    buildingGrid: string
+    cleaningConfetti: string
+    separatingColors: string
+    preparingRender: string
+    aspectFit: string
+    aspectCrop: string
+    aspectStretch: string
+    ditherFlat: string
+    ditherFloyd: string
+    ditherAtkinson: string
+    ditherOrdered: string
+    confettiCleanup: string
+    sepProcessing: string
   }
   palette: {
     sectionTag: string
@@ -319,6 +381,68 @@ const KO: Translations = {
     infoTotal: '총 칸',
     infoTotalSuffix: '칸',
     dmcPicker: 'DMC 색상 선택',
+    eyedropper: '스포이드',
+    undo: '실행취소',
+    redo: '다시실행',
+    zoomIn: '확대',
+    zoomOut: '축소',
+  },
+  threadList: {
+    title: '실 목록 · 범례',
+    colorCount: '{n}색',
+    symbolHeader: '기호',
+    dmcHeader: 'DMC 번호',
+    usageHeader: '사용량',
+    skeins: '{n}타래',
+    skein: '{n}타래',
+    replaceTitle: '색상 교체',
+    fabricCount: '원단 규격 (CT)',
+    finishedSize: '완성 예상 크기:',
+    finishedSizeBasis: '({w} × {h} 기준)',
+    paperSize: '인쇄 용지',
+    pdfPages: 'PDF 페이지',
+    pageCover: '표지',
+    pageColorChart: '색상표',
+    pageOverview: '도안 전체',
+    pagePattern: '도안 분할',
+    pageWorkOverview: '작업 전체',
+    pageWorkPattern: '작업 분할',
+    downloadPdf: 'PDF 다운로드',
+    exporting: '내보내는 중...',
+  },
+  colorReplace: {
+    title: '색상 교체',
+    noSelection: '교체할 색상을 선택해주세요',
+    tabPattern: '도안에서',
+    tabAll: '전체 색상',
+    noOtherColors: '교체 가능한 다른 색상이 없습니다',
+    searchPlaceholder: 'DMC 번호 또는 이름 검색...',
+    inUse: '사용 중',
+    noResults: '검색 결과가 없습니다',
+    cancel: '취소',
+    confirm: '확인',
+  },
+  progress: {
+    resampling: '이미지 리샘플링 중...',
+    adjusting: '밝기·명암 조정 중...',
+    preprocessing: '전처리 중...',
+    sharpening: '샤프닝 중...',
+    convertingLab: 'LAB 색공간 변환 중...',
+    clustering: '색상 클러스터링 중...',
+    mappingDmc: 'DMC 색상 매핑 중...',
+    buildingGrid: '격자 구성 중...',
+    cleaningConfetti: 'Confetti 정리 중...',
+    separatingColors: '유사색 분리 중...',
+    preparingRender: '렌더링 준비 중...',
+    aspectFit: 'Fit 모드 적용 중...',
+    aspectCrop: 'Crop 모드 적용 중...',
+    aspectStretch: 'Stretch 모드 적용 중...',
+    ditherFlat: '플랫 컬러 양자화 중...',
+    ditherFloyd: 'Floyd-Steinberg 디더링 중...',
+    ditherAtkinson: 'Atkinson 디더링 중...',
+    ditherOrdered: 'Bayer 매트릭스 디더링 중...',
+    confettiCleanup: 'Confetti 제거 중...',
+    sepProcessing: '유사색 자동 분리 처리 중...',
   },
   palette: {
     sectionTag: 'DMC 팔레트',
@@ -520,6 +644,68 @@ const EN: Translations = {
     infoTotal: 'Cells',
     infoTotalSuffix: '',
     dmcPicker: 'Select DMC color',
+    eyedropper: 'Eyedropper',
+    undo: 'Undo',
+    redo: 'Redo',
+    zoomIn: 'Zoom In',
+    zoomOut: 'Zoom Out',
+  },
+  threadList: {
+    title: 'Thread List · Legend',
+    colorCount: '{n} colors',
+    symbolHeader: 'Symbol',
+    dmcHeader: 'DMC No.',
+    usageHeader: 'Usage',
+    skeins: '{n} skeins',
+    skein: '{n} skein',
+    replaceTitle: 'Replace Color',
+    fabricCount: 'Fabric Count (CT)',
+    finishedSize: 'Estimated finished size:',
+    finishedSizeBasis: '(based on {w} × {h})',
+    paperSize: 'Paper Size',
+    pdfPages: 'PDF Pages',
+    pageCover: 'Cover',
+    pageColorChart: 'Color Chart',
+    pageOverview: 'Pattern Overview',
+    pagePattern: 'Pattern Pages',
+    pageWorkOverview: 'Work Overview',
+    pageWorkPattern: 'Work Pages',
+    downloadPdf: 'Download PDF',
+    exporting: 'Exporting...',
+  },
+  colorReplace: {
+    title: 'Replace Color',
+    noSelection: 'Select a color to replace',
+    tabPattern: 'In Pattern',
+    tabAll: 'All Colors',
+    noOtherColors: 'No other colors available',
+    searchPlaceholder: 'Search DMC number or name...',
+    inUse: 'In use',
+    noResults: 'No results found',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+  },
+  progress: {
+    resampling: 'Resampling image...',
+    adjusting: 'Adjusting brightness & contrast...',
+    preprocessing: 'Preprocessing...',
+    sharpening: 'Sharpening...',
+    convertingLab: 'Converting to LAB color space...',
+    clustering: 'Clustering colors...',
+    mappingDmc: 'Mapping DMC colors...',
+    buildingGrid: 'Building stitch grid...',
+    cleaningConfetti: 'Cleaning up confetti...',
+    separatingColors: 'Separating similar colors...',
+    preparingRender: 'Preparing render...',
+    aspectFit: 'Applying Fit mode...',
+    aspectCrop: 'Applying Crop mode...',
+    aspectStretch: 'Applying Stretch mode...',
+    ditherFlat: 'Flat color quantization...',
+    ditherFloyd: 'Floyd-Steinberg dithering...',
+    ditherAtkinson: 'Atkinson dithering...',
+    ditherOrdered: 'Bayer matrix dithering...',
+    confettiCleanup: 'Removing confetti...',
+    sepProcessing: 'Processing similar color separation...',
   },
   palette: {
     sectionTag: 'DMC Palette',
@@ -721,6 +907,68 @@ const JA: Translations = {
     infoTotal: '総マス数',
     infoTotalSuffix: 'マス',
     dmcPicker: 'DMC色を選択',
+    eyedropper: 'スポイト',
+    undo: '元に戻す',
+    redo: 'やり直す',
+    zoomIn: '拡大',
+    zoomOut: '縮小',
+  },
+  threadList: {
+    title: '糸リスト · 凡例',
+    colorCount: '{n}色',
+    symbolHeader: '記号',
+    dmcHeader: 'DMC番号',
+    usageHeader: '使用量',
+    skeins: '{n}かせ',
+    skein: '{n}かせ',
+    replaceTitle: '色を置換',
+    fabricCount: '布目数 (CT)',
+    finishedSize: '完成予定サイズ:',
+    finishedSizeBasis: '({w} × {h} 基準)',
+    paperSize: '用紙サイズ',
+    pdfPages: 'PDFページ',
+    pageCover: '表紙',
+    pageColorChart: 'カラーチャート',
+    pageOverview: '図案全体',
+    pagePattern: '図案分割',
+    pageWorkOverview: '作業全体',
+    pageWorkPattern: '作業分割',
+    downloadPdf: 'PDFをダウンロード',
+    exporting: 'エクスポート中...',
+  },
+  colorReplace: {
+    title: '色を置換',
+    noSelection: '置換する色を選択してください',
+    tabPattern: '図案内',
+    tabAll: '全色',
+    noOtherColors: '置換できる他の色がありません',
+    searchPlaceholder: 'DMC番号または名前で検索...',
+    inUse: '使用中',
+    noResults: '検索結果がありません',
+    cancel: 'キャンセル',
+    confirm: '確定',
+  },
+  progress: {
+    resampling: '画像リサンプリング中...',
+    adjusting: '明るさ・コントラスト調整中...',
+    preprocessing: '前処理中...',
+    sharpening: 'シャープニング中...',
+    convertingLab: 'LAB色空間に変換中...',
+    clustering: '色クラスタリング中...',
+    mappingDmc: 'DMC色マッピング中...',
+    buildingGrid: 'グリッド構築中...',
+    cleaningConfetti: 'コンフェッティ整理中...',
+    separatingColors: '類似色分離中...',
+    preparingRender: 'レンダリング準備中...',
+    aspectFit: 'Fitモード適用中...',
+    aspectCrop: 'Cropモード適用中...',
+    aspectStretch: 'Stretchモード適用中...',
+    ditherFlat: 'フラットカラー量子化中...',
+    ditherFloyd: 'Floyd-Steinbergディザリング中...',
+    ditherAtkinson: 'Atkinsonディザリング中...',
+    ditherOrdered: 'Bayerマトリクスディザリング中...',
+    confettiCleanup: 'コンフェッティ除去中...',
+    sepProcessing: '類似色自動分離処理中...',
   },
   palette: {
     sectionTag: 'DMCパレット',

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useLang } from '@/lib/i18n/context'
 import type { ThreadUsage, PatternResult, FabricCount, PaperSize } from '@/types'
 
 interface ThreadListProps {
@@ -30,6 +31,7 @@ export default function ThreadList({
   threads, pattern, imageDataUrl,
   onHighlight, highlightDmcId, onReplaceRequest,
 }: ThreadListProps) {
+  const { t } = useLang()
   const [exporting,        setExporting]        = useState(false)
   const [pinnedId,         setPinnedId]         = useState<string | null>(null)
   const [fabricCount,      setFabricCount]      = useState<FabricCount>(14)
@@ -61,6 +63,7 @@ export default function ThreadList({
         showWorkPattern,
         imageDataUrl,
         threadBrand: 'DMC',
+        labels: t.threadList,
       })
     } finally {
       setExporting(false)
@@ -69,23 +72,25 @@ export default function ThreadList({
 
   if (threads.length === 0) return null
 
+  const tl = t.threadList
+
   return (
     <div className="px-[18px] py-3.5 flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
-        <p className="sec-label mb-0">실 목록 · 범례</p>
+        <p className="sec-label mb-0">{tl.title}</p>
         <span className="text-[9px] bg-sage-400/15 text-sage-500 px-2 py-0.5 rounded-full
                          font-light tracking-wide">
-          {threads.length}색
+          {tl.colorCount.replace('{n}', String(threads.length))}
         </span>
       </div>
 
       {/* Column labels */}
       <div className="flex items-center gap-2 px-1 mb-1.5">
-        <span className="w-6 text-[9px] uppercase tracking-wider text-warm-400/70 text-center flex-shrink-0">기호</span>
+        <span className="w-6 text-[9px] uppercase tracking-wider text-warm-400/70 text-center flex-shrink-0">{tl.symbolHeader}</span>
         <span className="w-4 flex-shrink-0" />
-        <span className="flex-1 text-[9px] uppercase tracking-wider text-warm-400/70">DMC 번호</span>
-        <span className="text-[9px] uppercase tracking-wider text-warm-400/70">사용량</span>
+        <span className="flex-1 text-[9px] uppercase tracking-wider text-warm-400/70">{tl.dmcHeader}</span>
+        <span className="text-[9px] uppercase tracking-wider text-warm-400/70">{tl.usageHeader}</span>
       </div>
 
       {/* Thread rows */}
@@ -128,14 +133,14 @@ export default function ThreadList({
 
             {/* Counts */}
             <span className="text-[10px] text-warm-400 font-mono tabular-nums whitespace-nowrap">
-              {cells.toLocaleString()} · {skeins}타래
+              {cells.toLocaleString()} · {(skeins === 1 ? tl.skein : tl.skeins).replace('{n}', String(skeins))}
             </span>
 
             {/* Replace button */}
             {onReplaceRequest && (
               <button
                 onClick={e => { e.stopPropagation(); onReplaceRequest(dmc.id) }}
-                title="색상 변환"
+                title={tl.replaceTitle}
                 className="ml-1 flex-shrink-0 w-5 h-5 rounded-[4px] flex items-center justify-center
                            text-warm-300 hover:text-warm-600 hover:bg-linen-300/40 transition-colors"
               >
@@ -151,7 +156,7 @@ export default function ThreadList({
 
         {/* CT 선택 */}
         <div>
-          <p className="text-[9px] uppercase tracking-wider text-warm-400/70 mb-1.5">원단 규격 (CT)</p>
+          <p className="text-[9px] uppercase tracking-wider text-warm-400/70 mb-1.5">{tl.fabricCount}</p>
           <div className="flex gap-1 flex-wrap">
             {FABRIC_OPTIONS.map(opt => (
               <button
@@ -168,17 +173,17 @@ export default function ThreadList({
             ))}
           </div>
           <p className="mt-1.5 text-[9.5px] text-warm-400 font-light">
-            완성 예상 크기:{' '}
+            {tl.finishedSize}{' '}
             <span className="font-mono text-warm-500">{finishedW} × {finishedH} cm</span>
             {w > 0 && (
-              <span className="text-warm-300"> ({w} × {h} 기준)</span>
+              <span className="text-warm-300"> {tl.finishedSizeBasis.replace('{w}', String(w)).replace('{h}', String(h))}</span>
             )}
           </p>
         </div>
 
         {/* 용지 선택 */}
         <div>
-          <p className="text-[9px] uppercase tracking-wider text-warm-400/70 mb-1.5">인쇄 용지</p>
+          <p className="text-[9px] uppercase tracking-wider text-warm-400/70 mb-1.5">{tl.paperSize}</p>
           <div className="flex gap-1">
             {PAPER_OPTIONS.map(opt => (
               <button
@@ -198,14 +203,14 @@ export default function ThreadList({
 
         {/* 페이지 토글 */}
         <div className="space-y-1.5">
-          <p className="text-[9px] uppercase tracking-wider text-warm-400/70 mb-1">PDF 페이지</p>
+          <p className="text-[9px] uppercase tracking-wider text-warm-400/70 mb-1">{tl.pdfPages}</p>
           {([
-            [showCover,        setShowCover,        '① 표지 — 원본 이미지 · 도안 정보'],
-            [showColorChart,   setShowColorChart,   '② 색상표 — DMC 실 번호 · 기호 범례'],
-            [showOverview,     setShowOverview,     '③ 패턴 오버뷰 — 전체 도안 축소판'],
-            [showPattern,      setShowPattern,      '④ 패턴 — 실제 작업용 격자 페이지'],
-            [showWorkOverview, setShowWorkOverview, '⑤ 워크컬러 오버뷰 — 전체보기'],
-            [showWorkPattern,  setShowWorkPattern,  '⑥ 워크컬러 패턴 — 격자 페이지'],
+            [showCover,        setShowCover,        `① ${tl.pageCover}`],
+            [showColorChart,   setShowColorChart,   `② ${tl.pageColorChart}`],
+            [showOverview,     setShowOverview,     `③ ${tl.pageOverview}`],
+            [showPattern,      setShowPattern,      `④ ${tl.pagePattern}`],
+            [showWorkOverview, setShowWorkOverview, `⑤ ${tl.pageWorkOverview}`],
+            [showWorkPattern,  setShowWorkPattern,  `⑥ ${tl.pageWorkPattern}`],
           ] as [boolean, (v: boolean) => void, string][]).map(([checked, setter, label]) => (
             <label key={label} className="flex items-center gap-2 cursor-pointer group">
               <input
@@ -229,11 +234,11 @@ export default function ThreadList({
         disabled={exporting}
       >
         {exporting ? (
-          '내보내는 중...'
+          tl.exporting
         ) : (
           <>
             <PdfIcon />
-            PDF 다운로드
+            {tl.downloadPdf}
           </>
         )}
       </button>

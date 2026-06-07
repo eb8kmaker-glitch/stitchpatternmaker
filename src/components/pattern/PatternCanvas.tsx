@@ -433,8 +433,8 @@ export default function PatternCanvas({
       {/* ── Toolbar ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-linen-300/20
                       bg-linen-50/70 flex-wrap relative">
-        <ToolBtn onClick={() => zoomStep(1)}  label="확대"><ZoomInIcon /></ToolBtn>
-        <ToolBtn onClick={() => zoomStep(-1)} label="축소"><ZoomOutIcon /></ToolBtn>
+        <ToolBtn onClick={() => zoomStep(1)}  label={t.toolbar.zoomIn}><ZoomInIcon /></ToolBtn>
+        <ToolBtn onClick={() => zoomStep(-1)} label={t.toolbar.zoomOut}><ZoomOutIcon /></ToolBtn>
         <ToolBtn onClick={() => zoomStep(0)}  label={t.toolbar.fit}>
           <FitIcon /> <span className="text-[11px]">{t.toolbar.fit}</span>
         </ToolBtn>
@@ -458,12 +458,12 @@ export default function PatternCanvas({
         ><FillIcon /> <span className="text-[11px]">{t.toolbar.fill}</span></ToolBtn>
         <ToolBtn
           onClick={() => setEditTool(et => et === 'eyedropper' ? 'none' : 'eyedropper')}
-          active={editTool === 'eyedropper'} label="스포이드"
+          active={editTool === 'eyedropper'} label={t.toolbar.eyedropper}
         ><EyedropIcon /></ToolBtn>
 
         <div className="w-px h-4 bg-linen-300/30 mx-1" />
-        <ToolBtn onClick={undo} label="실행취소"><UndoIcon /></ToolBtn>
-        <ToolBtn onClick={redo} label="다시실행"><RedoIcon /></ToolBtn>
+        <ToolBtn onClick={undo} label={t.toolbar.undo}><UndoIcon /></ToolBtn>
+        <ToolBtn onClick={redo} label={t.toolbar.redo}><RedoIcon /></ToolBtn>
 
         {pattern && editTool !== 'none' && editTool !== 'eyedropper' && editTool !== 'erase' && (
           <>
