@@ -1,4 +1,4 @@
-import { hexToRgb, rgbToLab, deltaE } from '@/lib/color/lab'
+import { hexToRgb, rgbToLab, deltaE2000 } from '@/lib/color/lab'
 import type { DmcColor } from '@/types'
 
 // ── Raw DMC data ─────────────────────────────────────────────────────────────
@@ -206,22 +206,51 @@ export const DMC_COLORS: DmcColor[] = RAW_DMC.map(([id, name, hex]) => {
   return { id, name, hex, rgb: [r, g, b], lab: rgbToLab(r, g, b) }
 })
 
+// ── Neutral-color protection ─────────────────────────────────────────────────
+// Pixels with chroma C* below this threshold are treated as achromatic.
+const NEUTRAL_CHROMA_THRESHOLD = 8
+
+// If a candidate DMC color's chroma exceeds the pixel's by this much,
+// multiply its distance by the penalty factor (pushes it down the ranking).
+const NEUTRAL_CHROMA_DELTA = 6
+const NEUTRAL_CHROMA_PENALTY = 2.5
+
 // ── Matcher ──────────────────────────────────────────────────────────────────
 /**
- * Find the closest DMC color in LAB space.
- * @param lab    Target LAB values
- * @param exclude DMC ids to skip (already used)
+ * Find the closest DMC color using CIEDE2000 with neutral-color protection.
+ *
+ * For achromatic pixels (C* < 8) a penalty is applied when a candidate DMC
+ * thread has significantly more chroma than the target, preventing pure-gray
+ * image regions from being mapped to greenish/warm beige-gray threads.
+ *
+ * @param lab     Target LAB values (from k-means cluster center)
+ * @param exclude DMC ids to skip (already used in this pattern)
  */
 export function findClosestDmc(
   lab: [number, number, number],
   exclude: string[] = [],
 ): DmcColor {
+  const [, a, b] = lab
+  const targetChroma = Math.sqrt(a * a + b * b)
+  const isNeutral = targetChroma < NEUTRAL_CHROMA_THRESHOLD
+
   let best: DmcColor = DMC_COLORS[0]
   let bestDist = Infinity
 
   for (const color of DMC_COLORS) {
     if (exclude.includes(color.id)) continue
-    const dist = deltaE(lab, color.lab)
+
+    let dist = deltaE2000(lab, color.lab)
+
+    // Neutral-color protection: penalise chromatic candidates for achromatic targets
+    if (isNeutral) {
+      const [, ca, cb] = color.lab
+      const candidateChroma = Math.sqrt(ca * ca + cb * cb)
+      if (candidateChroma - targetChroma > NEUTRAL_CHROMA_DELTA) {
+        dist *= NEUTRAL_CHROMA_PENALTY
+      }
+    }
+
     if (dist < bestDist) {
       bestDist = dist
       best = color
