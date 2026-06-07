@@ -62,6 +62,20 @@ export interface ThreadUsage {
 export type FabricCount = 11 | 14 | 16 | 18 | 28
 export type PaperSize   = 'a4' | 'a3' | 'letter'
 
+export interface PdfLabels {
+  pageCover:       string
+  pageColorChart:  string
+  pageOverview:    string
+  pagePattern:     string
+  pageWorkOverview: string
+  pageWorkPattern: string
+  symbolHeader:    string
+  dmcHeader:       string
+  usageHeader:     string
+  skeins:          string
+  skein:           string
+}
+
 export interface PdfOptions {
   fabricCount:      FabricCount
   paperSize:        PaperSize
@@ -74,4 +88,5 @@ export interface PdfOptions {
   imageDataUrl?:    string
   threadBrand?:     string
   workColors?:      string[]
+  labels?:          PdfLabels
 }

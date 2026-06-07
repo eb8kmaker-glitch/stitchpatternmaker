@@ -50,6 +50,7 @@ export function usePatternGenerator() {
           },
           settings.brightness,
           settings.contrast,
+          t.progress,
         )
 
         if (genIdRef.current !== myId) return

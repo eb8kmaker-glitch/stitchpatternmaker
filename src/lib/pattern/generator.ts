@@ -6,6 +6,16 @@ import type { DmcColor, PatternResult, SepLevel, QualityMode, AspectMode, Dither
 // ── Progress callback ─────────────────────────────────────────────────────────
 export type ProgressCallback = (pct: number, label: string, sub?: string) => void
 
+export interface ProgressMessages {
+  resampling: string; adjusting: string; preprocessing: string
+  sharpening: string; convertingLab: string; clustering: string
+  mappingDmc: string; buildingGrid: string; cleaningConfetti: string
+  separatingColors: string; preparingRender: string
+  aspectFit: string; aspectCrop: string; aspectStretch: string
+  ditherFlat: string; ditherFloyd: string; ditherAtkinson: string
+  ditherOrdered: string; confettiCleanup: string; sepProcessing: string
+}
+
 // ── Separation thresholds (ΔE) ────────────────────────────────────────────────
 const SEP_THRESHOLD: Record<SepLevel, number> = {
   off:    0,
@@ -454,6 +464,29 @@ function applyBrightnessContrast(data: Uint8ClampedArray, brightness: number, co
 }
 
 // ── Main generator ────────────────────────────────────────────────────────────
+const DEFAULT_MESSAGES: ProgressMessages = {
+  resampling: 'Resampling image...',
+  adjusting: 'Adjusting brightness & contrast...',
+  preprocessing: 'Preprocessing...',
+  sharpening: 'Sharpening...',
+  convertingLab: 'Converting to LAB...',
+  clustering: 'Clustering colors...',
+  mappingDmc: 'Mapping DMC colors...',
+  buildingGrid: 'Building stitch grid...',
+  cleaningConfetti: 'Cleaning up confetti...',
+  separatingColors: 'Separating similar colors...',
+  preparingRender: 'Preparing render...',
+  aspectFit: 'Fit mode...',
+  aspectCrop: 'Crop mode...',
+  aspectStretch: 'Stretch mode...',
+  ditherFlat: 'Flat color...',
+  ditherFloyd: 'Floyd-Steinberg dithering...',
+  ditherAtkinson: 'Atkinson dithering...',
+  ditherOrdered: 'Bayer matrix dithering...',
+  confettiCleanup: 'Confetti cleanup...',
+  sepProcessing: 'Similar color separation...',
+}
+
 export async function generatePattern(
   imageElement: HTMLImageElement,
   width: number,
@@ -466,14 +499,16 @@ export async function generatePattern(
   onProgress?: ProgressCallback,
   brightness = 0,
   contrast = 0,
+  messages?: ProgressMessages,
 ): Promise<PatternResult> {
   const progress = onProgress ?? (() => {})
+  const msg = messages ?? DEFAULT_MESSAGES
   const { sat, contrast: contrastBoost, gamma, sharpen, kIter } = QUALITY_PARAMS[qualityMode]
   const isHQ = qualityMode === 'hq'
 
   // 1. Resample with aspect ratio control
-  const aspectLabel = { fit: 'Fit — 비율 유지', crop: 'Crop — 중앙 크롭', stretch: 'Stretch — 채움' }
-  progress(8, '이미지 리샘플링 중...', aspectLabel[aspectMode])
+  const aspectLabel = { fit: msg.aspectFit, crop: msg.aspectCrop, stretch: msg.aspectStretch }
+  progress(8, msg.resampling, aspectLabel[aspectMode])
   await tick()
 
   const resampled = resampleImage(imageElement, width, height, aspectMode, isHQ)
@@ -481,25 +516,25 @@ export async function generatePattern(
 
   // 2. Apply user brightness/contrast adjustment
   if (brightness !== 0 || contrast !== 0) {
-    progress(14, '명도 / 명암 조정 중...', '')
+    progress(14, msg.adjusting, '')
     await tick()
     applyBrightnessContrast(imageData.data, brightness, contrast)
   }
 
   // 3. Preprocess: gamma + contrast + saturation
-  progress(18, '이미지 전처리 중...', '채도 / 대비 / 감마 보정')
+  progress(18, msg.preprocessing, '')
   await tick()
   preprocessPixels(imageData.data, sat, contrastBoost, gamma)
 
   // 3. Unsharp mask (HQ only)
   if (sharpen) {
-    progress(24, '선명도 향상 중...', 'Unsharp Mask 3×3')
+    progress(24, msg.sharpening, '')
     await tick()
     applySharpen(imageData.data, width, height)
   }
 
   // 4. RGB → LAB
-  progress(28, 'LAB 색공간 변환 중...', 'perceptual color analysis')
+  progress(28, msg.convertingLab, '')
   await tick()
 
   const raw = imageData.data
@@ -509,17 +544,17 @@ export async function generatePattern(
   }
 
   // 5. K-means++ clustering in LAB space
-  progress(45, '색상 군집화 중...', `K-means++ (${kIter} iterations)`)
+  progress(45, msg.clustering, `K-means++ (${kIter} iterations)`)
   await tick()
 
   const k = Math.min(colorCount, labPixels.length, DMC_COLORS.length)
   const { centers, assignments: clusterAssignments } = await kMeansLab(
     labPixels, k, kIter,
-    (iter) => progress(45 + Math.round((iter / kIter) * 18), '색상 군집화 중...', `K-means++ (${iter + 1}/${kIter})`)
+    (iter) => progress(45 + Math.round((iter / kIter) * 18), msg.clustering, `K-means++ (${iter + 1}/${kIter})`)
   )
 
   // 6. Map cluster centers → unique DMC colors (ΔE nearest)
-  progress(65, 'DMC 색상 매핑 중...', 'ΔE 기반 최적 매칭')
+  progress(65, msg.mappingDmc, '')
   await tick()
 
   const usedIds = new Set<string>()
@@ -532,12 +567,12 @@ export async function generatePattern(
 
   // 7. Apply selected dithering algorithm
   const ditheringLabel: Record<DitheringMode, string> = {
-    none:     '플랫 컬러',
-    floyd:    'Floyd–Steinberg 디더링',
-    atkinson: 'Atkinson 디더링',
-    ordered:  'Ordered (Bayer 4×4) 디더링',
+    none:     msg.ditherFlat,
+    floyd:    msg.ditherFloyd,
+    atkinson: msg.ditherAtkinson,
+    ordered:  msg.ditherOrdered,
   }
-  progress(78, '도안 격자 생성 중...', ditheringLabel[ditheringMode])
+  progress(78, msg.buildingGrid, ditheringLabel[ditheringMode])
   await tick()
 
   let assignments: number[]
@@ -560,7 +595,7 @@ export async function generatePattern(
 
   // 8. Confetti cleanup (HQ mode or any dithering active)
   if (isHQ || ditheringMode !== 'none') {
-    progress(85, 'Confetti 정리 중...', '고립 픽셀 주변색으로 병합')
+    progress(85, msg.confettiCleanup, '')
     await tick()
     grid = cleanupConfetti(grid, width, height)
   }
@@ -570,13 +605,13 @@ export async function generatePattern(
   // 9. Similar color separation
   const threshold = SEP_THRESHOLD[sepLevel]
   if (threshold > 0) {
-    progress(92, '유사색 분리 처리 중...', `ΔE < ${threshold} 인접 셀 보정`)
+    progress(92, msg.sepProcessing, `ΔE < ${threshold}`)
     await tick()
     const separated = separateSimilarColors(grid, dmcMap, threshold, width, height)
     separated.forEach((d, i) => { dmcMap[i] = d })
   }
 
-  progress(96, '렌더링 준비 중...', '')
+  progress(96, msg.preparingRender, '')
   await tick()
 
   return { grid, dmcMap, width, height }

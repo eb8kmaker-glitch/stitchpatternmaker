@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { DMC_COLORS } from '@/lib/dmc/database'
+import { useLang } from '@/lib/i18n/context'
 import type { DmcColor } from '@/types'
 
 interface ColorReplaceModalProps {
@@ -16,6 +17,8 @@ type Tab = 'pattern' | 'all'
 export default function ColorReplaceModal({
   sourceColor, usedColors, onReplace, onClose,
 }: ColorReplaceModalProps) {
+  const { t } = useLang()
+  const cr = t.colorReplace
   const [tab,      setTab]      = useState<Tab>('pattern')
   const [query,    setQuery]    = useState('')
   const [selected, setSelected] = useState<DmcColor | null>(null)
@@ -57,7 +60,7 @@ export default function ColorReplaceModal({
           {/* Header */}
           <div className="px-5 pt-5 pb-4 border-b border-linen-300/20">
             <p className="text-[9px] uppercase tracking-[0.15em] text-warm-400 font-light mb-2">
-              색상 변환
+              {cr.title}
             </p>
             <div className="flex items-center gap-3">
               <div
@@ -85,14 +88,14 @@ export default function ColorReplaceModal({
                   </div>
                 </div>
               ) : (
-                <span className="text-[11px] text-warm-300 italic font-light">선택 없음</span>
+                <span className="text-[11px] text-warm-300 italic font-light">{cr.noSelection}</span>
               )}
             </div>
           </div>
 
           {/* Tabs */}
           <div className="flex border-b border-linen-300/20">
-            {([['pattern', '도안 내 색상'], ['all', '전체 DMC 검색']] as [Tab, string][]).map(([t, label]) => (
+            {([['pattern', cr.tabPattern], ['all', cr.tabAll]] as [Tab, string][]).map(([t, label]) => (
               <button
                 key={t}
                 onClick={() => handleTabChange(t)}
@@ -111,7 +114,7 @@ export default function ColorReplaceModal({
             {tab === 'pattern' ? (
               usedColors.length === 0 ? (
                 <p className="text-center text-[11px] text-warm-300 italic py-6">
-                  현재 도안에 다른 색상이 없습니다
+                  {cr.noOtherColors}
                 </p>
               ) : (
                 <div className="space-y-1">
@@ -132,7 +135,7 @@ export default function ColorReplaceModal({
                   type="text"
                   value={query}
                   onChange={e => setQuery(e.target.value)}
-                  placeholder="DMC 번호 또는 색상명 검색..."
+                  placeholder={cr.searchPlaceholder}
                   className="w-full mb-3 px-3 py-2 text-[11px] bg-linen-100/80 border border-linen-300/30
                              rounded-card text-warm-700 placeholder:text-warm-300
                              focus:outline-none focus:border-sage-400/50"
@@ -144,13 +147,13 @@ export default function ColorReplaceModal({
                       key={c.id}
                       color={c}
                       selected={selected?.id === c.id}
-                      badge={usedIds.has(c.id) ? '도안 내 사용중' : null}
+                      badge={usedIds.has(c.id) ? cr.inUse : null}
                       onClick={() => setSelected(c)}
                     />
                   ))}
                   {searchResults.length === 0 && (
                     <p className="text-center text-[11px] text-warm-300 italic py-4">
-                      검색 결과가 없습니다
+                      {cr.noResults}
                     </p>
                   )}
                 </div>
@@ -165,14 +168,14 @@ export default function ColorReplaceModal({
               onClick={onClose}
               className="btn-ghost text-[11px] px-4"
             >
-              취소
+              {cr.cancel}
             </button>
             <button
               onClick={handleConfirm}
               disabled={!selected}
               className="btn-primary text-[11px] px-5 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              변환 확정
+              {cr.confirm}
             </button>
           </div>
         </div>
