@@ -18,6 +18,56 @@ const PAPER_SIZES = {
   letter: { w: 215.9, h: 279.4, jsPdfFormat: 'letter' as const },
 }
 
+// ── Bug 1: geometric symbols that WinAnsi/Helvetica cannot render ─────────────
+// ASCII symbols (digits, letters, +, ×) render fine — only these need shape drawing
+const GEOMETRIC_SYMS = new Set(['■','□','●','○','▲','△','◆','◇','★','☆','▼','▽'])
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function drawSymbolShape(doc: any, symbol: string, cell: { x: number; y: number; width: number; height: number }): void {
+  const cx = cell.x + cell.width / 2
+  const cy = cell.y + cell.height / 2
+  const s  = 1.5  // half-size in mm
+
+  doc.setFillColor(70, 70, 70)
+  doc.setDrawColor(70, 70, 70)
+  doc.setLineWidth(0.3)
+
+  switch (symbol) {
+    case '●': doc.circle(cx, cy, s, 'F'); break
+    case '○': doc.circle(cx, cy, s, 'S'); break
+    case '■': doc.rect(cx - s, cy - s, s * 2, s * 2, 'F'); break
+    case '□': doc.rect(cx - s, cy - s, s * 2, s * 2, 'S'); break
+    // ▲ / △: start at top vertex, go bottom-right, bottom-left, close
+    case '▲': doc.lines([[s * 1.15, s * 2], [-s * 2.3, 0]], cx, cy - s, [1, 1], 'F', true); break
+    case '△': doc.lines([[s * 1.15, s * 2], [-s * 2.3, 0]], cx, cy - s, [1, 1], 'S', true); break
+    // ▼ / ▽: start at bottom vertex, go top-right, top-left, close
+    case '▼': doc.lines([[s * 1.15, -s * 2], [-s * 2.3, 0]], cx, cy + s, [1, 1], 'F', true); break
+    case '▽': doc.lines([[s * 1.15, -s * 2], [-s * 2.3, 0]], cx, cy + s, [1, 1], 'S', true); break
+    // ◆ / ◇: start at top, go right, bottom, left, close
+    case '◆': doc.lines([[s, s * 1.3], [-s, s * 1.3], [-s, -s * 1.3]], cx, cy - s * 1.3, [1, 1], 'F', true); break
+    case '◇': doc.lines([[s, s * 1.3], [-s, s * 1.3], [-s, -s * 1.3]], cx, cy - s * 1.3, [1, 1], 'S', true); break
+    case '★': drawStar(doc, cx, cy, s, 'F'); break
+    case '☆': drawStar(doc, cx, cy, s, 'S'); break
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function drawStar(doc: any, cx: number, cy: number, r: number, style: 'F' | 'S'): void {
+  const inner = r * 0.42
+  const pts: [number, number][] = []
+  for (let i = 0; i < 10; i++) {
+    const angle  = (i * Math.PI / 5) - Math.PI / 2
+    const radius = i % 2 === 0 ? r : inner
+    pts.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)])
+  }
+  const [x0, y0] = pts[0]
+  const moves: number[][] = []
+  for (let i = 1; i < pts.length; i++) {
+    moves.push([pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]])
+  }
+  doc.lines(moves, x0, y0, [1, 1], style, true)
+}
+
 // ── Canvas helper: render a grid chunk to an offscreen canvas ────────────────
 function renderGridToCanvas(
   grid: number[][],
@@ -143,7 +193,8 @@ export async function exportPatternPdf(
   const CELL_MM    = CELL_PX * 0.352778
   const CELLS_PER_PAGE_X = Math.floor((PAGE_W - MARGIN * 2) / CELL_MM)
   const CELLS_PER_PAGE_Y = Math.floor((PAGE_H - MARGIN * 2 - 22) / CELL_MM)
-  const RENDER_SCALE = 3
+  // Bug 3: reduced from 3→2 to lower canvas resolution; JPEG handles the rest
+  const RENDER_SCALE = 2
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: paper.jsPdfFormat })
 
@@ -252,13 +303,30 @@ export async function exportPatternPdf(
     startY: 31,
     head: [[L.symbolHeader, L.dmcHeader, 'Color Name', L.usageHeader, 'Skeins', 'DMC Color', 'Work Color']],
     body: threads.map(th => [
-      th.symbol, th.dmc.id, th.dmc.name,
+      // Bug 1: geometric Unicode symbols cannot render in WinAnsi/Helvetica —
+      // suppress text for these; shapes are drawn in didDrawCell instead
+      GEOMETRIC_SYMS.has(th.symbol) ? '' : th.symbol,
+      th.dmc.id, th.dmc.name,
       th.cells.toLocaleString(), (th.skeins === 1 ? L.skein : L.skeins).replace('{n}', String(th.skeins)), '', '',
     ]),
+    willDrawCell(data) {
+      // Suppress the empty-string cell so autotable doesn't waste draw calls
+      if (data.column.index === 0 && data.section === 'body') {
+        const sym = threads[data.row.index]?.symbol
+        if (sym && GEOMETRIC_SYMS.has(sym)) {
+          data.cell.text = []
+        }
+      }
+    },
     didDrawCell(data) {
       if (data.section !== 'body') return
       const t = threads[data.row.index]
       if (!t) return
+
+      // Bug 1: draw geometric symbols as jsPDF shapes (WinAnsi-safe)
+      if (data.column.index === 0 && GEOMETRIC_SYMS.has(t.symbol)) {
+        drawSymbolShape(doc, t.symbol, data.cell)
+      }
 
       if (data.column.index === 5) {
         const [r, g, b] = t.dmc.rgb
@@ -335,19 +403,15 @@ export async function exportPatternPdf(
   {
     const OVERVIEW_MARGIN = 20
     const availW = PAGE_W - OVERVIEW_MARGIN * 2
-    const availH = PAGE_H - 36 - 14   // title area + footer
-    const cellPxMini = Math.max(2, Math.floor(Math.min(availW / width, availH / height) * (96 / 25.4)))
-    // cellPxMini in screen pixels; availW/height are in mm, 1mm = 96/25.4 px
-    // Use a generous cell size (8px) and let addImage scale it down
-    const MINI_CELL = 8
+    const availH = PAGE_H - 36 - 14
+    // Use renderScale=1 for overview — it's a thumbnail, high-res canvas is wasteful
     const miniCanvas = renderGridToCanvas(
       grid, dmcMap, symbolMap,
       0, 0, width, height,
-      MINI_CELL, 2, false,
+      4, 1, false,
     )
-    const miniImgData = miniCanvas.toDataURL('image/png')
+    const miniImgData = miniCanvas.toDataURL('image/jpeg', 0.85)
 
-    // Fit into available area
     const ratio = width / height
     let drawW = availW
     let drawH = drawW / ratio
@@ -355,7 +419,7 @@ export async function exportPatternPdf(
     const drawX = OVERVIEW_MARGIN + (availW - drawW) / 2
     const drawY = 29
 
-    doc.addImage(miniImgData, 'PNG', drawX, drawY, drawW, drawH)
+    doc.addImage(miniImgData, 'JPEG', drawX, drawY, drawW, drawH)
   }
 
   doc.setFont('helvetica', 'normal')
@@ -423,18 +487,21 @@ export async function exportPatternPdf(
         }
         rCtx.restore()
 
-        const imgData   = offCanvas.toDataURL('image/png')
-        const printW    = PAGE_W - MARGIN * 2
-        const printHRaw = printW * (chunkH / chunkW)
-        const printH    = Math.min(printHRaw, PAGE_H - MARGIN - originY)
-        doc.addImage(imgData, 'PNG', MARGIN, originY, printW, printH)
+        // Bug 3: JPEG instead of PNG — eliminates alpha smask, ~10× file size reduction
+        const imgData = offCanvas.toDataURL('image/jpeg', 0.87)
+
+        // Bug 2: size from actual chunk cell count × physical cell size, not page width
+        // This preserves consistent cell scale across all pages including leftover chunks
+        const printW = chunkW * CELL_MM
+        const printH = chunkH * CELL_MM
+        doc.addImage(imgData, 'JPEG', MARGIN, originY, printW, printH)
 
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(4.5)
         doc.setTextColor(110, 100, 90)
-        const cellMmFit = printW / chunkW
+        // cellMmFit = printW / chunkW = CELL_MM, consistent for all chunk sizes
         for (let y = startY; y < endY; y += 10) {
-          const py = originY + (y - startY) * cellMmFit + cellMmFit / 2 + 1
+          const py = originY + (y - startY) * CELL_MM + CELL_MM / 2 + 1
           doc.text(String(y + 1), MARGIN - 2, py, { align: 'right' })
         }
       }
@@ -468,19 +535,18 @@ export async function exportPatternPdf(
     const OVERVIEW_MARGIN = 20
     const availW = PAGE_W - OVERVIEW_MARGIN * 2
     const availH = PAGE_H - 36 - 14
-    const MINI_CELL = 8
     const miniCanvas = renderGridToCanvas(
       grid, workDmcMap, symbolMap,
       0, 0, width, height,
-      MINI_CELL, 2, false,
+      4, 1, false,
     )
-    const miniImgData = miniCanvas.toDataURL('image/png')
+    const miniImgData = miniCanvas.toDataURL('image/jpeg', 0.85)
     const ratio = width / height
     let drawW = availW
     let drawH = drawW / ratio
     if (drawH > availH) { drawH = availH; drawW = drawH * ratio }
     const drawX = OVERVIEW_MARGIN + (availW - drawW) / 2
-    doc.addImage(miniImgData, 'PNG', drawX, 29, drawW, drawH)
+    doc.addImage(miniImgData, 'JPEG', drawX, 29, drawW, drawH)
   }
 
   doc.setFont('helvetica', 'normal')
