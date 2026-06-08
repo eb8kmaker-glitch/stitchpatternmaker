@@ -44,6 +44,9 @@ export interface PatternSettings {
   ditheringMode: DitheringMode
   brightness:    number   // -100 ~ 100, default 0
   contrast:      number   // -100 ~ 100, default 0
+  saturation:    number   // -100 ~ 100, default 0  (Lab chroma scale)
+  temperature:   number   // -100 ~ 100, default 0  (b* offset: positive = warm)
+  tint:          number   // -100 ~ 100, default 0  (a* offset: positive = magenta, negative = green)
 }
 
 // ── Edit tool ─────────────────────────────────────────────────────────────────

@@ -48,6 +48,12 @@ export interface Translations {
       section: string
       brightness: string
       contrast: string
+      saturation: string
+      temperature: string
+      tint: string
+      temperatureHint: string
+      tintHint: string
+      auto: string
       defaultBadge: string
       reset: string
     }
@@ -302,6 +308,12 @@ const KO: Translations = {
       section: '이미지 조정',
       brightness: '명도',
       contrast: '명암',
+      saturation: '채도',
+      temperature: '색온도',
+      tint: '색조',
+      temperatureHint: '← 차갑게 · 따뜻하게 →',
+      tintHint: '← 녹색 · 자홍 →',
+      auto: '✦ 자동',
       defaultBadge: '기본값',
       reset: '초기화',
     },
@@ -565,6 +577,12 @@ const EN: Translations = {
       section: 'Image Adjustments',
       brightness: 'Brightness',
       contrast: 'Contrast',
+      saturation: 'Saturation',
+      temperature: 'Temperature',
+      tint: 'Tint',
+      temperatureHint: '← Cool · Warm →',
+      tintHint: '← Green · Magenta →',
+      auto: '✦ Auto',
       defaultBadge: 'Default',
       reset: 'Reset',
     },
@@ -828,6 +846,12 @@ const JA: Translations = {
       section: '画像調整',
       brightness: '明るさ',
       contrast: 'コントラスト',
+      saturation: '彩度',
+      temperature: '色温度',
+      tint: '色合い',
+      temperatureHint: '← 寒色 · 暖色 →',
+      tintHint: '← グリーン · マゼンタ →',
+      auto: '✦ 自動',
       defaultBadge: 'デフォルト',
       reset: 'リセット',
     },

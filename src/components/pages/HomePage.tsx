@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Script from 'next/script'
 import Navbar          from '@/components/layout/Navbar'
 import UploadZone      from '@/components/pattern/UploadZone'
@@ -13,6 +13,7 @@ import AdUnit          from '@/components/ui/AdUnit'
 import { usePatternGenerator } from '@/hooks/usePatternGenerator'
 import { useLang } from '@/lib/i18n/context'
 import HomeFAQ from '@/components/ui/HomeFAQ'
+import { computeAutoAdjust } from '@/lib/pattern/generator'
 import type { PatternSettings } from '@/types'
 
 const DEFAULT_SETTINGS: PatternSettings = {
@@ -26,6 +27,9 @@ const DEFAULT_SETTINGS: PatternSettings = {
   ditheringMode: 'floyd',
   brightness:    0,
   contrast:      0,
+  saturation:    0,
+  temperature:   0,
+  tint:          0,
 }
 
 export default function HomePage() {
@@ -34,7 +38,8 @@ export default function HomePage() {
     ...f,
     icon: [<LabIcon key={0}/>, <WandIcon key={1}/>, <PrintIcon key={2}/>, <ShieldIcon key={3}/>][i],
   }))
-  const imageRef = useRef<HTMLImageElement | null>(null)
+  const imageRef    = useRef<HTMLImageElement | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [hasImage,        setHasImage]        = useState(false)
   const [imageDataUrl,    setImageDataUrl]    = useState<string | undefined>(undefined)
   const [settings,        setSettings]        = useState<PatternSettings>(DEFAULT_SETTINGS)
@@ -62,9 +67,33 @@ export default function HomePage() {
     generate(img, settings)
   }
 
-  function handleSettingsChange(next: PatternSettings) {
+  // Auto-regenerate when colour-adjust sliders change (if pattern already exists)
+  const autoRegenerate = useCallback((next: PatternSettings) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      const img = imageRef.current
+      if (img && state.status === 'done') generate(img, next)
+    }, 280)
+  }, [state.status, generate])
+
+  function handleSettingsChange(next: PatternSettings, triggerRegen = false) {
     setSettings(next)
+    if (triggerRegen) autoRegenerate(next)
   }
+
+  function handleAutoAdjust() {
+    const img = imageRef.current
+    if (!img) return
+    const adj = computeAutoAdjust(img)
+    const next = { ...settings, ...adj }
+    setSettings(next)
+    if (state.status === 'done') {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      generate(img, next)
+    }
+  }
+
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current) }, [])
 
   const isGenerating = state.status === 'generating'
 
@@ -133,6 +162,7 @@ export default function HomePage() {
               settings={settings}
               onChange={handleSettingsChange}
               onGenerate={handleGenerate}
+              onAutoAdjust={handleAutoAdjust}
               isGenerating={isGenerating}
               hasImage={hasImage}
             />
