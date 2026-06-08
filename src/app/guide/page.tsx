@@ -318,6 +318,14 @@ export default function GuidePage() {
                   Browse the full DMC color chart →
                 </Link>
               </Tip>
+              <Tip>
+                <strong className="text-warm-600 block mb-1">On-screen colors may differ from real thread</strong>
+                The colors and DMC numbers shown in your pattern are approximate guides. Actual thread
+                color can vary with your monitor, lighting, and the DMC dye lot (production batch) —
+                the same number can look slightly different depending on when it was manufactured.
+                For color-critical projects, confirm against a physical DMC color card.
+                To shift the overall tone, use the color adjustment options.
+              </Tip>
             </div>
           </section>
 
