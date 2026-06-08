@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
-import { SectionLabel, Tip, PrepItem, TipItem } from '@/components/guide/GuideShared'
+import { SectionLabel, Tip, PrepItem, TipItem, MaterialCard } from '@/components/guide/GuideShared'
 
 const SITE_URL = 'https://stitchpatternmaker.app'
 
@@ -110,16 +110,17 @@ const koFaqItems = [
 ]
 
 const koTocItems = [
-  '십자수란 무엇인가',
-  '십자수 기본 준비물',
-  'DMC 실 번호 보는 방법',
-  '도안 읽는 방법',
-  '색상 수가 많을수록 어려운 이유',
-  '초보자 추천 도안 크기',
-  '십자수 작업 팁',
-  '실 보관 방법',
-  '큰 도안 작업 요령',
-  'PDF 도안 인쇄 팁',
+  { num: '1',   title: '십자수란 무엇인가',            anchor: 'section-1'  },
+  { num: '2',   title: '십자수 기본 준비물',            anchor: 'section-2'  },
+  { num: '2-1', title: '재료 구매 가이드',              anchor: 'section-2b' },
+  { num: '3',   title: 'DMC 실 번호 보는 방법',        anchor: 'section-3'  },
+  { num: '4',   title: '도안 읽는 방법',                anchor: 'section-4'  },
+  { num: '5',   title: '색상 수가 많을수록 어려운 이유', anchor: 'section-5'  },
+  { num: '6',   title: '초보자 추천 도안 크기',          anchor: 'section-6'  },
+  { num: '7',   title: '십자수 작업 팁',                anchor: 'section-7'  },
+  { num: '8',   title: '실 보관 방법',                  anchor: 'section-8'  },
+  { num: '9',   title: '큰 도안 작업 요령',              anchor: 'section-9'  },
+  { num: '10',  title: 'PDF 도안 인쇄 팁',              anchor: 'section-10' },
 ]
 
 function KoGuideContent() {
@@ -163,6 +164,47 @@ function KoGuideContent() {
             <PrepItem title="에이다 원단 (Aida Cloth)" badge="14카운트 입문자용" desc="십자수 전용 원단으로, 격자 구조가 명확히 구분되어 있어 초보자가 작업하기 쉽습니다. '카운트(Count)'는 1인치당 격자 수를 의미하며, 숫자가 클수록 격자가 촘촘해집니다. 입문자에게는 14카운트를 권장하며, 보통 베이지·흰색·검정 중 도안의 배경색과 어울리는 색을 고릅니다." />
             <PrepItem title="수틀 (Embroidery Hoop)" badge="지름 10~15cm 추천" desc="원단을 팽팽하게 고정시켜 작업 편의성을 높이는 도구입니다. 대나무 또는 플라스틱 재질이 있으며, 지름 10~15cm짜리를 먼저 구입해보는 것을 권장합니다. 큰 작품에는 더 큰 수틀을 사용하거나 수틀 없이 프레임에 원단을 고정하기도 합니다." />
           </div>
+        </div>
+      </section>
+
+      <section id="section-2b">
+        <div className="flex items-center gap-2.5 mb-4">
+          <span className="px-2 h-6 rounded-full bg-sage-400/20 border border-sage-400/30
+                           flex items-center justify-center text-[10px] text-sage-500 tabular-nums">
+            2-1
+          </span>
+          <div className="h-px w-8 bg-sage-400/40" />
+        </div>
+        <h2 className="font-playfair text-[26px] text-warm-700 mb-5 leading-snug">재료 구매 가이드</h2>
+        <div className="prose-content">
+          <p className="mb-6">
+            십자수 재료는 쿠팡에서 쉽게 구할 수 있습니다. 아래 상품은 입문자에게 적합한 추천 구성입니다.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <MaterialCard
+              title="DMC 25번사 자수실 세트"
+              desc="전 세계 표준. 도안의 색번호와 1:1 대응."
+              embed={`<iframe src="https://coupa.ng/cnitGE" width="120" height="240" frameborder="0" scrolling="no" referrerpolicy="unsafe-url" browsingtopics></iframe>`}
+            />
+            <MaterialCard
+              title="자수 수틀 세트 (15~20cm)"
+              desc="원단을 팽팽하게 고정해 작업 정확도를 높여준다."
+              embed={`<iframe src="https://coupa.ng/cnitK3" width="120" height="240" frameborder="0" scrolling="no" referrerpolicy="unsafe-url" browsingtopics></iframe>`}
+            />
+            <MaterialCard
+              title="에이다(Aida) 원단 14카운트"
+              desc="입문자 표준. 격자가 선명해 실 넣기가 쉽다."
+              embed={`<iframe src="https://coupa.ng/cnitNN" width="120" height="240" frameborder="0" scrolling="no" referrerpolicy="unsafe-url" browsingtopics></iframe>`}
+            />
+            <MaterialCard
+              title="십자수 바늘 세트 (돗바늘)"
+              desc="끝이 뭉뚝해 원단을 손상시키지 않는다. 14ct 기준 24–26호."
+              embed={`<iframe src="https://coupa.ng/cnitSp" width="120" height="240" frameborder="0" scrolling="no" referrerpolicy="unsafe-url" browsingtopics></iframe>`}
+            />
+          </div>
+          <p className="text-[11px] text-warm-300 font-light mt-5 leading-relaxed">
+            이 링크는 쿠팡 파트너스 활동의 일환으로, 구매 시 소정의 수수료를 제공받습니다.
+          </p>
         </div>
       </section>
 
@@ -399,16 +441,17 @@ const jaFaqItems = [
 ]
 
 const jaTocItems = [
-  'クロスステッチとは',
-  '基本の道具',
-  'DMC糸番号の読み方',
-  '図案の読み方',
-  '色数が多いほど難しい理由',
-  '初心者におすすめの図案サイズ',
-  '刺繍のコツ',
-  '糸の保管方法',
-  '大きな図案の攻略法',
-  'PDF図案の印刷のコツ',
+  { num: '1',   title: 'クロスステッチとは',            anchor: 'section-1'  },
+  { num: '2',   title: '基本の道具',                    anchor: 'section-2'  },
+  { num: '2-1', title: '材料の購入ガイド',               anchor: 'section-2b' },
+  { num: '3',   title: 'DMC糸番号の読み方',             anchor: 'section-3'  },
+  { num: '4',   title: '図案の読み方',                  anchor: 'section-4'  },
+  { num: '5',   title: '色数が多いほど難しい理由',        anchor: 'section-5'  },
+  { num: '6',   title: '初心者におすすめの図案サイズ',   anchor: 'section-6'  },
+  { num: '7',   title: '刺繍のコツ',                    anchor: 'section-7'  },
+  { num: '8',   title: '糸の保管方法',                  anchor: 'section-8'  },
+  { num: '9',   title: '大きな図案の攻略法',             anchor: 'section-9'  },
+  { num: '10',  title: 'PDF図案の印刷のコツ',           anchor: 'section-10' },
 ]
 
 function JaGuideContent() {
@@ -452,6 +495,48 @@ function JaGuideContent() {
             <PrepItem title="アイーダ布" badge="14カウントが入門用" desc="クロスステッチ専用の布で、均等な間隔のグリッド穴があり、ステッチを置く位置がひと目でわかります。「カウント」は1インチあたりのマス数を表し、数字が大きいほど目が細かくなります。初心者には14カウントがスタンダードです。" />
             <PrepItem title="刺繍枠（フープ）" badge="直径10〜15cmがおすすめ" desc="布をピンと張って固定し、ステッチを均一に仕上げるための道具です。竹製またはプラスチック製の10〜15cmサイズから始めましょう。大きな作品には大きなフープや布を固定するフレームを使うこともあります。" />
           </div>
+        </div>
+      </section>
+
+      <section id="section-2b">
+        <div className="flex items-center gap-2.5 mb-4">
+          <span className="px-2 h-6 rounded-full bg-sage-400/20 border border-sage-400/30
+                           flex items-center justify-center text-[10px] text-sage-500 tabular-nums">
+            2-1
+          </span>
+          <div className="h-px w-8 bg-sage-400/40" />
+        </div>
+        <h2 className="font-playfair text-[26px] text-warm-700 mb-5 leading-snug">材料の購入ガイド</h2>
+        <div className="prose-content">
+          <p className="mb-6">
+            Amazonで手軽に揃えられる初心者向けのおすすめ商品です。
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <MaterialCard
+              title="DMC 25番糸 刺繍糸セット"
+              desc="世界標準。図案の色番号とそのまま対応します。"
+              link={{ href: 'https://www.amazon.co.jp/s?k=DMC+刺繍糸+セット', text: 'Amazonで見る →' }}
+            />
+            <MaterialCard
+              title="刺繍枠セット (15〜20cm)"
+              desc="布をピンと張って正確な刺繍をサポートします。"
+              link={{ href: 'https://www.amazon.co.jp/s?k=刺繍枠+セット', text: 'Amazonで見る →' }}
+            />
+            <MaterialCard
+              title="アイーダ布 14カウント"
+              desc="初心者の定番。グリッドが明確で針を通しやすい。"
+              link={{ href: 'https://www.amazon.co.jp/s?k=アイーダ布+14カウント', text: 'Amazonで見る →' }}
+            />
+            <MaterialCard
+              title="クロスステッチ針セット（タペストリー針）"
+              desc="先端が丸く布を傷めない。14カウントには24〜26号が適切。"
+              link={{ href: 'https://www.amazon.co.jp/s?k=クロスステッチ針+タペストリー', text: 'Amazonで見る →' }}
+            />
+          </div>
+          {/* TODO: Amazon JP Associates リンクへの差し替えが必要 */}
+          <p className="text-[11px] text-warm-300 font-light mt-5 leading-relaxed">
+            これはAmazonアソシエイトの提携リンクです。購入時に少額の手数料が発生する場合があります。
+          </p>
         </div>
       </section>
 
@@ -739,11 +824,11 @@ export default async function LocaleGuidePage({
               {isJa ? '目次' : '목차'}
             </p>
             <ol className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1.5 list-none">
-              {tocItems.map((title, i) => (
-                <li key={title} className="flex items-baseline gap-2">
-                  <span className="text-[10px] text-sage-400 tabular-nums w-4 flex-shrink-0">{i + 1}</span>
+              {tocItems.map(({ num, title, anchor }) => (
+                <li key={anchor} className="flex items-baseline gap-2">
+                  <span className="text-[10px] text-sage-400 tabular-nums w-6 flex-shrink-0">{num}</span>
                   <a
-                    href={`#section-${i + 1}`}
+                    href={`#${anchor}`}
                     className="text-[13px] text-warm-500 font-light hover:text-warm-700
                                transition-colors no-underline leading-snug"
                   >
