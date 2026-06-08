@@ -229,6 +229,13 @@ function KoGuideContent() {
             국내 온라인 쇼핑몰에서 DMC 번호로 검색하면 쉽게 찾을 수 있습니다.
             <Link href="/dmc-colors" className="text-sage-500 hover:text-sage-600 ml-1">DMC 색상표 전체 보기 →</Link>
           </Tip>
+          <Tip>
+            <strong className="text-warm-600 block mb-1">화면색과 실제 실색은 다를 수 있어요</strong>
+            도안에 표시되는 색과 DMC 번호는 가이드용 근사값입니다. 실제 실색은 모니터 설정, 조명,
+            DMC 염료 로트(생산 시기)에 따라 미묘하게 달라질 수 있어요. 색이 중요한 작업이라면
+            실물 DMC 컬러 카드로 최종 확인하는 것을 권장합니다.
+            전체적인 색감을 조정하고 싶다면 색감 보정 옵션을 활용하세요.
+          </Tip>
         </div>
       </section>
 
@@ -558,6 +565,13 @@ function JaGuideContent() {
           <Tip>
             図案に書かれたDMC番号をそのまま手芸店やネットショップで検索すれば簡単に購入できます。
             <Link href="/dmc-colors" className="text-sage-500 hover:text-sage-600 ml-1">DMCカラーチャート全色を見る →</Link>
+          </Tip>
+          <Tip>
+            <strong className="text-warm-600 block mb-1">画面の色と実際の糸色は異なる場合があります</strong>
+            図案に表示される色とDMC番号は、あくまで目安の近似値です。実際の糸色は、モニター設定・照明・
+            DMCの染色ロット（製造時期）によって微妙に変わることがあります。
+            色が重要な作品では実物のDMCカラーカードで最終確認をおすすめします。
+            全体の色味を調整したい場合は、カラー調整オプションをご利用ください。
           </Tip>
         </div>
       </section>
