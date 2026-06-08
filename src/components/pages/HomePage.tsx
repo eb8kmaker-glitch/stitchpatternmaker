@@ -67,18 +67,20 @@ export default function HomePage() {
     generate(img, settings)
   }
 
-  // Auto-regenerate when colour-adjust sliders change (if pattern already exists)
+  // Debounced regeneration. The hook's genIdRef cancels any in-flight run,
+  // so a fresh slider change mid-generation supersedes the previous one.
   const autoRegenerate = useCallback((next: PatternSettings) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       const img = imageRef.current
-      if (img && state.status === 'done') generate(img, next)
+      if (img) generate(img, next)
     }, 280)
-  }, [state.status, generate])
+  }, [generate])
 
   function handleSettingsChange(next: PatternSettings, triggerRegen = false) {
     setSettings(next)
-    if (triggerRegen) autoRegenerate(next)
+    // Only live-update once a pattern already exists (i.e. after first manual generate)
+    if (triggerRegen && state.pattern) autoRegenerate(next)
   }
 
   function handleAutoAdjust() {
@@ -87,7 +89,8 @@ export default function HomePage() {
     const adj = computeAutoAdjust(img)
     const next = { ...settings, ...adj }
     setSettings(next)
-    if (state.status === 'done') {
+    // Regenerate immediately if a pattern already exists
+    if (state.pattern) {
       if (debounceRef.current) clearTimeout(debounceRef.current)
       generate(img, next)
     }
