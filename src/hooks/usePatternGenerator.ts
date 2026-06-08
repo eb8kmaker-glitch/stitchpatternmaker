@@ -51,6 +51,9 @@ export function usePatternGenerator() {
           settings.brightness,
           settings.contrast,
           t.progress,
+          settings.saturation,
+          settings.temperature,
+          settings.tint,
         )
 
         if (genIdRef.current !== myId) return

@@ -487,6 +487,53 @@ const DEFAULT_MESSAGES: ProgressMessages = {
   sepProcessing: 'Similar color separation...',
 }
 
+// ── Lab-space colour adjustments (saturation / temperature / tint) ────────────
+// Applied in-place after RGB→Lab conversion, before K-means.
+// Values are in [-100, +100]; 0 = no effect.
+function applyLabAdjustments(
+  labPixels: [number, number, number][],
+  saturation: number,
+  temperature: number,
+  tint: number,
+): void {
+  const sFactor = Math.max(0, 1 + saturation / 100)  // chroma scale: 0–2
+  const bOffset = temperature * 0.20                  // b* offset ±20 Lab units
+  const aOffset = tint        * 0.20                  // a* offset ±20 Lab units
+  for (let i = 0; i < labPixels.length; i++) {
+    let [L, a, b] = labPixels[i]
+    if (saturation  !== 0) { a *= sFactor; b *= sFactor }
+    if (temperature !== 0) b += bOffset
+    if (tint        !== 0) a += aOffset
+    labPixels[i][0] = L
+    labPixels[i][1] = a
+    labPixels[i][2] = b
+  }
+}
+
+// Gray-world auto-adjust: samples a 60x60 thumbnail and returns sat/temp/tint
+// values that neutralise the average Lab a/b colour cast.
+export function computeAutoAdjust(img: HTMLImageElement): { saturation: number; temperature: number; tint: number } {
+  const SZ = 60
+  const canvas = document.createElement('canvas')
+  canvas.width = SZ; canvas.height = SZ
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return { saturation: 0, temperature: 0, tint: 0 }
+  ctx.drawImage(img, 0, 0, SZ, SZ)
+  const { data } = ctx.getImageData(0, 0, SZ, SZ)
+  let sumA = 0, sumB = 0, count = 0
+  for (let i = 0; i < data.length; i += 4) {
+    const [, a, b] = rgbToLab(data[i], data[i + 1], data[i + 2])
+    sumA += a; sumB += b; count++
+  }
+  const avgA = sumA / count
+  const avgB = sumB / count
+  return {
+    saturation:  0,
+    tint:        Math.max(-100, Math.min(100, -avgA / 0.20)),
+    temperature: Math.max(-100, Math.min(100, -avgB / 0.20)),
+  }
+}
+
 export async function generatePattern(
   imageElement: HTMLImageElement,
   width: number,
@@ -500,6 +547,9 @@ export async function generatePattern(
   brightness = 0,
   contrast = 0,
   messages?: ProgressMessages,
+  saturation = 0,
+  temperature = 0,
+  tint = 0,
 ): Promise<PatternResult> {
   const progress = onProgress ?? (() => {})
   const msg = messages ?? DEFAULT_MESSAGES
@@ -541,6 +591,11 @@ export async function generatePattern(
   const labPixels: [number, number, number][] = []
   for (let i = 0; i < raw.length; i += 4) {
     labPixels.push(rgbToLab(raw[i], raw[i + 1], raw[i + 2]))
+  }
+
+  // 4.5 Lab-space colour adjustments (saturation / temperature / tint)
+  if (saturation !== 0 || temperature !== 0 || tint !== 0) {
+    applyLabAdjustments(labPixels, saturation, temperature, tint)
   }
 
   // 5. K-means++ clustering in LAB space

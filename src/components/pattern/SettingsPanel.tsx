@@ -9,17 +9,18 @@ import type {
 import AdUnit from '@/components/ui/AdUnit'
 
 interface SettingsPanelProps {
-  settings:     PatternSettings
-  onChange:     (s: PatternSettings) => void
-  onGenerate:   () => void
-  isGenerating: boolean
-  hasImage:     boolean
+  settings:      PatternSettings
+  onChange:      (s: PatternSettings, triggerRegen?: boolean) => void
+  onGenerate:    () => void
+  onAutoAdjust:  () => void
+  isGenerating:  boolean
+  hasImage:      boolean
 }
 
 const MAX_CELLS = 90_000   // 300×300 — safe upper bound
 
 export default function SettingsPanel({
-  settings, onChange, onGenerate, isGenerating, hasImage,
+  settings, onChange, onGenerate, onAutoAdjust, isGenerating, hasImage,
 }: SettingsPanelProps) {
   const { t } = useLang()
   const PRESETS_DEFS = [
@@ -222,15 +223,113 @@ export default function SettingsPanel({
           </div>
         </div>
 
-        {(settings.brightness !== 0 || settings.contrast !== 0) && (
+        {/* Saturation */}
+        <div className="mb-3 mt-1">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="form-lbl mb-0">{t.settings.adjust.saturation}</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`text-[11px] font-mono ${settings.saturation !== 0 ? 'text-sage-500' : 'text-warm-400'}`}>
+                {settings.saturation > 0 ? `+${settings.saturation}` : settings.saturation}
+              </span>
+              {settings.saturation !== 0 && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-400/12 border border-sage-400/20 text-sage-500 tracking-wide cursor-pointer"
+                      onClick={e => { e.stopPropagation(); onChange({ ...settings, saturation: 0 }, true) }}>
+                  {t.settings.adjust.defaultBadge}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="relative">
+            <input type="range" min={-100} max={100} step={1} value={settings.saturation}
+              style={{ touchAction: 'none' }}
+              className={`w-full h-1 rounded-full appearance-none cursor-pointer
+                         ${settings.saturation !== 0 ? 'accent-sage-500' : 'accent-warm-400'}`}
+              onChange={e => onChange({ ...settings, saturation: +e.target.value }, true)}
+            />
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-2 bg-warm-400/40 pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Temperature */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="form-lbl mb-0">{t.settings.adjust.temperature}</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`text-[11px] font-mono ${settings.temperature !== 0 ? 'text-sage-500' : 'text-warm-400'}`}>
+                {settings.temperature > 0 ? `+${settings.temperature}` : settings.temperature}
+              </span>
+              {settings.temperature !== 0 && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-400/12 border border-sage-400/20 text-sage-500 tracking-wide cursor-pointer"
+                      onClick={e => { e.stopPropagation(); onChange({ ...settings, temperature: 0 }, true) }}>
+                  {t.settings.adjust.defaultBadge}
+                </span>
+              )}
+            </div>
+          </div>
+          <p className="text-[9px] text-warm-300/70 mb-1">{t.settings.adjust.temperatureHint}</p>
+          <div className="relative">
+            <input type="range" min={-100} max={100} step={1} value={settings.temperature}
+              style={{ touchAction: 'none' }}
+              className={`w-full h-1 rounded-full appearance-none cursor-pointer
+                         ${settings.temperature !== 0 ? 'accent-sage-500' : 'accent-warm-400'}`}
+              onChange={e => onChange({ ...settings, temperature: +e.target.value }, true)}
+            />
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-2 bg-warm-400/40 pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Tint */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="form-lbl mb-0">{t.settings.adjust.tint}</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`text-[11px] font-mono ${settings.tint !== 0 ? 'text-sage-500' : 'text-warm-400'}`}>
+                {settings.tint > 0 ? `+${settings.tint}` : settings.tint}
+              </span>
+              {settings.tint !== 0 && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-400/12 border border-sage-400/20 text-sage-500 tracking-wide cursor-pointer"
+                      onClick={e => { e.stopPropagation(); onChange({ ...settings, tint: 0 }, true) }}>
+                  {t.settings.adjust.defaultBadge}
+                </span>
+              )}
+            </div>
+          </div>
+          <p className="text-[9px] text-warm-300/70 mb-1">{t.settings.adjust.tintHint}</p>
+          <div className="relative">
+            <input type="range" min={-100} max={100} step={1} value={settings.tint}
+              style={{ touchAction: 'none' }}
+              className={`w-full h-1 rounded-full appearance-none cursor-pointer
+                         ${settings.tint !== 0 ? 'accent-sage-500' : 'accent-warm-400'}`}
+              onChange={e => onChange({ ...settings, tint: +e.target.value }, true)}
+            />
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-2 bg-warm-400/40 pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Auto + Reset */}
+        <div className="flex gap-1.5 mt-2">
           <button
-            className="mt-1 w-full py-1 text-[10px] text-warm-400 border border-linen-300/30
-                       rounded-chip hover:bg-linen-100/50 transition-all duration-150 cursor-pointer"
-            onClick={() => onChange({ ...settings, brightness: 0, contrast: 0 })}
+            disabled={!hasImage}
+            className="flex-1 py-1 text-[10px] text-sage-600 border border-sage-400/30
+                       rounded-chip bg-sage-400/10 hover:bg-sage-400/20
+                       transition-all duration-150 cursor-pointer
+                       disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={onAutoAdjust}
           >
-            {t.settings.adjust.reset}
+            {t.settings.adjust.auto}
           </button>
-        )}
+          {(settings.brightness !== 0 || settings.contrast !== 0 ||
+            settings.saturation !== 0 || settings.temperature !== 0 || settings.tint !== 0) && (
+            <button
+              className="flex-1 py-1 text-[10px] text-warm-400 border border-linen-300/30
+                         rounded-chip hover:bg-linen-100/50 transition-all duration-150 cursor-pointer"
+              onClick={() => onChange({ ...settings, brightness: 0, contrast: 0,
+                                        saturation: 0, temperature: 0, tint: 0 }, true)}
+            >
+              {t.settings.adjust.reset}
+            </button>
+          )}
+        </div>
       </Section>
 
       {/* Colors */}
