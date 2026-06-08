@@ -45,3 +45,38 @@ export function TipItem({ title, desc }: { title: string; desc: string }) {
     </li>
   )
 }
+
+export function MaterialCard({
+  title,
+  desc,
+  embed,
+  link,
+}: {
+  title: string
+  desc: string
+  embed?: string
+  link?: { href: string; text: string }
+}) {
+  return (
+    <div className="flex flex-col gap-3 p-5 bg-linen-50/70 border border-linen-300/20 rounded-card">
+      <div>
+        <strong className="block font-cormorant text-[17px] text-warm-600 mb-1">{title}</strong>
+        <p className="text-[13px] text-warm-500 font-light leading-relaxed">{desc}</p>
+      </div>
+      <div className="flex justify-center mt-auto">
+        {embed ? (
+          <div dangerouslySetInnerHTML={{ __html: embed }} />
+        ) : link ? (
+          <a
+            href={link.href}
+            rel="nofollow sponsored"
+            target="_blank"
+            className="text-[13px] text-sage-500 hover:text-sage-600 transition-colors"
+          >
+            {link.text}
+          </a>
+        ) : null}
+      </div>
+    </div>
+  )
+}

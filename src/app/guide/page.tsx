@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
-import { SectionLabel, Tip, PrepItem, TipItem } from '@/components/guide/GuideShared'
+import { SectionLabel, Tip, PrepItem, TipItem, MaterialCard } from '@/components/guide/GuideShared'
 
 const SITE_URL = 'https://stitchpatternmaker.app'
 
@@ -101,16 +101,17 @@ const jsonLd = {
 }
 
 const tocItems = [
-  'What is Cross Stitch?',
-  'Basic Supplies',
-  'Reading DMC Thread Numbers',
-  'Reading a Pattern',
-  'Why More Colors Means More Difficulty',
-  'Recommended Pattern Size for Beginners',
-  'Stitching Tips',
-  'Storing Your Thread',
-  'Working on Large Patterns',
-  'Printing Your PDF Pattern',
+  { num: '1',   title: 'What is Cross Stitch?',                     anchor: 'section-1'  },
+  { num: '2',   title: 'Basic Supplies',                            anchor: 'section-2'  },
+  { num: '2-1', title: 'Where to Buy Supplies',                     anchor: 'section-2b' },
+  { num: '3',   title: 'Reading DMC Thread Numbers',                anchor: 'section-3'  },
+  { num: '4',   title: 'Reading a Pattern',                         anchor: 'section-4'  },
+  { num: '5',   title: 'Why More Colors Means More Difficulty',     anchor: 'section-5'  },
+  { num: '6',   title: 'Recommended Pattern Size for Beginners',   anchor: 'section-6'  },
+  { num: '7',   title: 'Stitching Tips',                           anchor: 'section-7'  },
+  { num: '8',   title: 'Storing Your Thread',                      anchor: 'section-8'  },
+  { num: '9',   title: 'Working on Large Patterns',                anchor: 'section-9'  },
+  { num: '10',  title: 'Printing Your PDF Pattern',                anchor: 'section-10' },
 ]
 
 export default function GuidePage() {
@@ -152,11 +153,11 @@ export default function GuidePage() {
           <div className="mt-9 p-6 bg-linen-50/80 border border-linen-300/25 rounded-card">
             <p className="text-[10px] uppercase tracking-[0.14em] text-sage-400 mb-4">Contents</p>
             <ol className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1.5 list-none">
-              {tocItems.map((title, i) => (
-                <li key={title} className="flex items-baseline gap-2">
-                  <span className="text-[10px] text-sage-400 tabular-nums w-4 flex-shrink-0">{i + 1}</span>
+              {tocItems.map(({ num, title, anchor }) => (
+                <li key={anchor} className="flex items-baseline gap-2">
+                  <span className="text-[10px] text-sage-400 tabular-nums w-6 flex-shrink-0">{num}</span>
                   <a
-                    href={`#section-${i + 1}`}
+                    href={`#${anchor}`}
                     className="text-[13px] text-warm-500 font-light hover:text-warm-700
                                transition-colors no-underline leading-snug"
                   >
@@ -229,6 +230,51 @@ export default function GuidePage() {
                   desc="A hoop keeps the fabric taut so your stitches lie flat and even. Start with a 10–15 cm bamboo or plastic hoop. Larger projects can use bigger hoops or a frame to hold the fabric."
                 />
               </div>
+            </div>
+          </section>
+
+          {/* Section 2b — Where to Buy Supplies */}
+          <section id="section-2b">
+            <div className="flex items-center gap-2.5 mb-4">
+              <span className="px-2 h-6 rounded-full bg-sage-400/20 border border-sage-400/30
+                               flex items-center justify-center text-[10px] text-sage-500 tabular-nums">
+                2-1
+              </span>
+              <div className="h-px w-8 bg-sage-400/40" />
+            </div>
+            <h2 className="font-playfair text-[26px] text-warm-700 mb-5 leading-snug">
+              Where to Buy Supplies
+            </h2>
+            <div className="prose-content">
+              <p className="mb-6">
+                These are Amazon picks to get you started. Each item matches the supplies described above.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <MaterialCard
+                  title="DMC Embroidery Floss Set"
+                  desc="The global standard. Matches DMC numbers in any pattern."
+                  link={{ href: 'https://www.amazon.com/s?k=DMC+embroidery+floss+set', text: 'View on Amazon →' }}
+                />
+                <MaterialCard
+                  title="Embroidery Hoop Set (15–20cm)"
+                  desc="Keeps fabric taut for cleaner, more accurate stitching."
+                  link={{ href: 'https://www.amazon.com/s?k=embroidery+hoop+set', text: 'View on Amazon →' }}
+                />
+                <MaterialCard
+                  title="Aida Cloth 14ct"
+                  desc="Beginner standard. Clear grid makes needle placement easy."
+                  link={{ href: 'https://www.amazon.com/s?k=aida+cloth+14+count', text: 'View on Amazon →' }}
+                />
+                <MaterialCard
+                  title="Cross Stitch Needle Set (Tapestry)"
+                  desc="Blunt tip won't snag fabric. Size 24–26 for 14ct Aida."
+                  link={{ href: 'https://www.amazon.com/s?k=cross+stitch+needle+tapestry', text: 'View on Amazon →' }}
+                />
+              </div>
+              {/* TODO: Replace with Amazon Associates affiliate links */}
+              <p className="text-[11px] text-warm-300 font-light mt-5 leading-relaxed">
+                These are Amazon Associates affiliate links. I may earn a small commission at no extra cost to you.
+              </p>
             </div>
           </section>
 
