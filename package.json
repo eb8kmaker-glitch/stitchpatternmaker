@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "gen:work-palette": "node scripts/generateWorkPalette.mjs",
+    "verify:work-colors": "node scripts/verifyWorkColors.mjs"
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",

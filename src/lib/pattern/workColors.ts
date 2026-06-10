@@ -1,74 +1,97 @@
 import type { ThreadUsage } from '@/types'
+import { hexToRgb, rgbToLab, deltaE } from '@/lib/color/lab'
+import workPalette from './workPalette.json'
 
-export const WORK_COLOR_PALETTE = [
-  '#FF0000', // 빨강
-  '#0000FF', // 파랑
-  '#00BB00', // 초록
-  '#FFD700', // 노랑
-  '#FF6600', // 주황
-  '#CC00CC', // 마젠타
-  '#00CCFF', // 하늘
-  '#FF69B4', // 핑크
-  '#8B4513', // 갈색
-  '#008080', // 청록
-  '#7FFF00', // 연두
-  '#C71585', // 자주
-  '#000080', // 남색
-  '#808000', // 올리브
-  '#FF4500', // 주홍
-  '#3EB489', // 민트
-]
+/**
+ * Work colors are high-contrast "tags" laid over each DMC thread so that
+ * adjacent, visually-similar threads can be told apart while stitching.
+ *
+ * The palette is a glasbey-style, perceptually maximally-distinct set,
+ * pre-generated OFFLINE by scripts/generateWorkPalette.mjs (farthest-point
+ * sampling in CIELAB / CIEDE2000) and stored as a static JSON. The runtime
+ * never recomputes the sampling — it only slices the first N entries. The
+ * palette holds 256 colors, so it auto-extends well past today's 80-color
+ * cap without code changes.
+ *
+ * Readability constraints are baked into the palette itself: no near-white,
+ * near-black, or pure-red (grid-line) colors. Symbol glyph color (black vs
+ * white) is chosen per-cell from the work color's luma at render time
+ * (see src/lib/pdf/exporter.ts), so glyphs stay legible on dark work colors.
+ */
+export const WORK_COLOR_PALETTE: string[] = workPalette as string[]
 
-function hexToRgbArr(hex: string): [number, number, number] {
-  const h = hex.replace('#', '')
-  return [
-    parseInt(h.slice(0, 2), 16),
-    parseInt(h.slice(2, 4), 16),
-    parseInt(h.slice(4, 6), 16),
-  ]
-}
+const PALETTE_LAB: [number, number, number][] = WORK_COLOR_PALETTE.map((hex) => {
+  const [r, g, b] = hexToRgb(hex)
+  return rgbToLab(r, g, b)
+})
 
-function rgbToLab(r: number, g: number, b: number): [number, number, number] {
-  let rn = r / 255, gn = g / 255, bn = b / 255
-  rn = rn > 0.04045 ? Math.pow((rn + 0.055) / 1.055, 2.4) : rn / 12.92
-  gn = gn > 0.04045 ? Math.pow((gn + 0.055) / 1.055, 2.4) : gn / 12.92
-  bn = bn > 0.04045 ? Math.pow((bn + 0.055) / 1.055, 2.4) : bn / 12.92
-  const x = (rn * 0.4124 + gn * 0.3576 + bn * 0.1805) / 0.95047
-  const y = (rn * 0.2126 + gn * 0.7152 + bn * 0.0722) / 1.00000
-  const z = (rn * 0.0193 + gn * 0.1192 + bn * 0.9505) / 1.08883
-  const f = (t: number) => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116
-  return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))]
-}
+// How many of the nearest (most easily-confused) DMC threads each new thread
+// is actively contrasted against when choosing its work color.
+const NEIGHBOR_K = 16
 
-function deltaE(hex1: string, hex2: string): number {
-  const [r1, g1, b1] = hexToRgbArr(hex1)
-  const [r2, g2, b2] = hexToRgbArr(hex2)
-  const [l1, a1, bb1] = rgbToLab(r1, g1, b1)
-  const [l2, a2, bb2] = rgbToLab(r2, g2, b2)
-  return Math.sqrt((l1 - l2) ** 2 + (a1 - a2) ** 2 + (bb1 - bb2) ** 2)
-}
-
+/**
+ * Assign a work color to every thread.
+ *
+ * Strategy:
+ *  1. Use the first `n` glasbey colors (n = thread count). These are all
+ *     mutually distinct with the best achievable minimum ΔE for n colors,
+ *     so there are NO duplicate / near-duplicate work colors (for n ≤ 256).
+ *  2. Permute those colors across threads so that DMC-similar threads — the
+ *     ones a stitcher would confuse — receive the most contrasting work
+ *     colors. Plain Lab-sorted assignment would create a gradient where
+ *     adjacent DMCs get adjacent work colors; this does the opposite.
+ *
+ * The permutation is a greedy: process threads, and for each pick the unused
+ * palette color that maximizes the minimum work-color ΔE to the work colors
+ * already given to this thread's nearest DMC neighbors.
+ */
 export function assignWorkColors(threads: ThreadUsage[]): string[] {
-  const assigned: string[] = []
-  for (let i = 0; i < threads.length; i++) {
-    const recent = assigned.slice(Math.max(0, i - WORK_COLOR_PALETTE.length))
-    let bestColor = WORK_COLOR_PALETTE[i % WORK_COLOR_PALETTE.length]
-    let bestScore = -1
+  const n = threads.length
+  if (n === 0) return []
 
-    for (const candidate of WORK_COLOR_PALETTE) {
-      if (recent.includes(candidate) && recent.length >= WORK_COLOR_PALETTE.length) continue
-      let minDist = Infinity
-      for (const prev of recent) {
-        const d = deltaE(candidate, prev)
-        if (d < minDist) minDist = d
+  const palN = WORK_COLOR_PALETTE.length
+  const threadLab = threads.map((t) => t.dmc.lab)
+
+  // Candidate pool: first n palette entries (wraps only if n exceeds the
+  // 256-color palette, which is far beyond the current 80-color cap).
+  const pool = Array.from({ length: n }, (_, i) => i % palN)
+  const poolUsed = new Array<boolean>(n).fill(false)
+
+  const assignedPaletteIdx = new Array<number>(n).fill(-1)
+
+  for (let i = 0; i < n; i++) {
+    // The DMC threads most likely to be confused with thread i are its
+    // nearest Lab neighbors among the already-assigned threads.
+    const neighbors: { idx: number; dist: number }[] = []
+    for (let j = 0; j < i; j++) {
+      neighbors.push({ idx: j, dist: deltaE(threadLab[i], threadLab[j]) })
+    }
+    neighbors.sort((a, b) => a.dist - b.dist)
+    const window = neighbors.slice(0, NEIGHBOR_K)
+
+    // Pick the unused pool color that sits farthest from the work colors of
+    // those near neighbors (maximize the minimum separation).
+    let bestPool = -1
+    let bestScore = -Infinity
+    for (let p = 0; p < n; p++) {
+      if (poolUsed[p]) continue
+      const candLab = PALETTE_LAB[pool[p]]
+      let score = Infinity
+      for (const nb of window) {
+        const d = deltaE(candLab, PALETTE_LAB[assignedPaletteIdx[nb.idx]])
+        if (d < score) score = d
       }
-      if (recent.length === 0) minDist = 1000
-      if (minDist > bestScore) {
-        bestScore = minDist
-        bestColor = candidate
+      // No neighbors yet (first thread): every candidate ties at Infinity, so
+      // the lowest-index pool color is taken — the "nicest" leading color.
+      if (score > bestScore) {
+        bestScore = score
+        bestPool = p
       }
     }
-    assigned.push(bestColor)
+
+    poolUsed[bestPool] = true
+    assignedPaletteIdx[i] = pool[bestPool]
   }
-  return assigned
+
+  return assignedPaletteIdx.map((idx) => WORK_COLOR_PALETTE[idx])
 }
