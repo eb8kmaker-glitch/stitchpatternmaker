@@ -94,5 +94,20 @@ export function usePatternGenerator() {
     })
   }, [])
 
-  return { state, generate, reset }
+  // Restore a previously captured pattern (e.g. from conversion history).
+  // Cancels any in-flight generation so a stale run can't overwrite it.
+  const restore = useCallback((pattern: PatternResult, threads: ThreadUsage[]) => {
+    genIdRef.current++
+    setState(s => ({
+      ...s,
+      status:   'done',
+      pattern,
+      threads,
+      progress: 100,
+      sub:      '',
+      error:    null,
+    }))
+  }, [])
+
+  return { state, generate, reset, restore }
 }

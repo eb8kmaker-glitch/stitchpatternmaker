@@ -10,7 +10,11 @@ import ThreadList      from '@/components/pattern/ThreadList'
 import ProgressOverlay from '@/components/ui/ProgressOverlay'
 import PaletteShowcase from '@/components/ui/PaletteShowcase'
 import AdUnit          from '@/components/ui/AdUnit'
+import HistoryPanel    from '@/components/pattern/HistoryPanel'
+import CompareModal    from '@/components/pattern/CompareModal'
 import { usePatternGenerator } from '@/hooks/usePatternGenerator'
+import { useConversionHistory } from '@/hooks/useConversionHistory'
+import { makeThumbnail, type HistorySnapshot } from '@/lib/history/snapshot'
 import { useLang } from '@/lib/i18n/context'
 import HomeFAQ from '@/components/ui/HomeFAQ'
 import { computeAutoAdjust } from '@/lib/pattern/generator'
@@ -45,7 +49,40 @@ export default function HomePage() {
   const [settings,        setSettings]        = useState<PatternSettings>(DEFAULT_SETTINGS)
   const [highlightDmcId,  setHighlightDmcId]  = useState<string | null>(null)
   const [replaceSourceId, setReplaceSourceId] = useState<string | null>(null)
-  const { state, generate } = usePatternGenerator()
+  const { state, generate, restore } = usePatternGenerator()
+
+  // ── Conversion history & compare ─────────────────────────────────────────
+  const history = useConversionHistory()
+  const [activeHistoryId, setActiveHistoryId] = useState<number | null>(null)
+  const [compareItems,    setCompareItems]    = useState<HistorySnapshot[] | null>(null)
+  // Holds the exact settings of an in-flight explicit Generate / Auto action
+  // (null otherwise), so slider live-updates and history restores never
+  // snapshot, and the captured settings match the run that produced them.
+  const pendingSnapshotRef = useRef<PatternSettings | null>(null)
+
+  // Capture a snapshot once an explicit generation completes successfully.
+  useEffect(() => {
+    const usedSettings = pendingSnapshotRef.current
+    if (state.status !== 'done' || !state.pattern || !usedSettings) return
+    pendingSnapshotRef.current = null
+    let thumbnail: string | null = null
+    try { thumbnail = makeThumbnail(state.pattern) } catch { thumbnail = null }
+    const id = history.add({
+      thumbnail,
+      pattern:  state.pattern,
+      threads:  state.threads,
+      settings: usedSettings,
+      imageDataUrl,
+    })
+    setActiveHistoryId(id)
+  }, [state.status, state.pattern, state.threads, imageDataUrl, history])
+
+  function handleRestore(snap: HistorySnapshot) {
+    setSettings(snap.settings)
+    setHighlightDmcId(null)
+    restore(snap.pattern, snap.threads)
+    setActiveHistoryId(snap.id)
+  }
 
   function handleImageLoad(img: HTMLImageElement) {
     imageRef.current = img
@@ -64,6 +101,7 @@ export default function HomePage() {
   function handleGenerate() {
     const img = imageRef.current
     if (!img) return
+    pendingSnapshotRef.current = settings
     generate(img, settings)
   }
 
@@ -92,6 +130,7 @@ export default function HomePage() {
     // Regenerate immediately if a pattern already exists
     if (state.pattern) {
       if (debounceRef.current) clearTimeout(debounceRef.current)
+      pendingSnapshotRef.current = next
       generate(img, next)
     }
   }
@@ -207,6 +246,14 @@ export default function HomePage() {
           )}
         </div>
 
+        {/* ── Conversion history ────────────────────────────────────────── */}
+        <HistoryPanel
+          items={history.items}
+          activeId={activeHistoryId}
+          onRestore={handleRestore}
+          onCompare={setCompareItems}
+        />
+
         {/* ── Features ──────────────────────────────────────────────────── */}
         <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           {FEATURES.map(f => (
@@ -253,6 +300,14 @@ export default function HomePage() {
       </main>
 
       <HomeFAQ />
+
+      {compareItems && (
+        <CompareModal
+          items={compareItems}
+          onClose={() => setCompareItems(null)}
+          onUse={snap => { handleRestore(snap); setCompareItems(null) }}
+        />
+      )}
     </div>
   )
 }
