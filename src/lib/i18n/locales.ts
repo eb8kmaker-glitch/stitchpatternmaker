@@ -258,6 +258,16 @@ export interface Translations {
     guideLink: string
     createLink: string
   }
+  history: {
+    sectionTitle: string
+    active: string
+    compareButton: string
+    compareTitle: string
+    useThis: string
+    close: string
+    maxCompareWarning: string
+    summaryColors: string
+  }
 }
 
 const KO: Translations = {
@@ -526,6 +536,16 @@ const KO: Translations = {
     close:              '닫기',
     guideLink:          '← 십자수 입문 가이드 보기',
     createLink:         '도안 만들기',
+  },
+  history: {
+    sectionTitle:      '히스토리',
+    active:            '현재',
+    compareButton:     '선택 비교',
+    compareTitle:      '패턴 비교',
+    useThis:           '이 패턴 사용',
+    close:             '닫기',
+    maxCompareWarning: '최대 3개까지 비교할 수 있습니다.',
+    summaryColors:     '{n}색',
   },
 }
 
@@ -796,6 +816,16 @@ const EN: Translations = {
     guideLink:          '← View Cross Stitch Beginner Guide',
     createLink:         'Create Pattern',
   },
+  history: {
+    sectionTitle:      'History',
+    active:            'Current',
+    compareButton:     'Compare Selected',
+    compareTitle:      'Compare Patterns',
+    useThis:           'Use This',
+    close:             'Close',
+    maxCompareWarning: 'You can compare up to 3 patterns.',
+    summaryColors:     '{n} colors',
+  },
 }
 
 const JA: Translations = {
@@ -1064,6 +1094,16 @@ const JA: Translations = {
     close:              '閉じる',
     guideLink:          '← クロスステッチ入門ガイドを見る',
     createLink:         '図案を作成',
+  },
+  history: {
+    sectionTitle:      '履歴',
+    active:            '現在',
+    compareButton:     '比較する',
+    compareTitle:      'パターン比較',
+    useThis:           'これを使う',
+    close:             '閉じる',
+    maxCompareWarning: '最大3つまで比較できます。',
+    summaryColors:     '{n}色',
   },
 }
 
