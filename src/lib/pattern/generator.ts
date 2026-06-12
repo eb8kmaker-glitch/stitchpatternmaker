@@ -31,6 +31,13 @@ const NOISE_DELTAE_THRESHOLD   = 10 // ΔE00 ≤ this counts an 8-neighbor as "s
 // of the pipeline (after dithering too), so it also mops up dither confetti.
 const MERGE_MIN_STITCHES = 30
 
+// ── Floyd–Steinberg dither strength ───────────────────────────────────────────
+// Scales how much quantization error is diffused to neighboring cells.
+// 1.0 = textbook Floyd–Steinberg (smoothest gradients, most scattered single-
+// cell color changes); lower values trade a little smoothness for fewer isolated
+// color changes, which is friendlier to actually stitch. Start conservative.
+const DITHER_STRENGTH = 0.6
+
 // ── Separation thresholds (ΔE) ────────────────────────────────────────────────
 const SEP_THRESHOLD: Record<SepLevel, number> = {
   off:    0,
@@ -264,7 +271,19 @@ async function kMeansLab(
   return { centers, assignments }
 }
 
-// ── Floyd–Steinberg dithering in LAB space ────────────────────────────────────
+// ── Floyd–Steinberg error-diffusion quantization (serpentine, ΔE00) ───────────
+// Full-frame error diffusion replaces independent per-cell nearest matching, so
+// few colors still read as smooth gradients (the pic2pat look) instead of flat
+// regions + scattered leftover error. Differences from textbook FS:
+//  - Serpentine scan (even rows L→R, odd rows R→L) to cut horizontal streaks;
+//    the left/right diffusion weights mirror with the scan direction.
+//  - Nearest DMC color chosen with the existing CIEDE2000 (deltaE2000) so the
+//    match agrees with the rest of the palette pipeline.
+//  - Diffused error is scaled by DITHER_STRENGTH (< 1.0) to limit isolated
+//    single-cell color changes for stitchability.
+// Error is accumulated in LAB (the pipeline's working space, and what CIEDE2000
+// consumes); single-cell confetti this produces is cleaned up by the later
+// singleton-merge pass.
 function applyFloydSteinberg(
   labPixels: [number, number, number][],
   dmcPalette: DmcColor[],
@@ -275,20 +294,25 @@ function applyFloydSteinberg(
   const out: number[] = new Array(width * height).fill(0)
 
   for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+    const leftToRight = y % 2 === 0
+    const dir = leftToRight ? 1 : -1            // scan / "forward" direction
+    const xStart = leftToRight ? 0 : width - 1
+    const xEnd   = leftToRight ? width : -1
+
+    for (let x = xStart; x !== xEnd; x += dir) {
       const i = y * width + x
       const pixel = buf[i]
 
       let bestIdx = 0, bestDist = Infinity
       for (let d = 0; d < dmcPalette.length; d++) {
-        const dist = deltaE(pixel, dmcPalette[d].lab)
+        const dist = deltaE2000(pixel, dmcPalette[d].lab)
         if (dist < bestDist) { bestDist = dist; bestIdx = d }
       }
       out[i] = bestIdx
 
-      const errL = pixel[0] - dmcPalette[bestIdx].lab[0]
-      const errA = pixel[1] - dmcPalette[bestIdx].lab[1]
-      const errB = pixel[2] - dmcPalette[bestIdx].lab[2]
+      const errL = (pixel[0] - dmcPalette[bestIdx].lab[0]) * DITHER_STRENGTH
+      const errA = (pixel[1] - dmcPalette[bestIdx].lab[1]) * DITHER_STRENGTH
+      const errB = (pixel[2] - dmcPalette[bestIdx].lab[2]) * DITHER_STRENGTH
 
       const spread = (dx: number, dy: number, f: number) => {
         const nx = x + dx, ny = y + dy
@@ -299,10 +323,11 @@ function applyFloydSteinberg(
           buf[ni][2] += errB * f
         }
       }
-      spread( 1, 0, 7 / 16)
-      spread(-1, 1, 3 / 16)
-      spread( 0, 1, 5 / 16)
-      spread( 1, 1, 1 / 16)
+      // Weights mirror with the scan direction (dir): the cell ahead gets 7/16.
+      spread( dir, 0, 7 / 16)
+      spread(-dir, 1, 3 / 16)
+      spread(   0, 1, 5 / 16)
+      spread( dir, 1, 1 / 16)
     }
   }
 
