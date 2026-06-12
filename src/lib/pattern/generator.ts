@@ -1,4 +1,4 @@
-import { rgbToLab, deltaE } from '@/lib/color/lab'
+import { rgbToLab, deltaE, deltaE2000 } from '@/lib/color/lab'
 import { findClosestDmc, DMC_COLORS } from '@/lib/dmc/database'
 import { buildSymbolMap } from '@/lib/pattern/symbols'
 import type { DmcColor, PatternResult, SepLevel, QualityMode, AspectMode, DitheringMode } from '@/types'
@@ -15,6 +15,28 @@ export interface ProgressMessages {
   ditherFlat: string; ditherFloyd: string; ditherAtkinson: string
   ditherOrdered: string; confettiCleanup: string; sepProcessing: string
 }
+
+// ── Pre-quantization noise (isolated-cell) cleanup tuning ─────────────────────
+// Applied to the reduced per-cell LAB grid *before* color quantization / DMC
+// matching, so scattered single-cell "confetti" in flat regions gets absorbed
+// and doesn't spawn orphan palette slots (1–20 cell colors). Both values live
+// here so they're easy to tune in one place.
+const NOISE_NEIGHBOR_THRESHOLD = 2  // fewer than this many similar 8-neighbors ⇒ treat cell as isolated
+const NOISE_DELTAE_THRESHOLD   = 10 // ΔE00 ≤ this counts an 8-neighbor as "similar"
+
+// ── Singleton-color merge threshold ───────────────────────────────────────────
+// After DMC matching, any color used in fewer than this many stitches is
+// absorbed into its nearest surviving color. Avoids buying a whole skein for a
+// handful of "dust" stitches and keeps the palette clean. Runs at the very end
+// of the pipeline (after dithering too), so it also mops up dither confetti.
+const MERGE_MIN_STITCHES = 30
+
+// ── Floyd–Steinberg dither strength ───────────────────────────────────────────
+// Scales how much quantization error is diffused to neighboring cells.
+// 1.0 = textbook Floyd–Steinberg (smoothest gradients, most scattered single-
+// cell color changes); lower values trade a little smoothness for fewer isolated
+// color changes, which is friendlier to actually stitch. Start conservative.
+const DITHER_STRENGTH = 0.6
 
 // ── Separation thresholds (ΔE) ────────────────────────────────────────────────
 const SEP_THRESHOLD: Record<SepLevel, number> = {
@@ -249,7 +271,19 @@ async function kMeansLab(
   return { centers, assignments }
 }
 
-// ── Floyd–Steinberg dithering in LAB space ────────────────────────────────────
+// ── Floyd–Steinberg error-diffusion quantization (serpentine, ΔE00) ───────────
+// Full-frame error diffusion replaces independent per-cell nearest matching, so
+// few colors still read as smooth gradients (the pic2pat look) instead of flat
+// regions + scattered leftover error. Differences from textbook FS:
+//  - Serpentine scan (even rows L→R, odd rows R→L) to cut horizontal streaks;
+//    the left/right diffusion weights mirror with the scan direction.
+//  - Nearest DMC color chosen with the existing CIEDE2000 (deltaE2000) so the
+//    match agrees with the rest of the palette pipeline.
+//  - Diffused error is scaled by DITHER_STRENGTH (< 1.0) to limit isolated
+//    single-cell color changes for stitchability.
+// Error is accumulated in LAB (the pipeline's working space, and what CIEDE2000
+// consumes); single-cell confetti this produces is cleaned up by the later
+// singleton-merge pass.
 function applyFloydSteinberg(
   labPixels: [number, number, number][],
   dmcPalette: DmcColor[],
@@ -260,20 +294,25 @@ function applyFloydSteinberg(
   const out: number[] = new Array(width * height).fill(0)
 
   for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+    const leftToRight = y % 2 === 0
+    const dir = leftToRight ? 1 : -1            // scan / "forward" direction
+    const xStart = leftToRight ? 0 : width - 1
+    const xEnd   = leftToRight ? width : -1
+
+    for (let x = xStart; x !== xEnd; x += dir) {
       const i = y * width + x
       const pixel = buf[i]
 
       let bestIdx = 0, bestDist = Infinity
       for (let d = 0; d < dmcPalette.length; d++) {
-        const dist = deltaE(pixel, dmcPalette[d].lab)
+        const dist = deltaE2000(pixel, dmcPalette[d].lab)
         if (dist < bestDist) { bestDist = dist; bestIdx = d }
       }
       out[i] = bestIdx
 
-      const errL = pixel[0] - dmcPalette[bestIdx].lab[0]
-      const errA = pixel[1] - dmcPalette[bestIdx].lab[1]
-      const errB = pixel[2] - dmcPalette[bestIdx].lab[2]
+      const errL = (pixel[0] - dmcPalette[bestIdx].lab[0]) * DITHER_STRENGTH
+      const errA = (pixel[1] - dmcPalette[bestIdx].lab[1]) * DITHER_STRENGTH
+      const errB = (pixel[2] - dmcPalette[bestIdx].lab[2]) * DITHER_STRENGTH
 
       const spread = (dx: number, dy: number, f: number) => {
         const nx = x + dx, ny = y + dy
@@ -284,10 +323,11 @@ function applyFloydSteinberg(
           buf[ni][2] += errB * f
         }
       }
-      spread( 1, 0, 7 / 16)
-      spread(-1, 1, 3 / 16)
-      spread( 0, 1, 5 / 16)
-      spread( 1, 1, 1 / 16)
+      // Weights mirror with the scan direction (dir): the cell ahead gets 7/16.
+      spread( dir, 0, 7 / 16)
+      spread(-dir, 1, 3 / 16)
+      spread(   0, 1, 5 / 16)
+      spread( dir, 1, 1 / 16)
     }
   }
 
@@ -449,6 +489,113 @@ function separateSimilarColors(
   return result
 }
 
+// ── Pre-quantization isolated-cell (noise) cleanup ───────────────────────────
+// Operates on the reduced per-cell LAB grid right before quantization / DMC
+// matching. For each cell, count how many of its 8 neighbors are perceptually
+// similar (ΔE00 ≤ NOISE_DELTAE_THRESHOLD, via the existing CIEDE2000 function).
+// Cells with too few similar neighbors are isolated noise and get absorbed into
+// the per-channel median of their 8-neighborhood. Single non-destructive pass:
+// reads from a snapshot, writes into the live array, so changes don't cascade.
+function cleanupGridNoise(
+  labPixels: [number, number, number][],
+  width: number,
+  height: number,
+): void {
+  const src = labPixels.map(p => [p[0], p[1], p[2]] as [number, number, number])
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const cell = src[y * width + x]
+      const neighbors: [number, number, number][] = []
+      let similar = 0
+
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dy === 0 && dx === 0) continue
+          const ny = y + dy, nx = x + dx
+          if (ny < 0 || ny >= height || nx < 0 || nx >= width) continue
+          const nb = src[ny * width + nx]
+          neighbors.push(nb)
+          if (deltaE2000(cell, nb) <= NOISE_DELTAE_THRESHOLD) similar++
+        }
+      }
+
+      // Only isolated cells (too few similar neighbors) are absorbed.
+      if (neighbors.length > 0 && similar < NOISE_NEIGHBOR_THRESHOLD) {
+        const median = (ch: number): number => {
+          const vals = neighbors.map(n => n[ch]).sort((a, b) => a - b)
+          const m = vals.length >> 1
+          return vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2
+        }
+        const i = y * width + x
+        labPixels[i][0] = median(0)
+        labPixels[i][1] = median(1)
+        labPixels[i][2] = median(2)
+      }
+    }
+  }
+}
+
+// ── Singleton-color merge (post-quantization) ────────────────────────────────
+// Counts stitches per cluster index, then repeatedly absorbs the smallest color
+// below MERGE_MIN_STITCHES into its nearest *surviving* color (CIEDE2000 over the
+// existing palette — reuses deltaE2000). Counts are updated after each merge so
+// a color that grows past the threshold becomes a valid absorption target, and
+// a bounded iteration guard prevents any infinite loop. Mutates `grid` in place;
+// merged-away cluster indices simply stop appearing in the grid, so the
+// downstream color list / symbol map / counts regenerate without them.
+function mergeSmallColors(
+  grid: number[][],
+  dmcMap: DmcColor[],
+  width: number,
+  height: number,
+): void {
+  const counts = new Array(dmcMap.length).fill(0)
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) counts[grid[y][x]]++
+  }
+
+  const reassign = (from: number, to: number) => {
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) if (grid[y][x] === from) grid[y][x] = to
+    }
+    counts[to] += counts[from]
+    counts[from] = 0
+  }
+
+  // At most one color is eliminated per iteration, so length+1 is a safe cap.
+  const maxIters = dmcMap.length + 1
+  for (let iter = 0; iter < maxIters; iter++) {
+    // Smallest still-present color below the threshold.
+    let victim = -1
+    for (let i = 0; i < dmcMap.length; i++) {
+      if (counts[i] > 0 && counts[i] < MERGE_MIN_STITCHES) {
+        if (victim === -1 || counts[i] < counts[victim]) victim = i
+      }
+    }
+    if (victim === -1) break // no small colors left → palette is stable
+
+    // Nearest surviving color (>= threshold). Fall back to nearest present
+    // color of any size when no survivor exists yet (e.g. tiny images).
+    const pickNearest = (survivorsOnly: boolean): number => {
+      let best = -1, bestD = Infinity
+      for (let j = 0; j < dmcMap.length; j++) {
+        if (j === victim || counts[j] === 0) continue
+        if (survivorsOnly && counts[j] < MERGE_MIN_STITCHES) continue
+        const d = deltaE2000(dmcMap[victim].lab, dmcMap[j].lab)
+        if (d < bestD) { bestD = d; best = j }
+      }
+      return best
+    }
+
+    let target = pickNearest(true)
+    if (target === -1) target = pickNearest(false)
+    if (target === -1) break // only one color present → nothing to merge into
+
+    reassign(victim, target)
+  }
+}
+
 // ── Brightness / Contrast adjustment ─────────────────────────────────────────
 function applyBrightnessContrast(data: Uint8ClampedArray, brightness: number, contrast: number): void {
   if (brightness === 0 && contrast === 0) return
@@ -598,6 +745,12 @@ export async function generatePattern(
     applyLabAdjustments(labPixels, saturation, temperature, tint)
   }
 
+  // 4.6 Pre-quantization noise cleanup — absorb isolated single-cell confetti
+  // into their neighborhood before clustering / DMC matching so they don't
+  // create orphan palette colors.
+  await tick()
+  cleanupGridNoise(labPixels, width, height)
+
   // 5. K-means++ clustering in LAB space
   progress(45, msg.clustering, `K-means++ (${kIter} iterations)`)
   await tick()
@@ -665,6 +818,12 @@ export async function generatePattern(
     const separated = separateSimilarColors(grid, dmcMap, threshold, width, height)
     separated.forEach((d, i) => { dmcMap[i] = d })
   }
+
+  // 10. Singleton-color merge — final pass. Absorb colors used in fewer than
+  // MERGE_MIN_STITCHES stitches into their nearest surviving color. Kept last so
+  // it also cleans up scattered single-cell colors produced by dithering.
+  await tick()
+  mergeSmallColors(grid, dmcMap, width, height)
 
   progress(96, msg.preparingRender, '')
   await tick()
