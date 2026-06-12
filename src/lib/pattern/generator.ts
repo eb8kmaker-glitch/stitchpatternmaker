@@ -1,4 +1,4 @@
-import { rgbToLab, deltaE } from '@/lib/color/lab'
+import { rgbToLab, deltaE, deltaE2000 } from '@/lib/color/lab'
 import { findClosestDmc, DMC_COLORS } from '@/lib/dmc/database'
 import { buildSymbolMap } from '@/lib/pattern/symbols'
 import type { DmcColor, PatternResult, SepLevel, QualityMode, AspectMode, DitheringMode } from '@/types'
@@ -15,6 +15,14 @@ export interface ProgressMessages {
   ditherFlat: string; ditherFloyd: string; ditherAtkinson: string
   ditherOrdered: string; confettiCleanup: string; sepProcessing: string
 }
+
+// ── Pre-quantization noise (isolated-cell) cleanup tuning ─────────────────────
+// Applied to the reduced per-cell LAB grid *before* color quantization / DMC
+// matching, so scattered single-cell "confetti" in flat regions gets absorbed
+// and doesn't spawn orphan palette slots (1–20 cell colors). Both values live
+// here so they're easy to tune in one place.
+const NOISE_NEIGHBOR_THRESHOLD = 2  // fewer than this many similar 8-neighbors ⇒ treat cell as isolated
+const NOISE_DELTAE_THRESHOLD   = 10 // ΔE00 ≤ this counts an 8-neighbor as "similar"
 
 // ── Separation thresholds (ΔE) ────────────────────────────────────────────────
 const SEP_THRESHOLD: Record<SepLevel, number> = {
@@ -449,6 +457,53 @@ function separateSimilarColors(
   return result
 }
 
+// ── Pre-quantization isolated-cell (noise) cleanup ───────────────────────────
+// Operates on the reduced per-cell LAB grid right before quantization / DMC
+// matching. For each cell, count how many of its 8 neighbors are perceptually
+// similar (ΔE00 ≤ NOISE_DELTAE_THRESHOLD, via the existing CIEDE2000 function).
+// Cells with too few similar neighbors are isolated noise and get absorbed into
+// the per-channel median of their 8-neighborhood. Single non-destructive pass:
+// reads from a snapshot, writes into the live array, so changes don't cascade.
+function cleanupGridNoise(
+  labPixels: [number, number, number][],
+  width: number,
+  height: number,
+): void {
+  const src = labPixels.map(p => [p[0], p[1], p[2]] as [number, number, number])
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const cell = src[y * width + x]
+      const neighbors: [number, number, number][] = []
+      let similar = 0
+
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dy === 0 && dx === 0) continue
+          const ny = y + dy, nx = x + dx
+          if (ny < 0 || ny >= height || nx < 0 || nx >= width) continue
+          const nb = src[ny * width + nx]
+          neighbors.push(nb)
+          if (deltaE2000(cell, nb) <= NOISE_DELTAE_THRESHOLD) similar++
+        }
+      }
+
+      // Only isolated cells (too few similar neighbors) are absorbed.
+      if (neighbors.length > 0 && similar < NOISE_NEIGHBOR_THRESHOLD) {
+        const median = (ch: number): number => {
+          const vals = neighbors.map(n => n[ch]).sort((a, b) => a - b)
+          const m = vals.length >> 1
+          return vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2
+        }
+        const i = y * width + x
+        labPixels[i][0] = median(0)
+        labPixels[i][1] = median(1)
+        labPixels[i][2] = median(2)
+      }
+    }
+  }
+}
+
 // ── Brightness / Contrast adjustment ─────────────────────────────────────────
 function applyBrightnessContrast(data: Uint8ClampedArray, brightness: number, contrast: number): void {
   if (brightness === 0 && contrast === 0) return
@@ -597,6 +652,12 @@ export async function generatePattern(
   if (saturation !== 0 || temperature !== 0 || tint !== 0) {
     applyLabAdjustments(labPixels, saturation, temperature, tint)
   }
+
+  // 4.6 Pre-quantization noise cleanup — absorb isolated single-cell confetti
+  // into their neighborhood before clustering / DMC matching so they don't
+  // create orphan palette colors.
+  await tick()
+  cleanupGridNoise(labPixels, width, height)
 
   // 5. K-means++ clustering in LAB space
   progress(45, msg.clustering, `K-means++ (${kIter} iterations)`)
