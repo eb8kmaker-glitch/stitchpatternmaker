@@ -24,6 +24,13 @@ export interface ProgressMessages {
 const NOISE_NEIGHBOR_THRESHOLD = 2  // fewer than this many similar 8-neighbors ⇒ treat cell as isolated
 const NOISE_DELTAE_THRESHOLD   = 10 // ΔE00 ≤ this counts an 8-neighbor as "similar"
 
+// ── Singleton-color merge threshold ───────────────────────────────────────────
+// After DMC matching, any color used in fewer than this many stitches is
+// absorbed into its nearest surviving color. Avoids buying a whole skein for a
+// handful of "dust" stitches and keeps the palette clean. Runs at the very end
+// of the pipeline (after dithering too), so it also mops up dither confetti.
+const MERGE_MIN_STITCHES = 30
+
 // ── Separation thresholds (ΔE) ────────────────────────────────────────────────
 const SEP_THRESHOLD: Record<SepLevel, number> = {
   off:    0,
@@ -504,6 +511,66 @@ function cleanupGridNoise(
   }
 }
 
+// ── Singleton-color merge (post-quantization) ────────────────────────────────
+// Counts stitches per cluster index, then repeatedly absorbs the smallest color
+// below MERGE_MIN_STITCHES into its nearest *surviving* color (CIEDE2000 over the
+// existing palette — reuses deltaE2000). Counts are updated after each merge so
+// a color that grows past the threshold becomes a valid absorption target, and
+// a bounded iteration guard prevents any infinite loop. Mutates `grid` in place;
+// merged-away cluster indices simply stop appearing in the grid, so the
+// downstream color list / symbol map / counts regenerate without them.
+function mergeSmallColors(
+  grid: number[][],
+  dmcMap: DmcColor[],
+  width: number,
+  height: number,
+): void {
+  const counts = new Array(dmcMap.length).fill(0)
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) counts[grid[y][x]]++
+  }
+
+  const reassign = (from: number, to: number) => {
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) if (grid[y][x] === from) grid[y][x] = to
+    }
+    counts[to] += counts[from]
+    counts[from] = 0
+  }
+
+  // At most one color is eliminated per iteration, so length+1 is a safe cap.
+  const maxIters = dmcMap.length + 1
+  for (let iter = 0; iter < maxIters; iter++) {
+    // Smallest still-present color below the threshold.
+    let victim = -1
+    for (let i = 0; i < dmcMap.length; i++) {
+      if (counts[i] > 0 && counts[i] < MERGE_MIN_STITCHES) {
+        if (victim === -1 || counts[i] < counts[victim]) victim = i
+      }
+    }
+    if (victim === -1) break // no small colors left → palette is stable
+
+    // Nearest surviving color (>= threshold). Fall back to nearest present
+    // color of any size when no survivor exists yet (e.g. tiny images).
+    const pickNearest = (survivorsOnly: boolean): number => {
+      let best = -1, bestD = Infinity
+      for (let j = 0; j < dmcMap.length; j++) {
+        if (j === victim || counts[j] === 0) continue
+        if (survivorsOnly && counts[j] < MERGE_MIN_STITCHES) continue
+        const d = deltaE2000(dmcMap[victim].lab, dmcMap[j].lab)
+        if (d < bestD) { bestD = d; best = j }
+      }
+      return best
+    }
+
+    let target = pickNearest(true)
+    if (target === -1) target = pickNearest(false)
+    if (target === -1) break // only one color present → nothing to merge into
+
+    reassign(victim, target)
+  }
+}
+
 // ── Brightness / Contrast adjustment ─────────────────────────────────────────
 function applyBrightnessContrast(data: Uint8ClampedArray, brightness: number, contrast: number): void {
   if (brightness === 0 && contrast === 0) return
@@ -726,6 +793,12 @@ export async function generatePattern(
     const separated = separateSimilarColors(grid, dmcMap, threshold, width, height)
     separated.forEach((d, i) => { dmcMap[i] = d })
   }
+
+  // 10. Singleton-color merge — final pass. Absorb colors used in fewer than
+  // MERGE_MIN_STITCHES stitches into their nearest surviving color. Kept last so
+  // it also cleans up scattered single-cell colors produced by dithering.
+  await tick()
+  mergeSmallColors(grid, dmcMap, width, height)
 
   progress(96, msg.preparingRender, '')
   await tick()
